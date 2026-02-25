@@ -1,0 +1,9 @@
+ignoredBuiltDependencies:
+  - '@pkgr/core'
+  - napi-postinstall
+  - synckit
+  - unrs-resolver
+
+onlyBuiltDependencies:
+  - esbuild
+  - eslint-config-prettier

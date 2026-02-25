@@ -1,0 +1,15 @@
+domain.com {
+    reverse_proxy frontend:3000
+}
+
+www.domain.com {
+    redir https://domain.com
+}
+
+api.domain.com {
+    reverse_proxy backend:4000
+}
+
+www.api.domain.com {
+    redir https://api.domain.com
+}

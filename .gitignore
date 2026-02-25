@@ -1,0 +1,8 @@
+node_modules/
+.next
+dist
+.idea
+postgres_data
+.env
+certbot
+database/*

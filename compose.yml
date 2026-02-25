@@ -1,0 +1,111 @@
+name: ers
+
+services:
+  database:
+    container_name: database
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_PORT=${DB_PORT:-5432}
+      - POSTGRES_DB=${DB_NAME:-database}
+      - POSTGRES_USER=${DB_USER:-user}
+      - POSTGRES_PASSWORD=${DB_PASS:-password}
+    env_file:
+      - .env
+    ports:
+      - ${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${DB_USER}\" -d \"$${DB_NAME}\" || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  migration:
+    container_name: database_migrations
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.Migration
+    env_file:
+      - .env
+    restart: no
+    networks:
+      - app-network
+    depends_on:
+      database:
+        condition: service_healthy
+
+  backend:
+    container_name: backend_api
+    build:
+      context: ./backend
+      args:
+        - PROJECT_NAME=api
+        - NODE_ENV=${NODE_ENV:-production}
+        - WEB_DOMAIN=${WEB_DOMAIN:-localhost}
+      target: production
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - DB_HOST=${DB_HOST:-database}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-database}
+      - DB_USER=${DB_USER:-user}
+      - DB_PASS=${DB_PASS:-password}
+      - API_DOMAIN=${API_DOMAIN:-http://localhost:4000}
+      - PORT_API=${PORT_API:-4000}
+      - JWT_SECRET=${JWT_SECRET:-secret}
+      - WEB_DOMAIN=${WEB_DOMAIN:-localhost}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_USER=${MAIL_USER}
+      - MAIL_PASS=${MAIL_PASS}
+      - TZ=${TZ:-Europe/Prague}
+    env_file:
+      - .env
+    ports:
+      - ${PORT_API:-4000}:${PORT_API:-4000}
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --fail http://127.0.0.1:4000/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - backend_data:/app/storage
+    depends_on:
+      - database
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_API_DOMAIN=${API_DOMAIN:-localhost:4000}
+    environment:
+      - NEXT_PUBLIC_WEB_DOMAIN=${WEB_DOMAIN:-localhost:3000}
+      - NEXT_PUBLIC_API_DOMAIN=${API_DOMAIN:-localhost:4000}
+      - PORT_FE=${PORT_FE:-3000}
+      - JWT_SECRET=${JWT_SECRET:-secret}
+      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-vapid_public}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-vapid_private}
+      - TZ=${TZ:-Europe/Prague}
+    env_file:
+      - .env
+    ports:
+      - ${PORT_FE:-3000}:${PORT_FE:-3000}
+    networks:
+      - app-network
+    depends_on:
+      - backend
+      - database
+
+volumes:
+  postgres_data:
+  backend_data:
+
+networks:
+  app-network:

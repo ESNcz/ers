@@ -1,0 +1,12 @@
+FROM node:22-alpine
+
+# Set working directory
+WORKDIR /app
+
+COPY . .
+
+RUN npm install -g pnpm
+RUN npm cache clean --force && rm -rf node_modules && pnpm install --frozen-lockfile
+
+# Default command
+ENTRYPOINT [ "pnpm", "migration:run" ]

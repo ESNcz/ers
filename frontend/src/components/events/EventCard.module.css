@@ -1,0 +1,12 @@
+.card {
+  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-6));
+
+  transition:
+    box-shadow 150ms ease,
+    transform 100ms ease;
+
+  @mixin hover {
+    box-shadow: var(--mantine-shadow-md);
+    transform: scale(1.01);
+  }
+}

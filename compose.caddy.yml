@@ -1,0 +1,33 @@
+include:
+  - path: compose.yml
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    container_name: caddy
+    restart: unless-stopped
+    environment:
+      - API_DOMAIN=${API_DOMAIN:-http://localhost:4000}
+      - WEB_DOMAIN=${WEB_DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./caddy:/etc/caddy
+      - ./site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
+    depends_on:
+      - database
+      - backend
+      - frontend
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  app-network:

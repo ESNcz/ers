@@ -1,0 +1,46 @@
+{
+	"$schema": "https://json.schemastore.org/nest-cli",
+	"collection": "@nestjs/schematics",
+	"sourceRoot": "apps/api/src",
+	"compilerOptions": {
+		"deleteOutDir": true,
+		"webpack": true,
+		"webpackConfigPath": "webpack.config.js",
+		"tsConfigPath": "apps/api/tsconfig.json",
+		"plugins": [
+			{
+				"name": "@nestjs/swagger/plugin",
+				"options": {
+					"classValidatorShim": true,
+					"introspectComments": true,
+					"controllerKeyOfComment": "description",
+					"dtoKeyOfComment": "description",
+					"dtoFileNameSuffix": [".dto.ts", ".entity.ts"]
+				}
+			}
+		]
+	},
+	"monorepo": true,
+	"root": "apps/api",
+	"projects": {
+		"api": {
+			"type": "application",
+			"root": "apps/api",
+			"entryFile": "main",
+			"sourceRoot": "apps/api/src",
+			"compilerOptions": {
+				"tsConfigPath": "apps/api/tsconfig.json"
+			}
+		},
+		"documents": {
+			"type": "application",
+			"root": "apps/documents",
+			"entryFile": "main",
+			"sourceRoot": "apps/documents/src",
+			"compilerOptions": {
+				"tsConfigPath": "apps/documents/tsconfig.json",
+				"assets": ["**/*.ttf"]
+			}
+		}
+	}
+}

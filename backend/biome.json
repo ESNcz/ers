@@ -1,0 +1,76 @@
+{
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"style": {
+				"useImportType": "error",
+				"useNamingConvention": "off",
+				"useDefaultParameterLast": "off",
+				"useConsistentArrayType": "error"
+			},
+			"correctness": {
+				"noUnusedImports": "error"
+			},
+			"suspicious": {
+				"noConsoleLog": "warn",
+				"noImportAssign": "error",
+				"noEmptyBlockStatements": "off"
+			},
+			"complexity": {
+				"noThisInStatic": "off",
+				"noStaticOnlyClass": "off"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"include": [
+				"**/*.service.ts",
+				"**/*.service*",
+				"**/*.controller*",
+				"**/*.guard.ts",
+				"**/*.strategy.ts",
+				"**/*.pipe.ts"
+			],
+			"linter": {
+				"enabled": true,
+				"rules": {
+					"recommended": true,
+					"style": {
+						"useImportType": "off"
+					}
+				}
+			}
+		},
+		{
+			"include": ["dist/*", "**/*.spec*"],
+			"linter": {
+				"enabled": false
+			},
+			"formatter": {
+				"enabled": false
+			},
+			"organizeImports": {
+				"enabled": false
+			}
+		}
+	],
+	"javascript": {
+		"parser": {
+			"unsafeParameterDecoratorsEnabled": true
+		}
+	},
+	"formatter": {
+		"enabled": true,
+		"lineWidth": 120
+	},
+	"files": {
+		"ignore": ["node_modules/*", "dist/*", "database/*", "documentation/*"],
+		"include": ["*.ts", "*.json"]
+	}
+}
