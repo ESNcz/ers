@@ -12,7 +12,7 @@ const notAuthorizedPaths = [
   routes.RESET_PASSWORD,
 ];
 
-const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN;
+const apiUrl = process.env.API_DOMAIN || process.env.NEXT_PUBLIC_API_DOMAIN;
 const initCookieName = "InitFlag";
 const authCookieName = "AuthCookie";
 

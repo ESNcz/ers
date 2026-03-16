@@ -1,6 +1,11 @@
 import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 
-export const AXIOS_INSTANCE = Axios.create({ baseURL: process.env.NEXT_PUBLIC_API_DOMAIN, withCredentials: true });
+const baseURL =
+  typeof window === "undefined"
+    ? process.env.API_DOMAIN || process.env.NEXT_PUBLIC_API_DOMAIN
+    : process.env.NEXT_PUBLIC_API_DOMAIN;
+
+export const AXIOS_INSTANCE = Axios.create({ baseURL, withCredentials: true });
 
 // add a second `options` argument here if you want to pass extra options to each generated query
 export const customInstance = async <T>(config: AxiosRequestConfig, options?: AxiosRequestConfig): Promise<T> => {
