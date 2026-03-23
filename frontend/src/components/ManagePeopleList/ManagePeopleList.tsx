@@ -1,15 +1,19 @@
 "use client";
 
 import { useDeleteUser, useGenerateSheetUsers, useGetAllUsers, useGetCurrentUser } from "@/utils/api";
-import { RolePermissionsItem, User } from "@/utils/api.schemas";
+import { RolePermissionsItem } from "@/utils/api.schemas";
 import { downloadFile } from "@/utils/downloadFile";
+import { DataTable, facetedFilters } from "@components/data-table";
+import {
+  PeopleManagementColumns,
+  peopleManagementFacetedFilters,
+} from "@components/data-table/people-management-columns ";
 import ChangeRoleModal from "@components/modals/ChangeRoleModal/ChangeRoleModal";
 import CreateRoleModal from "@components/modals/CreateRoleModal/CreateRoleModal";
-import DynamicSearch from "@components/shared/DynamicSearch";
 import { Button, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTableExport } from "@tabler/icons-react";
-import React, { useState } from "react";
+import { useState } from "react";
 
 interface ManagePeopleListProps {}
 
@@ -54,6 +58,16 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
 
   if (!currentUser || !allUsers?.data) return null;
 
+  const columns = PeopleManagementColumns(
+    currentUser.id,
+    currentUser.role?.permissions ?? [],
+    handleDeleteUser,
+    setSelectedUserId,
+    openChangeRoleModal,
+  );
+
+  const users = allUsers.data;
+
   return (
     <Stack>
       <Flex
@@ -73,47 +87,11 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
           </Button>
         </Flex>
       </Flex>
-      <DynamicSearch<User>
-        filterData={allUsers.data}
-        dataColumns={[
-          "firstName",
-          "lastName",
-          "username",
-          "email",
-          "birthDate",
-          "nationality",
-          "isVerified",
-          "role.name",
-        ]}
-        customColumns={
-          currentUser.role?.permissions.includes(RolePermissionsItem.userupdateRole)
-            ? [
-                {
-                  type: "button",
-                  headerLabel: "Change Role",
-                  children: "Change Role",
-                  customHandle: (rowId) => {
-                    setSelectedUserId(rowId);
-                    openChangeRoleModal();
-                  },
-                },
-                {
-                  type: "button",
-                  headerLabel: "Delete",
-                  children: "Delete",
-                  color: "red",
-                  customHandle: (rowId) => {
-                    handleDeleteUser(rowId);
-                  },
-                },
-              ]
-            : []
-        }
-      />
+      <DataTable columns={columns} data={users} facetedFilters={peopleManagementFacetedFilters} />
       {selectedUserId && (
         <ChangeRoleModal
           currentUser={currentUser}
-          user={allUsers.data.find((f) => f.id === selectedUserId)}
+          user={users.find((f) => f.id === selectedUserId)}
           isOpened={isChangeRoleModalOpen}
           closeModal={closeChangeRoleModal}
           handleOnSuccess={() => {

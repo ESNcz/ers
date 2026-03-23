@@ -102,8 +102,10 @@ services:
     networks:
       - app-network
     depends_on:
-      - backend
-      - database
+      backend:
+        condition: service_healthy
+      database:
+        condition: service_healthy
 
 volumes:
   postgres_data:
