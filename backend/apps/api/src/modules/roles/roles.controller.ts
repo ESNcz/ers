@@ -9,7 +9,6 @@ import {
 	ParseUUIDPipe,
 	Patch,
 	Post,
-	UnauthorizedException,
 	UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
@@ -44,31 +43,36 @@ export class RolesController {
 	async updateUserRole(
 		@CurrentUser() currentUser: User,
 		@Param("userId", ParseUUIDPipe) userId: string,
-		@Param("roleId", ParseIntPipe) roleId: number | undefined,
+		@Param("roleId", ParseIntPipe) roleId: number,
 	) {
-		if (!currentUser.role?.hasOneOfPermissions([Permission.UserUpdateRole])) {
-			throw new UnauthorizedException("You don't have permission to perform this action");
-		}
-
-		const foundUser = await this.userService.findById(userId);
-		const foundRole = await this.rolesService.findById(roleId);
-
-		if (!roleId) {
-			if (!currentUser.role?.hasOneOfPermissions([Permission.UserUpdateRole])) {
-				foundUser.role = null;
-				return await this.userService.save(foundUser);
-			}
+		if (!currentUser.role?.hasPermission(Permission.UserUpdateRole)) {
 			throw new ForbiddenException("You dont have permissions to update role");
 		}
 
+		const foundUser = await this.userService.findById(userId);
 		if (!foundUser) throw new NotFoundException("User not found");
+
+		const foundRole = await this.rolesService.findById(roleId);
 		if (!foundRole) throw new NotFoundException("Role not found");
 
-		if (currentUser.role?.hasPermission(Permission.UserUpdateRole)) {
-			foundUser.role = foundRole;
-			return await this.userService.save(foundUser);
+		foundUser.role = foundRole;
+		return await this.userService.save(foundUser);
+	}
+
+	@Patch("remove-role/:userId")
+	async removeUserRole(
+		@CurrentUser() currentUser: User,
+		@Param("userId", ParseUUIDPipe) userId: string,
+	) {
+		if (!currentUser.role?.hasPermission(Permission.UserUpdateRole)) {
+			throw new ForbiddenException("You dont have permissions to update role");
 		}
-		throw new ForbiddenException("You dont have permissions to update role");
+
+		const foundUser = await this.userService.findById(userId);
+		if (!foundUser) throw new NotFoundException("User not found");
+
+		foundUser.role = null;
+		return await this.userService.save(foundUser);
 	}
 
 	/**

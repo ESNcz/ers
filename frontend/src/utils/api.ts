@@ -4157,6 +4157,46 @@ export const useUpdateUserRole = <TError = ErrorType<unknown>, TContext = unknow
   return useMutation(mutationOptions, queryClient);
 };
 
+export const removeUserRole = (userId: string, options?: SecondParameter<typeof customInstance>) => {
+  return customInstance<User>({ url: `/roles/remove-role/${userId}`, method: "PATCH" }, options);
+};
+
+export const getRemoveUserRoleMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof removeUserRole>>, TError, { userId: string }, TContext>;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof removeUserRole>>, TError, { userId: string }, TContext> => {
+  const mutationKey = ["removeUserRole"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeUserRole>>, { userId: string }> = (props) => {
+    const { userId } = props ?? {};
+
+    return removeUserRole(userId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RemoveUserRoleMutationResult = NonNullable<Awaited<ReturnType<typeof removeUserRole>>>;
+
+export type RemoveUserRoleMutationError = ErrorType<unknown>;
+
+export const useRemoveUserRole = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof removeUserRole>>, TError, { userId: string }, TContext>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof removeUserRole>>, TError, { userId: string }, TContext> => {
+  const mutationOptions = getRemoveUserRoleMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 /**
  * All available roles to assign
  */

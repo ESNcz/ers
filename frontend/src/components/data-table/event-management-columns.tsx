@@ -55,13 +55,17 @@ export const EventManagementColumns = (
       width: 56,
       render: (event) =>
         event.visible ? (
-          <Tooltip label="Published">
-            <IconCheck color="green" />
-          </Tooltip>
+          <Flex justify="center">
+            <Tooltip label="Published">
+              <IconCheck color="green" />
+            </Tooltip>
+          </Flex>
         ) : (
-          <Tooltip label="Unpublished">
-            <IconX color="red" />
-          </Tooltip>
+          <Flex justify="center">
+            <Tooltip label="Unpublished">
+              <IconX color="red" />
+            </Tooltip>
+          </Flex>
         ),
       filterFn: (row, id, value: string[]) => value.includes(String(row.getValue(id))),
     },

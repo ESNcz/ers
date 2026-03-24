@@ -919,11 +919,6 @@ export interface CreateSugarCubeDto {
   isAnonymous: boolean;
 }
 
-/**
- * @nullable
- */
-export type SugarCubeFromUser = EventApplication | null;
-
 export interface SugarCube {
   id: number;
   /** Message */
@@ -932,8 +927,7 @@ export interface SugarCube {
   isAnonymous: boolean;
   /** Whether the sugar cube has been reported */
   isReported: boolean;
-  /** @nullable */
-  fromUser: SugarCubeFromUser;
+  fromUser: EventApplication;
   toUser: EventApplication;
   event: Event;
   createdAt: string;

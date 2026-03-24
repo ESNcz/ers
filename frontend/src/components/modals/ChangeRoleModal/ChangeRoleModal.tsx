@@ -3,6 +3,7 @@ import {
   getGetAllUsersQueryKey,
   getGetCurrentUserQueryKey,
   useGetAllRoles,
+  useRemoveUserRole,
   useUpdateUserRole,
 } from "@/utils/api";
 import { User } from "@/utils/api.schemas";
@@ -27,17 +28,21 @@ const ChangeRoleModal = ({ currentUser, user, isOpened, closeModal, handleOnSucc
 
   const { data: allRoles } = useGetAllRoles();
 
+  const onMutationSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: [getGetAllUsersQueryKey()] });
+    queryClient.invalidateQueries({ queryKey: [getGetAllRolesQueryKey()] });
+    queryClient.invalidateQueries({ queryKey: [getGetCurrentUserQueryKey()] });
+    setNewRole(null);
+    handleOnSuccess();
+    closeModal();
+  };
+
   const changeRoleMutation = useUpdateUserRole({
-    mutation: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: [getGetAllUsersQueryKey()] });
-        queryClient.invalidateQueries({ queryKey: [getGetAllRolesQueryKey()] });
-        queryClient.invalidateQueries({ queryKey: [getGetCurrentUserQueryKey()] });
-        setNewRole(null);
-        handleOnSuccess();
-        closeModal();
-      },
-    },
+    mutation: { onSuccess: onMutationSuccess },
+  });
+
+  const removeRoleMutation = useRemoveUserRole({
+    mutation: { onSuccess: onMutationSuccess },
   });
 
   const filteredCategoriesRoles = useMemo(() => {
@@ -51,6 +56,10 @@ const ChangeRoleModal = ({ currentUser, user, isOpened, closeModal, handleOnSucc
 
   const handleChangeRole = () => {
     changeRoleMutation.mutate({ userId: user.id, roleId: Number(newRole) });
+  };
+
+  const handleRemoveRole = () => {
+    removeRoleMutation.mutate({ userId: user.id });
   };
 
   const handleClose = () => {
@@ -119,6 +128,11 @@ const ChangeRoleModal = ({ currentUser, user, isOpened, closeModal, handleOnSucc
         <Button onClick={handleChangeRole} loading={changeRoleMutation.isPending}>
           Update Role
         </Button>
+        {user?.role && (
+          <Button color="red" variant="outline" onClick={handleRemoveRole} loading={removeRoleMutation.isPending}>
+            Remove Role
+          </Button>
+        )}
       </Stack>
     </Modal>
   );
