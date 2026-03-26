@@ -122,6 +122,9 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
           </SimpleGrid>
           <RichTextEditor label="Short Description" {...form.getInputProps("shortDescription")} letterLimit={300} />
           <RichTextEditor label="Long Description" {...form.getInputProps("longDescription")} />
+          <TextInput label="Terms and Conditions Link" {...form.getInputProps("termsAndConditionsLink")} />
+          <TextInput label="Code of Conduct Link" {...form.getInputProps("codeOfConductLink")} />
+          <TextInput label="Photo Consent Link" {...form.getInputProps("photoPolicyLink")} />
         </Flex>
         <Fieldset legend="Link tree" variant="filled" p={16}>
           <LinkTree links={form.values.links ?? []} onChange={(links) => form.setFieldValue("links", links)} />
