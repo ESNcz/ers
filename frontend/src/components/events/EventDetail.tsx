@@ -89,6 +89,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
     return eventApplications?.some((f) => f.user.id === currentUser?.id);
   }, [eventApplications, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
     const eventApplicationId = eventApplications?.find((f) => f.user.id === currentUser?.id)?.id;
@@ -109,6 +110,8 @@ const EventDetail = ({ id }: EventDetailProps) => {
   if (!eventApplications || !eventDetail || !currentUser) {
     return null;
   }
+
+  const isRegisteredOrAdmin = isUserRegistered || hasSomePermissions(currentUser.role, ["event.reviewSugarCubes"]);
 
   return eventDetail ? (
     <>
@@ -180,11 +183,13 @@ const EventDetail = ({ id }: EventDetailProps) => {
                 >
                   Priority list
                 </Button>
-
-                <Button component={Link} href={routes.SUGAR_CUBES({ id: Number(id) })} color="darkBlue">
-                  Sugar Cubes
-                </Button>
               </>
+            )}
+
+            {isRegisteredOrAdmin && (
+              <Button component={Link} href={routes.SUGAR_CUBES({ id: Number(id) })} color="darkBlue">
+                Sugar Cubes
+              </Button>
             )}
 
             <Divider my={8} />
