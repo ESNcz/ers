@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm run dev:ui & pnpm run dev:api",
+    "dev": "pnpm run dev:web & pnpm run dev:api",
     "dev:api": "cd backend && pnpm start:dev",
     "dev:web": "cd frontend && pnpm dev"
   },

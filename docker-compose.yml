@@ -18,7 +18,8 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U \"$${DB_USER}\" -d \"$${DB_NAME}\" || exit 1" ]
+      test:
+        ["CMD-SHELL", 'pg_isready -U "$${DB_USER}" -d "$${DB_NAME}" || exit 1']
       interval: 30s
       timeout: 10s
       retries: 5
@@ -69,7 +70,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: [ "CMD-SHELL", "curl --fail http://127.0.0.1:4000/health || exit 1" ]
+      test: ["CMD-SHELL", "curl --fail http://127.0.0.1:4000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -88,6 +89,7 @@ services:
     environment:
       - NEXT_PUBLIC_WEB_DOMAIN=${WEB_DOMAIN:-localhost:3000}
       - NEXT_PUBLIC_API_DOMAIN=${API_DOMAIN:-localhost:4000}
+      - API_DOMAIN=http://backend:4000
       - PORT_FE=${PORT_FE:-3000}
       - JWT_SECRET=${JWT_SECRET:-secret}
       - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-vapid_public}
@@ -100,8 +102,10 @@ services:
     networks:
       - app-network
     depends_on:
-      - backend
-      - database
+      backend:
+        condition: service_healthy
+      database:
+        condition: service_healthy
 
 volumes:
   postgres_data:

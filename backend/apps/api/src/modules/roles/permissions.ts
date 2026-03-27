@@ -15,6 +15,7 @@ export enum Permission {
 	RoleUpdate = "role.update",
 	RoleDelete = "role.delete",
 
+	UserUpdate = "user.update",
 	UserUpdateRole = "user.updateRole",
 	UserDelete = "user.delete",
 }

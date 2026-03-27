@@ -58,6 +58,7 @@ export class EventsService {
 				longDescription: true,
 				shortDescription: true,
 				registrationDeadline: true,
+				priorityListDeadline: true,
 				registrationForm: {} as never,
 				since: true,
 				until: true,
@@ -113,7 +114,7 @@ export class EventsService {
 				links: true,
 			},
 			order: {
-				since: "DESC",
+				since: "ASC",
 			},
 			// TODO - fix apgination if "all" is undefined fetch all
 			take: pagination.all ? undefined : pagination.perPage,
