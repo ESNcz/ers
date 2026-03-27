@@ -417,6 +417,8 @@ export interface Event {
   links: EventLink[];
   visible: boolean;
   registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
   /** If true, generate invoices after {@link registrationDeadline} */
   generateInvoices: boolean;
   /**
@@ -705,6 +707,8 @@ export interface EventDetail {
   termsAndConditionsLink: string;
   createdAt: string;
   registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
   /**
    * Additional registration form
 Each event can have different "requirements"
@@ -741,6 +745,8 @@ export interface CreateEvent {
   since: string;
   until: string;
   registrationDeadline: string;
+  /** Deadline for managers to assign the priority list. Defaults to event start date if not provided. */
+  priorityListDeadline?: string;
   links?: CreateEventLinkPartial[];
   visible?: boolean;
   /** Additional registration properties
@@ -801,6 +807,8 @@ export interface UpdateEvent {
   since?: string;
   until?: string;
   registrationDeadline?: string;
+  /** Deadline for managers to assign the priority list. Defaults to event start date if not provided. */
+  priorityListDeadline?: string;
   visible?: boolean;
   /** Generate invoices after {@link registrationDeadline} */
   generateInvoices?: boolean;

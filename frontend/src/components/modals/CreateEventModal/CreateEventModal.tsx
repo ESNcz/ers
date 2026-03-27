@@ -38,7 +38,7 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
   const form = useForm<Partial<FormCreateEvent>>({
     initialValues: {
       visible: false,
-      title: undefined,
+      title: "",
       capacity: 0,
       shortDescription: "",
       longDescription: "",
@@ -46,9 +46,10 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
       since: new Date().toISOString(),
       until: new Date().toISOString(),
       registrationDeadline: new Date().toISOString(),
-      termsAndConditionsLink: undefined,
-      codeOfConductLink: undefined,
-      photoPolicyLink: undefined,
+      priorityListDeadline: undefined,
+      termsAndConditionsLink: "",
+      codeOfConductLink: "",
+      photoPolicyLink: "",
       generateInvoices: false,
       registrationForm: {},
     },
@@ -104,6 +105,18 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
                 value && form.setFieldValue("registrationDeadline", dayjs(value).toISOString());
               }}
               error={form.errors.registrationDeadline}
+              timePickerProps={{
+                withDropdown: true,
+              }}
+            />
+            <DateTimePicker
+              label="Priority List Deadline"
+              placeholder="Defaults to event start date"
+              value={form.values.priorityListDeadline ? dayjs(form.values.priorityListDeadline).toDate() : null}
+              onChange={(value) => {
+                form.setFieldValue("priorityListDeadline", value ? dayjs(value).toISOString() : undefined);
+              }}
+              clearable
               timePickerProps={{
                 withDropdown: true,
               }}

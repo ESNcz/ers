@@ -58,6 +58,7 @@ export class EventsService {
 				longDescription: true,
 				shortDescription: true,
 				registrationDeadline: true,
+				priorityListDeadline: true,
 				registrationForm: {} as never,
 				since: true,
 				until: true,

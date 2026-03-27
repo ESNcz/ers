@@ -176,6 +176,7 @@ export class EventsController {
 		event.createdByUser = currentUser;
 		event.visible = body.visible;
 		event.registrationDeadline = new Date(body.registrationDeadline);
+		event.priorityListDeadline = body.priorityListDeadline ? new Date(body.priorityListDeadline) : new Date(body.since);
 		event.registrationForm = body.registrationForm;
 		event.capacity = body.capacity;
 		event.codeOfConductLink = body.codeOfConductLink;
@@ -218,6 +219,7 @@ export class EventsController {
 			visible: false,
 			registrationForm: event.registrationForm,
 			registrationDeadline: event.registrationDeadline,
+			priorityListDeadline: event.priorityListDeadline,
 			generateInvoices: event.generateInvoices,
 			spotTypes: event.spotTypes.map((e) => new EventSpot({ name: e.name, price: e.price })),
 			links: newCreatedLinks,
