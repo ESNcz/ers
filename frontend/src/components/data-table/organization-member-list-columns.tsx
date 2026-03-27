@@ -23,8 +23,10 @@ export const organizationMemberFacetedFilters: DataTableFacetedFilterConfig[] = 
     columnId: "gender",
     title: "Gender",
     options: [
-      { label: "Male", value: "male", icon: IconCheck },
-      { label: "Female", value: "female", icon: IconX },
+      { label: "Male", value: "male" },
+      { label: "Female", value: "female" },
+      { label: "Non-Binary", value: "non-binary" },
+      { label: "Prefer Not To Say", value: "prefer-not-to-say" },
     ],
   },
 ];
@@ -35,6 +37,7 @@ export const OrganizationMemberListColumns = (
   handleTransferSectionManager: (organisationId: string, userId: string) => void,
   handleDeleteOrganizationMembers: (member: OrganizationMember) => void,
   deleteOrganizationMemberMutationIsPending: boolean,
+  isUserManager: boolean,
   handleAddMember?: (userId: string) => void,
   memberUserIds?: Set<string>,
 ) =>
@@ -86,11 +89,16 @@ export const OrganizationMemberListColumns = (
       id: "gender",
       header: "Gender",
       accessorFn: (member: OrganizationMember) => member.user.gender,
+      filterFn: "arrIncludesSome",
       width: 148,
       minWidth: 148,
       enableSorting: false,
       enableGlobalFilter: true,
-      render: (member) => <Text>{member.user.gender}</Text>,
+      render: (member) => (
+        // <Flex justify="center">
+        <Text>{member.user.gender}</Text>
+        // </Flex>
+      ),
     },
     {
       id: "email",
@@ -108,67 +116,77 @@ export const OrganizationMemberListColumns = (
       width: 148,
       enableSorting: false,
       enableGlobalFilter: true,
-      render: (member) => <Text>{member.user.role?.name ?? "N/A"}</Text>,
+      render: (member) => (
+        // <Flex justify="center">
+        <Text>{member.user.role?.name ?? "N/A"}</Text>
+        // </Flex>
+      ),
     },
-    {
-      id: "operations",
-      header: "Operations",
-      width: 200,
-      enableSorting: false,
-      enableGlobalFilter: false,
-      render: (member) => {
-        const isMember = !memberUserIds || memberUserIds.has(member.user.id);
+    ...(isUserManager
+      ? [
+          {
+            id: "operations" as const,
+            header: "Operations",
+            width: 200,
+            enableSorting: false,
+            enableGlobalFilter: false,
+            render: (member: OrganizationMember) => {
+              const isMember = !memberUserIds || memberUserIds.has(member.user.id);
 
-        if (!isMember && handleAddMember) {
-          return (
-            <Flex justify="center">
-              <Tooltip label="Add to Organization">
-                <ActionIcon
-                  variant="subtle"
-                  size={48}
-                  color="green"
-                  onClick={() => handleAddMember(member.user.id)}
-                >
-                  <IconUserPlus width={32} height={32} />
-                </ActionIcon>
-              </Tooltip>
-            </Flex>
-          );
-        }
-
-        return (
-          <Flex justify="space-evenly" gap={16}>
-            <Tooltip
-              label={
-                currentOrganisation?.manager?.id === member.user.id
-                  ? "This person is section manager"
-                  : "Transfer Manager"
+              if (!isMember && handleAddMember) {
+                return (
+                  <Flex justify="flex-start" gap={50}>
+                    <Tooltip label="Add to Organization">
+                      <ActionIcon
+                        variant="subtle"
+                        size={48}
+                        color="green"
+                        onClick={() => handleAddMember(member.user.id)}
+                      >
+                        <IconUserPlus width={32} height={32} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Flex>
+                );
               }
-            >
-              <ActionIcon
-                variant="subtle"
-                size={48}
-                color="yellow"
-                onClick={() => handleTransferSectionManager(currentOrganisation.id, member.user.id)}
-                disabled={currentOrganisation?.manager?.id === member.user.id}
-              >
-                <IconCrown width={32} height={32} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label={member.user.id === currentUserId ? "You cannot remove yourself" : "Remove from Organization"}>
-              <ActionIcon
-                variant="subtle"
-                size={48}
-                color="red"
-                disabled={member.user.id === currentUserId}
-                loading={deleteOrganizationMemberMutationIsPending}
-                onClick={() => handleDeleteOrganizationMembers(member)}
-              >
-                <IconUserX width={32} height={32} />
-              </ActionIcon>
-            </Tooltip>
-          </Flex>
-        );
-      },
-    },
+
+              return (
+                <Flex justify="flex-start" gap={50}>
+                  <Tooltip
+                    label={
+                      currentOrganisation?.manager?.id === member.user.id
+                        ? "This person is section manager"
+                        : "Transfer Manager"
+                    }
+                  >
+                    <ActionIcon
+                      variant="subtle"
+                      size={48}
+                      color="yellow"
+                      onClick={() => handleTransferSectionManager(currentOrganisation.id, member.user.id)}
+                      disabled={currentOrganisation?.manager?.id === member.user.id}
+                    >
+                      <IconCrown width={32} height={32} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip
+                    label={member.user.id === currentUserId ? "You cannot remove yourself" : "Remove from Organization"}
+                  >
+                    <ActionIcon
+                      variant="subtle"
+                      size={48}
+                      color="red"
+                      disabled={member.user.id === currentUserId}
+                      loading={deleteOrganizationMemberMutationIsPending}
+                      onClick={() => handleDeleteOrganizationMembers(member)}
+                    >
+                      <IconUserX width={32} height={32} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Flex>
+              );
+            },
+          },
+        ]
+      : []),
   ]);

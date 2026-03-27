@@ -131,6 +131,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
     handleTransferSectionManager,
     handleDeleteOrganizationMembers,
     deleteOrganizationMemberMutation.isPending,
+    isUserManager,
     isUserManager ? handleAddMemberToOrganization : undefined,
     memberUserIds,
   );

@@ -3,6 +3,7 @@ import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTableFacetedFilterConfig, createColumns } from "@components/data-table";
 import { ActionIcon, Badge, Flex, Text, Tooltip } from "@mantine/core";
 import { IconCheck, IconEdit, IconSwitchHorizontal, IconTrash, IconX } from "@tabler/icons-react";
+import dayjs from "dayjs";
 
 export const peopleManagementFacetedFilters: DataTableFacetedFilterConfig[] = [
   {
@@ -77,7 +78,7 @@ export const PeopleManagementColumns = (
       header: "Birth Date",
       enableSorting: false,
       enableGlobalFilter: false,
-      render: (user) => <Text size="sm">{user.birthDate ?? "N/A"}</Text>,
+      render: (user) => <Text size="sm">{user.birthDate ? dayjs(user.birthDate).format("DD/MM/YYYY") : "N/A"}</Text>,
     },
     {
       accessor: "nationality",
@@ -113,8 +114,8 @@ export const PeopleManagementColumns = (
       enableSorting: false,
       enableGlobalFilter: false,
       render: (user) => (
-        <Flex justify="center">
-          <Text size="sm">{user.role?.name ?? "N/A"}</Text>,
+        <Flex justify="start">
+          <Text size="sm">{user.role?.name ?? "N/A"}</Text>
         </Flex>
       ),
     },
@@ -128,7 +129,7 @@ export const PeopleManagementColumns = (
             enableSorting: false,
             enableGlobalFilter: false,
             render: (user: User) => (
-              <Flex justify="space-evenly" gap={16}>
+              <Flex justify="flex-start" gap={16}>
                 {hasPermission(currentUserRole, RolePermissionsItem.userupdate) && (
                   <Tooltip label="Edit User">
                     <ActionIcon
