@@ -149,6 +149,52 @@ export class UsersController {
 		return newUser;
 	}
 
+	/**
+	 * Update user data by admin
+	 */
+	@ApiBadRequestResponse({ description: "Username is already taken" })
+	@ApiBearerAuth()
+	@UseGuards(CookieGuard)
+	@Patch(":id")
+	async updateUserById(
+		@Param("id", ParseUUIDPipe) userId: string,
+		@Body() body: UpdateUser,
+		@CurrentUser() requestUser: User,
+	) {
+		if (!requestUser.role?.hasOneOfPermissions([Permission.UserUpdate])) {
+			throw new UnauthorizedException("You don't have permission to perform this action");
+		}
+
+		const user = await this.usersService.findById(userId, {
+			relations: { personalAddress: true },
+		});
+
+		if (body.username) {
+			const lowerCaseUsername = body.username.toLowerCase();
+			if (lowerCaseUsername !== user.username) {
+				const exists = await this.usersService.exist({ username: lowerCaseUsername });
+				if (exists) throw new BadRequestException("Username is already taken");
+			}
+			user.username = lowerCaseUsername;
+		}
+
+		user.firstName = body.firstName ?? user.firstName;
+		user.lastName = body.lastName ?? user.lastName;
+		user.gender = body.gender ?? user.gender;
+		user.pronouns = body.pronouns ?? user.pronouns;
+		user.phonePrefix = body.phonePrefix ?? user.phonePrefix;
+		user.phoneNumber = body.phoneNumber ?? user.phoneNumber;
+
+		if (body.personalAddress) {
+			if (user.personalAddress) user.personalAddress.update(body.personalAddress);
+			else user.personalAddress = new Address(body.personalAddress);
+		}
+
+		const updatedUser = await this.usersService.save(user);
+		updatedUser.password = undefined;
+		return updatedUser;
+	}
+
 	@ApiOkResponse({ type: User, description: "Current user data" })
 	@ApiBearerAuth()
 	@UseGuards(CookieGuard)

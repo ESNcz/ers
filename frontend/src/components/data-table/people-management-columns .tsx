@@ -1,7 +1,8 @@
-import { RolePermissionsItem, User } from "@/utils/api.schemas";
+import { RolePermissionsItem, User, UserRole } from "@/utils/api.schemas";
+import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTableFacetedFilterConfig, createColumns } from "@components/data-table";
 import { ActionIcon, Badge, Flex, Text, Tooltip } from "@mantine/core";
-import { IconCheck, IconSwitchHorizontal, IconTrash, IconX } from "@tabler/icons-react";
+import { IconCheck, IconEdit, IconSwitchHorizontal, IconTrash, IconX } from "@tabler/icons-react";
 
 export const peopleManagementFacetedFilters: DataTableFacetedFilterConfig[] = [
   {
@@ -14,12 +15,16 @@ export const peopleManagementFacetedFilters: DataTableFacetedFilterConfig[] = [
   },
 ];
 
+const hasPermission = (role: UserRole, permission: RolePermissionsItem) =>
+  hasSomePermissions(role, [permission]);
+
 export const PeopleManagementColumns = (
   currentUserId: string,
-  currentUserPermissions: RolePermissionsItem[],
+  currentUserRole: UserRole,
   handleDeleteUser: (id: string) => void,
   setSelectedUserId: (id: string) => void,
   openChangeRoleModal: () => void,
+  openEditUserModal: () => void,
 ) =>
   createColumns<User>([
     {
@@ -97,8 +102,9 @@ export const PeopleManagementColumns = (
       enableGlobalFilter: false,
       render: (user) => <Text size="sm">{user.role?.name ?? "N/A"}</Text>,
     },
-    ...(currentUserPermissions.includes(RolePermissionsItem.userupdateRole) ||
-    currentUserPermissions.includes(RolePermissionsItem.userdelete)
+    ...(hasPermission(currentUserRole, RolePermissionsItem.userupdateRole) ||
+    hasPermission(currentUserRole, RolePermissionsItem.userdelete) ||
+    hasPermission(currentUserRole, RolePermissionsItem.userupdate)
       ? [
           {
             id: "operations" as const,
@@ -107,7 +113,22 @@ export const PeopleManagementColumns = (
             enableGlobalFilter: false,
             render: (user: User) => (
               <Flex justify="space-evenly" gap={16}>
-                {currentUserPermissions.includes(RolePermissionsItem.userupdateRole) && (
+                {hasPermission(currentUserRole, RolePermissionsItem.userupdate) && (
+                  <Tooltip label="Edit User">
+                    <ActionIcon
+                      variant="subtle"
+                      size={48}
+                      color="green"
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        openEditUserModal();
+                      }}
+                    >
+                      <IconEdit width={32} height={32} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+                {hasPermission(currentUserRole, RolePermissionsItem.userupdateRole) && (
                   <Tooltip label="Change Role">
                     <ActionIcon
                       variant="subtle"
@@ -122,7 +143,7 @@ export const PeopleManagementColumns = (
                     </ActionIcon>
                   </Tooltip>
                 )}
-                {currentUserPermissions.includes(RolePermissionsItem.userdelete) && (
+                {hasPermission(currentUserRole, RolePermissionsItem.userdelete) && (
                   <Tooltip label={user.id === currentUserId ? "You cannot delete yourself" : "Delete User"}>
                     <ActionIcon
                       variant="subtle"

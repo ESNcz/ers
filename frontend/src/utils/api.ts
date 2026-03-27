@@ -879,6 +879,122 @@ export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUs
   return query;
 }
 
+/**
+ * Update user data by admin
+ */
+export const updateUserById = (
+  id: string,
+  updateUser: UpdateUser,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<User>(
+    { url: `/users/${id}`, method: "PATCH", headers: { "Content-Type": "application/json" }, data: updateUser },
+    options,
+  );
+};
+
+export const getUpdateUserByIdMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateUserById>>,
+    TError,
+    { id: string; data: UpdateUser },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateUserById>>,
+  TError,
+  { id: string; data: UpdateUser },
+  TContext
+> => {
+  const mutationKey = ["updateUserById"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUserById>>, { id: string; data: UpdateUser }> = (
+    props,
+  ) => {
+    const { id, data } = props ?? {};
+
+    return updateUserById(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateUserByIdMutationResult = NonNullable<Awaited<ReturnType<typeof updateUserById>>>;
+export type UpdateUserByIdMutationBody = UpdateUser;
+export type UpdateUserByIdMutationError = ErrorType<void>;
+
+export const useUpdateUserById = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateUserById>>,
+      TError,
+      { id: string; data: UpdateUser },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateUserById>>,
+  TError,
+  { id: string; data: UpdateUser },
+  TContext
+> => {
+  const mutationOptions = getUpdateUserByIdMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Delete (anonymize) user.
+Users are not getting deleted but their data are replaced with non-identifiable placeholders
+ */
+export const deleteUser = (id: string, options?: SecondParameter<typeof customInstance>) => {
+  return customInstance<void | void>({ url: `/users/${id}`, method: "DELETE" }, options);
+};
+
+export const getDeleteUserMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext>;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext> => {
+  const mutationKey = ["deleteUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteUser>>, { id: string }> = (props) => {
+    const { id } = props ?? {};
+
+    return deleteUser(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteUserMutationResult = NonNullable<Awaited<ReturnType<typeof deleteUser>>>;
+
+export type DeleteUserMutationError = ErrorType<unknown>;
+
+export const useDeleteUser = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext> => {
+  const mutationOptions = getDeleteUserMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 export const updateCurrentUserPhoto = (updatePhoto: UpdatePhoto, options?: SecondParameter<typeof customInstance>) => {
   const formData = new FormData();
   formData.append(`file`, updatePhoto.file);
@@ -1154,50 +1270,6 @@ export function useGetAllUsers<TData = Awaited<ReturnType<typeof getAllUsers>>, 
 
   return query;
 }
-
-/**
- * Delete (anonymize) user.
-Users are not getting deleted but their data are replaced with non-identifiable placeholders
- */
-export const deleteUser = (id: string, options?: SecondParameter<typeof customInstance>) => {
-  return customInstance<void | void>({ url: `/users/${id}`, method: "DELETE" }, options);
-};
-
-export const getDeleteUserMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext>;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext> => {
-  const mutationKey = ["deleteUser"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteUser>>, { id: string }> = (props) => {
-    const { id } = props ?? {};
-
-    return deleteUser(id, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type DeleteUserMutationResult = NonNullable<Awaited<ReturnType<typeof deleteUser>>>;
-
-export type DeleteUserMutationError = ErrorType<unknown>;
-
-export const useDeleteUser = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext>;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext> => {
-  const mutationOptions = getDeleteUserMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
 
 export const generateSheetUsers = (options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
   return customInstance<GenerateSheetUsers200>({ url: `/users/export/users`, method: "GET", signal }, options);

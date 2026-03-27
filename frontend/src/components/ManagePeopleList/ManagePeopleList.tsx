@@ -10,6 +10,7 @@ import {
 } from "@components/data-table/people-management-columns ";
 import ChangeRoleModal from "@components/modals/ChangeRoleModal/ChangeRoleModal";
 import CreateRoleModal from "@components/modals/CreateRoleModal/CreateRoleModal";
+import EditUserModal from "@components/modals/EditUserModal/EditUserModal";
 import { Button, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTableExport } from "@tabler/icons-react";
@@ -21,6 +22,7 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
   const [isChangeRoleModalOpen, { open: openChangeRoleModal, close: closeChangeRoleModal }] = useDisclosure(false);
   const [isCreateRoleModal, { open: openCreateRoleModal, close: closeCreateRoleModal }] = useDisclosure(false);
+  const [isEditUserModalOpen, { open: openEditUserModal, close: closeEditUserModal }] = useDisclosure(false);
 
   const deleteUserMutation = useDeleteUser({
     mutation: {
@@ -60,10 +62,11 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
 
   const columns = PeopleManagementColumns(
     currentUser.id,
-    currentUser.role?.permissions ?? [],
+    currentUser.role,
     handleDeleteUser,
     setSelectedUserId,
     openChangeRoleModal,
+    openEditUserModal,
   );
 
   const users = allUsers.data;
@@ -97,6 +100,16 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
           handleOnSuccess={() => {
             refetchUsers();
             refetchCurrentUser();
+          }}
+        />
+      )}
+      {selectedUserId && (
+        <EditUserModal
+          user={users.find((f) => f.id === selectedUserId)}
+          isOpened={isEditUserModalOpen}
+          closeModal={closeEditUserModal}
+          handleOnSuccess={() => {
+            refetchUsers();
           }}
         />
       )}

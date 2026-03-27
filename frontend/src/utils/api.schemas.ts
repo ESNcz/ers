@@ -129,6 +129,7 @@ export const RolePermissionsItem = {
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",
+  userupdate: "user.update",
   userupdateRole: "user.updateRole",
   userdelete: "user.delete",
 } as const;
@@ -883,6 +884,7 @@ export const CreateRolePermissionsItem = {
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",
+  userupdate: "user.update",
   userupdateRole: "user.updateRole",
   userdelete: "user.delete",
 } as const;
@@ -1096,6 +1098,7 @@ export const GetRoleAllPermissions200Item = {
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",
+  userupdate: "user.update",
   userupdateRole: "user.updateRole",
   userdelete: "user.delete",
 } as const;
