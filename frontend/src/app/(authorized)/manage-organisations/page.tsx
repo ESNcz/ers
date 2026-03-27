@@ -4,7 +4,7 @@ import { useAllOrganizations, useDeleteOrganization } from "@/utils/api";
 import type { Organization } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
 import { DataTable, facetedFilters } from "@components/data-table";
-import { OrganisationManagementColumns } from "@components/data-table/event-management-columns ";
+import { OrganisationManagementColumns } from "@components/data-table/organisation-management-columns";
 import CreateOrganizationModal from "@components/modals/CreateOrganizationModal/CreateOrganizationModal";
 import UpdateOrganisationModal from "@components/modals/UpdateOrganizationModal/UpdateOrganisationModal";
 import { ActionIcon, Button, Container, Flex, ScrollArea, Stack, Table, Text, Title, Tooltip } from "@mantine/core";

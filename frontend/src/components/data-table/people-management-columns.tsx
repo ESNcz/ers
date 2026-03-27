@@ -15,8 +15,7 @@ export const peopleManagementFacetedFilters: DataTableFacetedFilterConfig[] = [
   },
 ];
 
-const hasPermission = (role: UserRole, permission: RolePermissionsItem) =>
-  hasSomePermissions(role, [permission]);
+const hasPermission = (role: UserRole, permission: RolePermissionsItem) => hasSomePermissions(role, [permission]);
 
 export const PeopleManagementColumns = (
   currentUserId: string,
@@ -85,7 +84,11 @@ export const PeopleManagementColumns = (
       id: "nationality",
       header: "Nationality",
       enableSorting: false,
-      render: (user) => <Text size="sm">{user.nationality}</Text>,
+      render: (user) => (
+        <Flex justify="center">
+          <Text size="sm">{user.nationality}</Text>
+        </Flex>
+      ),
     },
     {
       accessorFn: (user) => String(user.isVerified),
@@ -93,14 +96,27 @@ export const PeopleManagementColumns = (
       header: "Verified",
       enableSorting: false,
       enableGlobalFilter: false,
-      render: (user) => (user.isVerified ? <IconCheck size={14} /> : <IconX size={14} />),
+      render: (user) =>
+        user.isVerified ? (
+          <Flex justify="center">
+            <IconCheck color="green" />
+          </Flex>
+        ) : (
+          <Flex justify="center">
+            <IconX color="red" />
+          </Flex>
+        ),
     },
     {
       id: "roleName",
       header: "Role",
       enableSorting: false,
       enableGlobalFilter: false,
-      render: (user) => <Text size="sm">{user.role?.name ?? "N/A"}</Text>,
+      render: (user) => (
+        <Flex justify="center">
+          <Text size="sm">{user.role?.name ?? "N/A"}</Text>,
+        </Flex>
+      ),
     },
     ...(hasPermission(currentUserRole, RolePermissionsItem.userupdateRole) ||
     hasPermission(currentUserRole, RolePermissionsItem.userdelete) ||

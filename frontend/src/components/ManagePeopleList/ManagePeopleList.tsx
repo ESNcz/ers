@@ -7,7 +7,7 @@ import { DataTable, facetedFilters } from "@components/data-table";
 import {
   PeopleManagementColumns,
   peopleManagementFacetedFilters,
-} from "@components/data-table/people-management-columns ";
+} from "@components/data-table/people-management-columns";
 import ChangeRoleModal from "@components/modals/ChangeRoleModal/ChangeRoleModal";
 import CreateRoleModal from "@components/modals/CreateRoleModal/CreateRoleModal";
 import EditUserModal from "@components/modals/EditUserModal/EditUserModal";

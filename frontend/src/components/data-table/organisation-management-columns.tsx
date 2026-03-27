@@ -66,9 +66,11 @@ export const OrganisationManagementColumns = (
       header: "VATIN",
       enableSorting: false,
       render: (event) => (
-        <Text size="sm" lineClamp={2}>
-          {event.vatin}
-        </Text>
+        <Flex justify="center">
+          <Text size="sm" lineClamp={2}>
+            {event.vatin}
+          </Text>
+        </Flex>
       ),
     },
     {
