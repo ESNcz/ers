@@ -113,7 +113,7 @@ export class EventsService {
 				links: true,
 			},
 			order: {
-				since: "DESC",
+				since: "ASC",
 			},
 			// TODO - fix apgination if "all" is undefined fetch all
 			take: pagination.all ? undefined : pagination.perPage,
