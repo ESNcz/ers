@@ -1,15 +1,15 @@
 {
-	"extends": "../../tsconfig.json",
-	"compilerOptions": {
-		"declaration": false,
-		"outDir": "../../dist/apps/api",
-		"baseUrl": "./",
-		"paths": {
-			"utilities/*": ["../../libs/utilities/*"],
-			"@api/*": ["src/*"],
-			"base/*": ["../../*"]
-		}
-	},
-	"include": ["src/**/*", "./src/modules/events/models/event-filter.dto.ts"],
-	"exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    "outDir": "../../dist/apps/api",
+    "rootDir": "../../",
+    "paths": {
+      "utilities/*": ["./../../libs/utilities/*"],
+      "@api/*": ["./src/*"],
+      "base/*": ["./../../*"]
+    }
+  },
+  "include": ["src/**/*", "../../libs/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

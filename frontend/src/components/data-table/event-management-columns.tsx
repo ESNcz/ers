@@ -1,10 +1,12 @@
 import { EventSimple } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
-import { extractText } from "@/utils/table-helpers";
 import ApiImage from "@components/ApiImage/ApiImage";
-import { DataTableFacetedFilterConfig, createColumns } from "@components/data-table";
-import { ActionIcon, Flex, Text, Tooltip } from "@mantine/core";
+import RichTextRenderer from "@components/Richtext/RichTextRenderer";
+import { DataTableColumnHeader } from "./DataTableColumnHeader";
+import type { DataTableFacetedFilterConfig } from "./types";
+import { ActionIcon, Flex, Tooltip } from "@mantine/core";
 import { IconCheck, IconCopy, IconEye, IconTrash, IconX } from "@tabler/icons-react";
+import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 export const facetedFilters: DataTableFacetedFilterConfig[] = [
@@ -21,79 +23,76 @@ export const facetedFilters: DataTableFacetedFilterConfig[] = [
 export const EventManagementColumns = (
   handleDuplicateEvent: (event: EventSimple) => void,
   handleDeleteEvent: (event: EventSimple) => void,
-) =>
-  createColumns<EventSimple>([
-    {
-      id: "photo",
-      header: "Photo",
-      width: 64,
-      enableSorting: false,
-      enableHiding: false,
-      enableGlobalFilter: false,
-      render: (event) => <ApiImage src={event.photo?.id} w="100%" h="100%" fit="cover" radius="xs" />,
-    },
-    {
-      accessor: "title",
-      header: "Event Name",
-      width: 148,
-      minWidth: 148,
-    },
-    {
-      id: "shortDescription",
-      header: "Short Description",
-      enableSorting: false,
-      enableGlobalFilter: false,
-      render: (event) => (
-        <Text size="sm" lineClamp={2}>
-          {extractText(event.shortDescription)}
-        </Text>
-      ),
-    },
-    {
-      accessor: "visible",
-      header: "Published?",
-      width: 56,
-      render: (event) =>
-        event.visible ? (
-          <Flex justify="center">
-            <Tooltip label="Published">
-              <IconCheck color="green" />
-            </Tooltip>
-          </Flex>
-        ) : (
-          <Flex justify="center">
-            <Tooltip label="Unpublished">
-              <IconX color="red" />
-            </Tooltip>
-          </Flex>
-        ),
-      filterFn: (row, id, value: string[]) => value.includes(String(row.getValue(id))),
-    },
-    {
-      id: "actions",
-      header: "Operations",
-      width: 200,
-      enableSorting: false,
-      enableHiding: false,
-      enableGlobalFilter: false,
-      render: (event) => (
-        <Flex justify="space-between" gap={16}>
-          <Tooltip label="View Event">
-            <ActionIcon component={Link} href={routes.EVENT_DETAIL({ id: event.id })} variant="subtle" size={48}>
-              <IconEye width={32} height={32} />
-            </ActionIcon>
+): ColumnDef<EventSimple>[] => [
+  {
+    id: "photo",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Photo" />,
+    size: 64,
+    enableSorting: false,
+    enableHiding: false,
+    enableGlobalFilter: false,
+    cell: ({ row }) => <ApiImage src={row.original.photo?.id} w="100%" h="100%" fit="cover" radius="xs" />,
+  },
+  {
+    accessorKey: "title",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Event Name" />,
+    size: 148,
+    minSize: 148,
+  },
+  {
+    id: "shortDescription",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Short Description" />,
+    enableSorting: false,
+    enableGlobalFilter: false,
+    cell: ({ row }) => (
+      <RichTextRenderer content={row.original.shortDescription} textOnly size="sm" lineClamp={2} />
+    ),
+  },
+  {
+    accessorKey: "visible",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Published?" />,
+    size: 56,
+    cell: ({ row }) =>
+      row.original.visible ? (
+        <Flex justify="center">
+          <Tooltip label="Published">
+            <IconCheck color="green" />
           </Tooltip>
-          <Tooltip label="Duplicate Event">
-            <ActionIcon variant="subtle" color="purple" size={48} onClick={() => handleDuplicateEvent(event)}>
-              <IconCopy width={32} height={32} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Delete Event">
-            <ActionIcon variant="subtle" size={48} color="red" onClick={() => handleDeleteEvent(event)}>
-              <IconTrash width={32} height={32} />
-            </ActionIcon>
+        </Flex>
+      ) : (
+        <Flex justify="center">
+          <Tooltip label="Unpublished">
+            <IconX color="red" />
           </Tooltip>
         </Flex>
       ),
-    },
-  ]);
+    filterFn: (row, id, value: string[]) => value.includes(String(row.getValue(id))),
+  },
+  {
+    id: "actions",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Operations" />,
+    size: 200,
+    enableSorting: false,
+    enableHiding: false,
+    enableGlobalFilter: false,
+    cell: ({ row }) => (
+      <Flex justify="space-between" gap={16}>
+        <Tooltip label="View Event">
+          <ActionIcon component={Link} href={routes.EVENT_DETAIL({ id: row.original.id })} variant="subtle" size={48}>
+            <IconEye width={32} height={32} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Duplicate Event">
+          <ActionIcon variant="subtle" color="purple" size={48} onClick={() => handleDuplicateEvent(row.original)}>
+            <IconCopy width={32} height={32} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label="Delete Event">
+          <ActionIcon variant="subtle" size={48} color="red" onClick={() => handleDeleteEvent(row.original)}>
+            <IconTrash width={32} height={32} />
+          </ActionIcon>
+        </Tooltip>
+      </Flex>
+    ),
+  },
+];

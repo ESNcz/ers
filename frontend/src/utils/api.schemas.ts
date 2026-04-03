@@ -126,6 +126,7 @@ export const RolePermissionsItem = {
   organisationaddUser: "organisation.addUser",
   organisationupdateUser: "organisation.updateUser",
   organisationdeleteUser: "organisation.deleteUser",
+  organisationmanageJoinRequests: "organisation.manageJoinRequests",
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",
@@ -673,6 +674,11 @@ export interface UpdateApplicationSlotDto {
   spotId: number | null;
 }
 
+export interface SpotNotificationResponseDto {
+  /** Number of notification emails sent */
+  sent: number;
+}
+
 export interface EventDetailLink {
   id: number;
   name: string;
@@ -889,6 +895,7 @@ export const CreateRolePermissionsItem = {
   organisationaddUser: "organisation.addUser",
   organisationupdateUser: "organisation.updateUser",
   organisationdeleteUser: "organisation.deleteUser",
+  organisationmanageJoinRequests: "organisation.manageJoinRequests",
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",
@@ -947,6 +954,44 @@ export type SugarCubeRecipientOptionDtoGrouped = { [key: string]: User[] };
 
 export interface SugarCubeRecipientOptionDto {
   grouped: SugarCubeRecipientOptionDtoGrouped;
+}
+
+export type OrganizationJoinRequestStatus =
+  (typeof OrganizationJoinRequestStatus)[keyof typeof OrganizationJoinRequestStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const OrganizationJoinRequestStatus = {
+  pending: "pending",
+  accepted: "accepted",
+  rejected: "rejected",
+} as const;
+
+/**
+ * @nullable
+ */
+export type OrganizationJoinRequestReviewedBy = User | null;
+
+export interface OrganizationJoinRequest {
+  id: number;
+  organization: Organization;
+  user: User;
+  status: OrganizationJoinRequestStatus;
+  /** @nullable */
+  reviewedBy: OrganizationJoinRequestReviewedBy;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RespondJoinRequestStatus = (typeof RespondJoinRequestStatus)[keyof typeof RespondJoinRequestStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const RespondJoinRequestStatus = {
+  accepted: "accepted",
+  rejected: "rejected",
+} as const;
+
+export interface RespondJoinRequest {
+  status: RespondJoinRequestStatus;
 }
 
 export interface MailAddress {
@@ -1103,6 +1148,7 @@ export const GetRoleAllPermissions200Item = {
   organisationaddUser: "organisation.addUser",
   organisationupdateUser: "organisation.updateUser",
   organisationdeleteUser: "organisation.deleteUser",
+  organisationmanageJoinRequests: "organisation.manageJoinRequests",
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",

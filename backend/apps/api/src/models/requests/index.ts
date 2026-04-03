@@ -17,3 +17,4 @@ export * from "./update-user.dto";
 export * from "./create-role.dto";
 export * from "./init.dto";
 export * from "./create-sugar-cube.dto";
+export * from "./respond-join-request.dto";

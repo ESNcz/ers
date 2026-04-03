@@ -31,6 +31,9 @@ export const routes = {
 
   // Organization
   ORGANISATION_MEMBERS: (props: { id: string }) => `/organisation-members/${props.id}`,
+  ORGANISATION_JOIN_REQUESTS: (props: { id: string }) => `/organisation-join-requests/${props.id}`,
+  BROWSE_ORGANISATIONS: "/browse-organisations",
+  MY_JOIN_REQUESTS: "/my-join-requests",
 };
 
 export default routes;

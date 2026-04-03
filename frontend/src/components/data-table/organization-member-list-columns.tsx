@@ -1,9 +1,10 @@
 import { Organization, OrganizationMember } from "@/utils/api.schemas";
 import ApiImage from "@components/ApiImage/ApiImage";
-import { DataTableFacetedFilterConfig, createColumns } from "@components/data-table";
+import { DataTableColumnHeader } from "./DataTableColumnHeader";
+import type { DataTableFacetedFilterConfig } from "./types";
 import { ActionIcon, Box, Flex, Text, Tooltip } from "@mantine/core";
-import { IconCheck, IconCrown, IconUserPlus, IconUserX, IconX } from "@tabler/icons-react";
-import type { FilterFn } from "@tanstack/react-table";
+import { IconCrown, IconUserPlus, IconUserX } from "@tabler/icons-react";
+import type { ColumnDef, FilterFn } from "@tanstack/react-table";
 
 export const organizationMemberGlobalFilterFn: FilterFn<OrganizationMember> = (row, _columnId, filterValue) => {
   const search = (filterValue as string).toLowerCase();
@@ -40,153 +41,147 @@ export const OrganizationMemberListColumns = (
   isUserManager: boolean,
   handleAddMember?: (userId: string) => void,
   memberUserIds?: Set<string>,
-) =>
-  createColumns<OrganizationMember>([
-    {
-      id: "photo",
-      header: "Photo",
-      width: 64,
-      enableSorting: false,
-      enableHiding: false,
-      enableGlobalFilter: false,
-      render: (member) => (
-        <Box>
-          <ApiImage src={member.user.photo?.id} />
-        </Box>
-      ),
+): ColumnDef<OrganizationMember>[] => [
+  {
+    id: "photo",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Photo" />,
+    size: 64,
+    enableSorting: false,
+    enableHiding: false,
+    enableGlobalFilter: false,
+    cell: ({ row }) => (
+      <Box>
+        <ApiImage src={row.original.user.photo?.id} />
+      </Box>
+    ),
+  },
+  {
+    id: "fullName",
+    accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
+    size: 148,
+    enableSorting: false,
+    enableHiding: false,
+    enableGlobalFilter: true,
+    cell: ({ row }) => <Text>{`${row.original.user.firstName} ${row.original.user.lastName}`}</Text>,
+  },
+  {
+    id: "address",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
+    size: 148,
+    minSize: 148,
+    enableSorting: false,
+    enableGlobalFilter: false,
+    cell: ({ row }) => {
+      const { personalAddress } = row.original.user;
+      return personalAddress ? (
+        <Flex direction="column" justify="start" align="start" ta="start">
+          <Text>{`${personalAddress.street} ${personalAddress.houseNumber}`}</Text>
+          <Text>{`${personalAddress.zip} ${personalAddress.city}`}</Text>
+          <Text>{personalAddress.country}</Text>
+        </Flex>
+      ) : (
+        <Text>N/A</Text>
+      );
     },
-    {
-      id: "fullName",
-      accessorFn: (member: OrganizationMember) => `${member.user.firstName} ${member.user.lastName}`,
-      header: "Full Name",
-      width: 148,
-      enableSorting: false,
-      enableHiding: false,
-      enableGlobalFilter: true,
-      render: (member) => <Text>{`${member.user.firstName} ${member.user.lastName}`}</Text>,
-    },
-    {
-      id: "address",
-      header: "Address",
-      width: 148,
-      minWidth: 148,
-      enableSorting: false,
-      enableGlobalFilter: false,
-      render: (member) => {
-        const { personalAddress } = member.user;
-        return personalAddress ? (
-          <Flex direction="column" justify="start" align="start" ta="start">
-            <Text>{`${personalAddress.street} ${personalAddress.houseNumber}`}</Text>
-            <Text>{`${personalAddress.zip} ${personalAddress.city}`}</Text>
-            <Text>{personalAddress.country}</Text>
-          </Flex>
-        ) : (
-          <Text>N/A</Text>
-        );
-      },
-    },
-    {
-      id: "gender",
-      header: "Gender",
-      accessorFn: (member: OrganizationMember) => member.user.gender,
-      filterFn: "arrIncludesSome",
-      width: 148,
-      minWidth: 148,
-      enableSorting: false,
-      enableGlobalFilter: true,
-      render: (member) => (
-        // <Flex justify="center">
-        <Text>{member.user.gender}</Text>
-        // </Flex>
-      ),
-    },
-    {
-      id: "email",
-      header: "E-mail",
-      accessorFn: (member: OrganizationMember) => member.user.email,
-      width: 148,
-      minWidth: 148,
-      enableSorting: false,
-      enableGlobalFilter: true,
-      render: (member) => <Text>{member.user.email}</Text>,
-    },
-    {
-      id: "role",
-      header: "Role",
-      width: 148,
-      enableSorting: false,
-      enableGlobalFilter: true,
-      render: (member) => (
-        // <Flex justify="center">
-        <Text>{member.user.role?.name ?? "N/A"}</Text>
-        // </Flex>
-      ),
-    },
-    ...(isUserManager
-      ? [
-          {
-            id: "operations" as const,
-            header: "Operations",
-            width: 200,
-            enableSorting: false,
-            enableGlobalFilter: false,
-            render: (member: OrganizationMember) => {
-              const isMember = !memberUserIds || memberUserIds.has(member.user.id);
+  },
+  {
+    id: "gender",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Gender" />,
+    accessorFn: (row) => row.user.gender,
+    filterFn: "arrIncludesSome",
+    size: 148,
+    minSize: 148,
+    enableSorting: false,
+    enableGlobalFilter: true,
+    cell: ({ row }) => <Text>{row.original.user.gender}</Text>,
+  },
+  {
+    id: "email",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="E-mail" />,
+    accessorFn: (row) => row.user.email,
+    size: 148,
+    minSize: 148,
+    enableSorting: false,
+    enableGlobalFilter: true,
+    cell: ({ row }) => <Text>{row.original.user.email}</Text>,
+  },
+  {
+    id: "role",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+    size: 148,
+    enableSorting: false,
+    enableGlobalFilter: true,
+    cell: ({ row }) => <Text>{row.original.user.role?.name ?? "N/A"}</Text>,
+  },
+  ...(isUserManager
+    ? ([
+        {
+          id: "operations",
+          header: ({ column }) => <DataTableColumnHeader column={column} title="Operations" />,
+          size: 200,
+          enableSorting: false,
+          enableGlobalFilter: false,
+          cell: ({ row }) => {
+            const member = row.original;
+            const isMember = !memberUserIds || memberUserIds.has(member.user.id);
 
-              if (!isMember && handleAddMember) {
-                return (
-                  <Flex justify="flex-start" gap={50}>
-                    <Tooltip label="Add to Organization">
-                      <ActionIcon
-                        variant="subtle"
-                        size={48}
-                        color="green"
-                        onClick={() => handleAddMember(member.user.id)}
-                      >
-                        <IconUserPlus width={32} height={32} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Flex>
-                );
-              }
-
+            if (!isMember && handleAddMember) {
               return (
                 <Flex justify="flex-start" gap={50}>
-                  <Tooltip
-                    label={
-                      currentOrganisation?.manager?.id === member.user.id
-                        ? "This person is section manager"
-                        : "Transfer Manager"
-                    }
-                  >
+                  <Tooltip label="Add to Organization">
                     <ActionIcon
                       variant="subtle"
                       size={48}
-                      color="yellow"
-                      onClick={() => handleTransferSectionManager(currentOrganisation.id, member.user.id)}
-                      disabled={currentOrganisation?.manager?.id === member.user.id}
+                      color="green"
+                      onClick={() => handleAddMember(member.user.id)}
                     >
-                      <IconCrown width={32} height={32} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip
-                    label={member.user.id === currentUserId ? "You cannot remove yourself" : "Remove from Organization"}
-                  >
-                    <ActionIcon
-                      variant="subtle"
-                      size={48}
-                      color="red"
-                      disabled={member.user.id === currentUserId}
-                      loading={deleteOrganizationMemberMutationIsPending}
-                      onClick={() => handleDeleteOrganizationMembers(member)}
-                    >
-                      <IconUserX width={32} height={32} />
+                      <IconUserPlus width={32} height={32} />
                     </ActionIcon>
                   </Tooltip>
                 </Flex>
               );
-            },
+            }
+
+            return (
+              <Flex justify="flex-start" gap={50}>
+                <Tooltip
+                  label={
+                    currentOrganisation?.manager?.id === member.user.id
+                      ? "This person is section manager"
+                      : "Transfer Manager"
+                  }
+                >
+                  <ActionIcon
+                    variant="subtle"
+                    size={48}
+                    color="yellow"
+                    onClick={() => handleTransferSectionManager(currentOrganisation.id, member.user.id)}
+                    disabled={currentOrganisation?.manager?.id === member.user.id}
+                  >
+                    <IconCrown width={32} height={32} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip
+                  label={
+                    member.user.id === currentUserId ? "You cannot remove yourself" : "Remove from Organization"
+                  }
+                >
+                  <ActionIcon
+                    variant="subtle"
+                    size={48}
+                    color="red"
+                    disabled={member.user.id === currentUserId}
+                    loading={deleteOrganizationMemberMutationIsPending}
+                    onClick={() => handleDeleteOrganizationMembers(member)}
+                  >
+                    <IconUserX width={32} height={32} />
+                  </ActionIcon>
+                </Tooltip>
+              </Flex>
+            );
           },
-        ]
-      : []),
-  ]);
+        },
+      ] as ColumnDef<OrganizationMember>[])
+    : []),
+];

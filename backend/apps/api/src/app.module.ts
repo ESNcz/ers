@@ -32,6 +32,7 @@ import { SettingsModule } from "@api/modules/settings/settings.module";
 import { SettingsController } from "@api/modules/settings/settings.controller";
 import { SugarCubesModule } from "@api/modules/sugar-cubes/sugar-cubes.module";
 import { SugarCubesController } from "@api/modules/sugar-cubes/sugar-cubes.controller";
+import { OrganizationJoinRequestsController } from "@api/modules/organization/organization-join-requests.controller";
 
 @Module({
 	imports: [
@@ -74,7 +75,8 @@ import { SugarCubesController } from "@api/modules/sugar-cubes/sugar-cubes.contr
 		EventsManagementController,
 		HealthController,
 		SettingsController,
-    SugarCubesController
+    SugarCubesController,
+		OrganizationJoinRequestsController
 	],
 	providers: [EventSimpleWithApplicationsMapper, EventApplicationSimpleWithApplicationsMapper],
 })

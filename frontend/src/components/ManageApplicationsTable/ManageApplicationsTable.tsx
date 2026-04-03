@@ -6,6 +6,7 @@ import {
   useGenerateSheetEventApplication,
   useGetEventApplications,
   useGetEventSpots,
+  useSendSpotNotifications,
   useUpdateUserApplicationSpot,
 } from "@/utils/api";
 import { type EventApplicationDetailedWithApplications, type EventSpotSimple } from "@/utils/api.schemas";
@@ -21,17 +22,21 @@ import {
   ComboboxData,
   Divider,
   Flex,
+  Group,
   List,
   ListItem,
+  Modal,
   ScrollArea,
   Select,
+  Stack,
   Table,
   Text,
   Title,
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconMail, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
 import { useMemo, useState } from "react";
 
 interface ManageApplicationsTableProps {
@@ -53,6 +58,7 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
   const [currentSpot, setCurrentSpot] = useState<EventSpotSimple | null>(null);
   const [currentApplication, setCurrentApplication] = useState<EventApplicationDetailedWithApplications | null>(null);
 
+  const [isSpotNotifModalOpen, { open: openSpotNotifModal, close: closeSpotNotifModal }] = useDisclosure(false);
   const [isCreateSpotModalOpen, { open: openCreateSpotModal, close: closeCreateSpotModal }] = useDisclosure(false);
   const [isUpdateSpotModalOpen, { open: openUpdateSpotModal, close: closeUpdateSpotModal }] = useDisclosure(false);
 
@@ -133,6 +139,38 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
     });
   };
 
+  const sendSpotNotificationsMutation = useSendSpotNotifications({
+    mutation: {
+      meta: { skipGlobalNotifications: true },
+      onSuccess: (data) => {
+        const sent = (data as { sent: number })?.sent ?? 0;
+        closeSpotNotifModal();
+        notifications.clean();
+        notifications.show({
+          id: "spot-notifications",
+          title: "Spot Notifications Sent",
+          message: `${sent} notification email(s) sent successfully.`,
+          color: "green",
+        });
+      },
+      onError: () => {
+        closeSpotNotifModal();
+        notifications.clean();
+        notifications.show({
+          id: "spot-notifications",
+          title: "Error",
+          message: "Failed to send spot notifications.",
+          color: "red",
+        });
+      },
+    },
+  });
+
+  const handleSendSpotNotifications = () => {
+    notifications.clean();
+    sendSpotNotificationsMutation.mutate({ id: eventId });
+  };
+
   const eventApplicationsRows = !applicationsList
     ? []
     : applicationsList?.map((application, index) => (
@@ -197,6 +235,13 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
         <Flex gap={16}>
           <Button onClick={exportDataXLSX} leftSection={<IconTableExport />} color="green" variant="outline">
             Export Data
+          </Button>
+          <Button
+            onClick={openSpotNotifModal}
+            leftSection={<IconMail />}
+            color="violet"
+          >
+            Assigned Spot Notification
           </Button>
           <Button onClick={openCreateSpotModal} leftSection={<IconPlus />}>
             Add Spot
@@ -294,6 +339,28 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
           closeModal={closeUpdateSpotModal}
         />
       )}
+      <Modal
+        opened={isSpotNotifModalOpen}
+        onClose={() => {
+          if (!sendSpotNotificationsMutation.isPending) closeSpotNotifModal();
+        }}
+        title={<Text fw={700} size="lg">Send Spot Notifications</Text>}
+        centered
+      >
+        <Stack>
+          <Text>
+            Send an email notification to all participants who have been assigned a spot for this event?
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeSpotNotifModal} disabled={sendSpotNotificationsMutation.isPending}>
+              Cancel
+            </Button>
+            <Button color="violet" onClick={handleSendSpotNotifications} loading={sendSpotNotificationsMutation.isPending}>
+              Send Notifications
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 };

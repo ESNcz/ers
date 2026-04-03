@@ -5,7 +5,7 @@ import Select from "@components/primitives/Select";
 import { Button, Grid, Group, TextInput } from "@mantine/core";
 import { Form, isNotEmpty, useForm } from "@mantine/form";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 interface EditUserModalProps {
   user: User | undefined;
@@ -95,12 +95,12 @@ const EditUserModal = ({ user, isOpened, closeModal, handleOnSuccess }: EditUser
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     form.reset();
     closeModal();
-  };
+  }, [form, closeModal]);
 
-  if (!user) return null;
+  if (!user || !isOpened) return null;
 
   const isTouchedDirty = form.isTouched() && form.isDirty();
 

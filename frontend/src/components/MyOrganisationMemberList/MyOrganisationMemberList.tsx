@@ -6,10 +6,12 @@ import {
   useGetAllUsers,
   useGetCurrentUser,
   useGetOrganisationById,
+  useGetOrganizationJoinRequests,
   useOrganizationMembers,
   useTransferManager,
 } from "@/utils/api";
-import { OrganizationMember, UserRole } from "@/utils/api.schemas";
+import { OrganizationJoinRequestStatus, OrganizationMember, UserRole } from "@/utils/api.schemas";
+import routes from "@/utils/routes";
 import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTable } from "@components/data-table";
 import {
@@ -17,7 +19,9 @@ import {
   organizationMemberFacetedFilters,
   organizationMemberGlobalFilterFn,
 } from "@components/data-table/organization-member-list-columns";
-import { Flex, Stack, Title } from "@mantine/core";
+import { Badge, Button, Flex, Group, Stack, Title } from "@mantine/core";
+import { IconMailForward } from "@tabler/icons-react";
+import Link from "next/link";
 import { useMemo } from "react";
 
 interface MyOrganisationMemberListProps {
@@ -31,14 +35,21 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
 
   const { data: allUsersList, refetch: refetchAllUsers } = useGetAllUsers({ all: true });
 
-  console.log("organizationMembers", allUsersList);
-
   const isUserManager = useMemo(() => {
     return (
       currentOrganisation?.manager?.id === currentUser?.id ||
       hasSomePermissions(currentUser?.role as UserRole, ["organisation.deleteUser"])
     );
   }, [currentOrganisation, currentUser]);
+
+  const { data: joinRequests } = useGetOrganizationJoinRequests(organizationId, {
+    query: { enabled: isUserManager },
+  });
+
+  const pendingCount = useMemo(
+    () => joinRequests?.filter((r) => r.status === OrganizationJoinRequestStatus.pending).length ?? 0,
+    [joinRequests],
+  );
 
   const addOrganizationMemberMutation = useAddOrganizationMembers({
     mutation: {
@@ -120,21 +131,26 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
     refetchOrganisationMembers();
   };
 
+  const tableData = useMemo(() => {
+    const members = organizationMembers?.data ?? [];
+    return [...members, ...nonMemberRows];
+  }, [organizationMembers?.data, nonMemberRows]);
+
+  const columns = useMemo(() => {
+    if (!currentUser || !currentOrganisation) return [];
+    return OrganizationMemberListColumns(
+      currentUser.id,
+      currentOrganisation,
+      handleTransferSectionManager,
+      handleDeleteOrganizationMembers,
+      deleteOrganizationMemberMutation.isPending,
+      isUserManager,
+      isUserManager ? handleAddMemberToOrganization : undefined,
+      memberUserIds,
+    );
+  }, [currentUser, currentOrganisation, handleTransferSectionManager, handleDeleteOrganizationMembers, deleteOrganizationMemberMutation.isPending, isUserManager, handleAddMemberToOrganization, memberUserIds]);
+
   if (!currentOrganisation || !currentUser) return null;
-
-  const members = organizationMembers?.data ?? [];
-  const tableData = [...members, ...nonMemberRows];
-
-  const columns = OrganizationMemberListColumns(
-    currentUser.id,
-    currentOrganisation,
-    handleTransferSectionManager,
-    handleDeleteOrganizationMembers,
-    deleteOrganizationMemberMutation.isPending,
-    isUserManager,
-    isUserManager ? handleAddMemberToOrganization : undefined,
-    memberUserIds,
-  );
 
   return (
     <Stack>
@@ -146,7 +162,18 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         gap={16}
       >
         <Title order={1}>My Organisation</Title>
-        <Title order={2}>{currentOrganisation?.name}</Title>
+        <Flex gap={16}>
+          {isUserManager && (
+            <Button
+              component={Link}
+              href={routes.ORGANISATION_JOIN_REQUESTS({ id: organizationId })}
+              leftSection={<IconMailForward />}
+            >
+              Manage Requests {pendingCount > 0 && `(${pendingCount})`}
+            </Button>
+          )}
+          <Title order={2}>{currentOrganisation?.name}</Title>
+        </Flex>
       </Flex>
       <DataTable
         columns={columns}

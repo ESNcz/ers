@@ -7,6 +7,6 @@ export class UpdatePhoto {
 		format: "binary",
 	})
 	@IsFile()
-	@HasMimeType(["image/png", "image/jpeg"])
+	@HasMimeType(["image/png", "image/jpeg", "image/webp"])
 	file: MemoryStoredFile;
 }

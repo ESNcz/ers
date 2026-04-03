@@ -1,4 +1,5 @@
 import {
+	BadRequestException,
 	Body,
 	Controller,
 	Delete,
@@ -255,6 +256,11 @@ export class EventsController {
 			visible: true,
 		});
 		if (!event) throw new NotFoundException("Event not found");
+
+		if (body.priorityListDeadline !== undefined && new Date(event.until) < new Date()) {
+			throw new BadRequestException("Cannot modify priority list deadline after the event has ended");
+		}
+
 		const newCreatedLinks = await this.eventsService.createLinks(body.links);
 
 		Object.assign(event, body);
