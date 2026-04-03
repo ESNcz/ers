@@ -11,7 +11,8 @@ import {
 } from "@/utils/api";
 import { type EventApplicationDetailedWithApplications, type EventSpotSimple } from "@/utils/api.schemas";
 import { downloadFile } from "@/utils/downloadFile";
-import { dateWithTime } from "@/utils/time";
+import { DataTable } from "@components/data-table";
+import { ApplicationManagementColumns } from "@components/data-table/application-management-columns";
 import CreateSpotModal from "@components/modals/CreateSpotModal/CreateSpotModal";
 import UpdateEventApplicationModal from "@components/modals/UpdateEventApplicationModal/UpdateEventApplicationModal";
 import UpdateSpotModal from "@components/modals/UpdateSpotModal/UpdateSpotModal";
@@ -26,18 +27,15 @@ import {
   List,
   ListItem,
   Modal,
-  ScrollArea,
-  Select,
   Stack,
-  Table,
   Text,
   Title,
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconMail, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useMemo, useState } from "react";
+import { IconEdit, IconMail, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
+import { useCallback, useMemo, useState } from "react";
 
 interface ManageApplicationsTableProps {
   eventId: number;
@@ -67,12 +65,10 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
 
   const spots: ComboboxData = useMemo(() => {
     return (
-      eventSpotsList?.map((spot) => {
-        return {
-          value: spot.id.toString(),
-          label: `${spot.name} - ${spot.price} CZK`,
-        };
-      }) ?? []
+      eventSpotsList?.map((spot) => ({
+        value: spot.id.toString(),
+        label: `${spot.name} - ${spot.price} CZK`,
+      })) ?? []
     );
   }, [eventSpotsList]);
 
@@ -90,14 +86,15 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
     },
   });
 
-  const handleChangeApplicationSpot = (applicationId: number, spotId: number | null) => {
-    updateApplicationSpotMutation.mutate({
-      applicationId: applicationId,
-      data: {
-        spotId: spotId,
-      },
-    });
-  };
+  const handleChangeApplicationSpot = useCallback(
+    (applicationId: number, spotId: number | null) => {
+      updateApplicationSpotMutation.mutate({
+        applicationId,
+        data: { spotId },
+      });
+    },
+    [updateApplicationSpotMutation],
+  );
 
   const deleteApplicationMutation = useDeleteEventApplication({
     mutation: {
@@ -109,28 +106,33 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
 
   const handleDeleteSpot = (spot: EventSpotSimple) => {
     if (!confirm(`Do you really want to delete spot "${spot.name} (${spot.price} ${spot.currency})"?`)) return;
-    deleteEventSpotMutation.mutate({
-      id: spot.id,
-    });
+    deleteEventSpotMutation.mutate({ id: spot.id });
   };
 
-  const handleDeleteApplication = (application: EventApplicationDetailedWithApplications) => {
-    if (
-      !confirm(
-        `Do you really want to delete application for user "${application.user.firstName} ${application.user.lastName} (${application.user.username})"?`,
-      )
-    ) {
-      return;
-    }
-    deleteApplicationMutation.mutate({
-      id: application.id,
-    });
-  };
+  const handleDeleteApplication = useCallback(
+    (application: EventApplicationDetailedWithApplications) => {
+      if (
+        !confirm(
+          `Do you really want to delete application for user "${application.user.firstName} ${application.user.lastName} (${application.user.username})"?`,
+        )
+      ) {
+        return;
+      }
+      deleteApplicationMutation.mutate({ id: application.id });
+    },
+    [deleteApplicationMutation],
+  );
+
+  const handleEditApplication = useCallback(
+    (application: EventApplicationDetailedWithApplications) => {
+      setCurrentApplication(application);
+      openEditApplicationModal();
+    },
+    [openEditApplicationModal],
+  );
 
   const exportToSheet = useGenerateSheetEventApplication(eventId, {
-    request: {
-      responseType: "blob",
-    },
+    request: { responseType: "blob" },
   });
 
   const exportDataXLSX = () => {
@@ -171,62 +173,13 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
     sendSpotNotificationsMutation.mutate({ id: eventId });
   };
 
-  const eventApplicationsRows = !applicationsList
-    ? []
-    : applicationsList?.map((application, index) => (
-        <Table.Tr key={`application-${index}-${application.id}`}>
-          <Table.Td>{application.priority}</Table.Td>
-          <Table.Td>{dateWithTime(application.createdAt)}</Table.Td>
-          <Table.Td>{application.user.firstName + " " + application.user.lastName}</Table.Td>
-          <Table.Td>
-            {application.organization ? application.organization.name : application.customOrganization?.name}
-          </Table.Td>
-          <Table.Td>
-            {application.organization
-              ? application.organization.address.country
-              : application.customOrganization?.country}
-          </Table.Td>
-          <Table.Td>
-            {application.spotType
-              ? `${application.spotType.name} - ${application.spotType.price} ${application.spotType.currency}`
-              : "N/A"}
-          </Table.Td>
-          <Table.Td>
-            <Select
-              defaultValue={application.spotType?.id ? application.spotType.id.toString() : null}
-              data={spots}
-              searchable
-              nothingFoundMessage="Nothing found..."
-              allowDeselect
-              onChange={(value) => {
-                handleChangeApplicationSpot(application.id, value === null ? null : Number(value));
-              }}
-            />
-          </Table.Td>
-          <Table.Td>
-            <Flex justify="space-evenly" gap={16}>
-              <Tooltip label="Edit Application">
-                <ActionIcon
-                  variant="subtle"
-                  color="blue"
-                  size={48}
-                  onClick={() => {
-                    setCurrentApplication(application);
-                    openEditApplicationModal();
-                  }}
-                >
-                  <IconEdit width={32} height={32} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="Delete Application">
-                <ActionIcon variant="subtle" size={48} color="red" onClick={() => handleDeleteApplication(application)}>
-                  <IconTrash width={32} height={32} />
-                </ActionIcon>
-              </Tooltip>
-            </Flex>
-          </Table.Td>
-        </Table.Tr>
-      ));
+  const applications = useMemo(() => applicationsList ?? [], [applicationsList]);
+
+  const columns = useMemo(
+    () =>
+      ApplicationManagementColumns(spots, handleChangeApplicationSpot, handleEditApplication, handleDeleteApplication),
+    [spots, handleChangeApplicationSpot, handleEditApplication, handleDeleteApplication],
+  );
 
   return (
     <>
@@ -236,11 +189,7 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
           <Button onClick={exportDataXLSX} leftSection={<IconTableExport />} color="green" variant="outline">
             Export Data
           </Button>
-          <Button
-            onClick={openSpotNotifModal}
-            leftSection={<IconMail />}
-            color="violet"
-          >
+          <Button onClick={openSpotNotifModal} leftSection={<IconMail />} color="violet">
             Assigned Spot Notification
           </Button>
           <Button onClick={openCreateSpotModal} leftSection={<IconPlus />}>
@@ -277,9 +226,7 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
                       variant="subtle"
                       size={32}
                       color="red"
-                      onClick={() => {
-                        handleDeleteSpot(spot);
-                      }}
+                      onClick={() => handleDeleteSpot(spot)}
                     >
                       <IconTrash width={24} height={24} />
                     </ActionIcon>
@@ -294,29 +241,8 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
         <Text>No spots created.</Text>
       )}
 
-      <ScrollArea w="100%">
-        {eventApplicationsRows && eventApplicationsRows?.length > 0 ? (
-          <Table withTableBorder withColumnBorders withRowBorders striped highlightOnHover={true}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th miw={50}>Priority</Table.Th>
-                <Table.Th miw={148}>Registered at</Table.Th>
-                <Table.Th miw={148}>First and Last Name</Table.Th>
-                <Table.Th miw={148}>Section</Table.Th>
-                <Table.Th miw={148}>Country</Table.Th>
-                <Table.Th miw={224}>Current Spot</Table.Th>
-                <Table.Th miw={224}>Change Spot</Table.Th>
-                <Table.Th miw={148} w={200}>
-                  Operations
-                </Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>{eventApplicationsRows}</Table.Tbody>
-          </Table>
-        ) : (
-          <Text>No applications found.</Text>
-        )}
-      </ScrollArea>
+      <DataTable columns={columns} data={applications} emptyMessage="No applications found." />
+
       {currentApplication ? (
         <UpdateEventApplicationModal
           currentApplication={currentApplication}
@@ -344,18 +270,24 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
         onClose={() => {
           if (!sendSpotNotificationsMutation.isPending) closeSpotNotifModal();
         }}
-        title={<Text fw={700} size="lg">Send Spot Notifications</Text>}
+        title={
+          <Text fw={700} size="lg">
+            Send Spot Notifications
+          </Text>
+        }
         centered
       >
         <Stack>
-          <Text>
-            Send an email notification to all participants who have been assigned a spot for this event?
-          </Text>
+          <Text>Send an email notification to all participants who have been assigned a spot for this event?</Text>
           <Group justify="flex-end">
             <Button variant="default" onClick={closeSpotNotifModal} disabled={sendSpotNotificationsMutation.isPending}>
               Cancel
             </Button>
-            <Button color="violet" onClick={handleSendSpotNotifications} loading={sendSpotNotificationsMutation.isPending}>
+            <Button
+              color="violet"
+              onClick={handleSendSpotNotifications}
+              loading={sendSpotNotificationsMutation.isPending}
+            >
               Send Notifications
             </Button>
           </Group>
