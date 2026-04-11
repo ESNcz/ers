@@ -3,12 +3,9 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { FileStorageService } from "../file-storage";
 import { Photo } from "./entities";
 import { Repository } from "typeorm";
-import sharp from "sharp";
 
 import crypto from "node:crypto";
 import path from "node:path";
-
-const MAX_DIMENSION = 800;
 
 @Injectable()
 export class PhotoService {
@@ -23,19 +20,14 @@ export class PhotoService {
 	}
 
 	/**
-	 * Save photo — downsample and convert to .webp
+	 * Save photo
 	 * @param data Photo data
 	 * @param directoryName Target directory name
 	 * @returns
 	 */
 	async save(data: Buffer, directoryName: string): Promise<Photo | null> {
-		const processed = await sharp(data)
-			.resize(MAX_DIMENSION, MAX_DIMENSION, { fit: "inside", withoutEnlargement: true })
-			.webp({ quality: 80 })
-			.toBuffer();
-
-		const fileName = `${crypto.randomUUID()}.webp`;
-		const result = await this.fileStorageService.save(path.join(directoryName, fileName), processed);
+		const fileName = crypto.randomUUID();
+		const result = await this.fileStorageService.save(path.join(directoryName, fileName), data);
 		if (!result) return null;
 
 		const photo = new Photo();

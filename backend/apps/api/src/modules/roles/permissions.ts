@@ -10,7 +10,6 @@ export enum Permission {
 	OrganisationAddUser = "organisation.addUser",
 	OrganisationUpdateUser = "organisation.updateUser",
 	OrganisationDeleteUser = "organisation.deleteUser",
-	OrganisationManageJoinRequests = "organisation.manageJoinRequests",
 
 	RoleCreate = "role.create",
 	RoleUpdate = "role.update",

@@ -8,7 +8,6 @@ import CreateEventModal from "@components/modals/CreateEventModal/CreateEventMod
 import { Button, Container, Flex, ScrollArea, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useMemo, useCallback } from "react";
 
 const ManageEventsPage = () => {
   const [isModalOpen, { open: openModal, close: closeModal }] = useDisclosure(false);
@@ -31,17 +30,17 @@ const ManageEventsPage = () => {
 
   const { data: eventList, refetch: refetchManagementEvents } = useGetManagementEvents();
 
-  const handleDuplicateEvent = useCallback((event: EventSimple) => {
+  const handleDuplicateEvent = (event: EventSimple) => {
     duplicateEventMutation.mutate({ id: event.id });
-  }, [duplicateEventMutation]);
+  };
 
-  const handleDeleteEvent = useCallback((event: EventSimple) => {
+  const handleDeleteEvent = (event: EventSimple) => {
     if (!confirm(`Do you really want to delete event "${event.title}"?`)) return;
     deleteEventMutation.mutate({ eventId: event.id });
-  }, [deleteEventMutation]);
+  };
 
-  const events = useMemo(() => eventList?.data ?? [], [eventList?.data]);
-  const columns = useMemo(() => EventManagementColumns(handleDuplicateEvent, handleDeleteEvent), [handleDuplicateEvent, handleDeleteEvent]);
+  const events = eventList?.data || [];
+  const columns = EventManagementColumns(handleDuplicateEvent, handleDeleteEvent);
 
   return (
     <Container size="xl">
@@ -64,6 +63,9 @@ const ManageEventsPage = () => {
             data={events}
             emptyMessage="No Events..."
             facetedFilters={facetedFilters}
+            enablePagination={true}
+            pageSize={10}
+            pageSizeOptions={[5, 10, 20, 50]}
           />
         </ScrollArea>
       </Stack>

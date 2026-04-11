@@ -1,8 +1,9 @@
 "use client";
 
 import { useDeleteUser, useGenerateSheetUsers, useGetAllUsers, useGetCurrentUser } from "@/utils/api";
+import { RolePermissionsItem } from "@/utils/api.schemas";
 import { downloadFile } from "@/utils/downloadFile";
-import { DataTable } from "@components/data-table";
+import { DataTable, facetedFilters } from "@components/data-table";
 import {
   PeopleManagementColumns,
   peopleManagementFacetedFilters,
@@ -13,7 +14,7 @@ import EditUserModal from "@components/modals/EditUserModal/EditUserModal";
 import { Button, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTableExport } from "@tabler/icons-react";
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 
 interface ManagePeopleListProps {}
 
@@ -45,7 +46,7 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
     });
   };
 
-  const handleDeleteUser = useCallback((id: string) => {
+  const handleDeleteUser = (id: string) => {
     const deleteUser = allUsers?.data?.find((f) => f.id === id);
     if (
       deleteUser &&
@@ -55,20 +56,20 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
     )
       return;
     deleteUserMutation.mutate({ id });
-  }, [allUsers?.data, deleteUserMutation]);
+  };
 
-  const users = useMemo(() => allUsers?.data ?? [], [allUsers?.data]);
+  if (!currentUser || !allUsers?.data) return null;
 
-  const columns = useMemo(() => PeopleManagementColumns(
-    currentUser?.id ?? "",
-    currentUser?.role ?? null,
+  const columns = PeopleManagementColumns(
+    currentUser.id,
+    currentUser.role,
     handleDeleteUser,
     setSelectedUserId,
     openChangeRoleModal,
     openEditUserModal,
-  ), [currentUser?.id, currentUser?.role, handleDeleteUser, setSelectedUserId, openChangeRoleModal, openEditUserModal]);
+  );
 
-  if (!currentUser || !allUsers?.data) return null;
+  const users = allUsers.data;
 
   return (
     <Stack>

@@ -23,7 +23,7 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconChevronDown, IconLogout, IconMailForward, IconSearch, IconUser } from "@tabler/icons-react";
+import { IconChevronDown, IconLogout, IconUser } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -120,12 +120,6 @@ const LayoutHeader = () => {
                   <Anchor component={Link} href={routes.ACCOUNT} underline="never" onClick={closeDrawer}>
                     <Menu.Item leftSection={<IconUser size={16} stroke={1.5} />}>Account</Menu.Item>
                   </Anchor>
-                  <Anchor component={Link} href="/browse-organisations" underline="never" onClick={closeDrawer}>
-                    <Menu.Item leftSection={<IconSearch size={16} stroke={1.5} />}>Browse Organisations</Menu.Item>
-                  </Anchor>
-                  <Anchor component={Link} href="/my-join-requests" underline="never" onClick={closeDrawer}>
-                    <Menu.Item leftSection={<IconMailForward size={16} stroke={1.5} />}>My Join Requests</Menu.Item>
-                  </Anchor>
                   <Menu.Divider />
                   <Menu.Item
                     leftSection={<IconLogout size={16} stroke={1.5} />}
@@ -176,22 +170,6 @@ const LayoutHeader = () => {
             leftSection={<IconUser size={16} stroke={1.5} />}
           >
             Account
-          </Button>
-          <Button
-            component={Link}
-            href="/browse-organisations"
-            onClick={closeDrawer}
-            leftSection={<IconSearch size={16} stroke={1.5} />}
-          >
-            Browse Organisations
-          </Button>
-          <Button
-            component={Link}
-            href="/my-join-requests"
-            onClick={closeDrawer}
-            leftSection={<IconMailForward size={16} stroke={1.5} />}
-          >
-            My Join Requests
           </Button>
           <Button
             leftSection={<IconLogout size={16} stroke={1.5} />}

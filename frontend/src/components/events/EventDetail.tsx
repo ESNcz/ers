@@ -21,7 +21,6 @@ import PriorityListModal from "@components/modals/PriorityListModal/PriorityList
 import UpdateEventPhotoModal from "@components/modals/UpdateEventPhotoModal/UpdateEventPhotoModal";
 import {
   Anchor,
-  Badge,
   Blockquote,
   Button,
   Collapse,
@@ -91,10 +90,6 @@ const EventDetail = ({ id }: EventDetailProps) => {
     return eventApplications?.some((f) => f.user.id === currentUser?.id);
   }, [eventApplications, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const userApplication = useMemo(() => {
-    return eventApplications?.find((f) => f.user.id === currentUser?.id);
-  }, [eventApplications, currentUser]);
-
 
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
@@ -153,22 +148,6 @@ const EventDetail = ({ id }: EventDetailProps) => {
                   {dayMonthYear(eventDetail.since)} - {dayMonthYear(eventDetail.until)}
                 </Text>
               </Text>
-              {userApplication?.spotType && (
-                <Flex align="center" gap={8}>
-                  <Text fw="bold">Your Spot:</Text>
-                  <Badge color="green" size="lg">
-                    {userApplication.spotType.name} — {userApplication.spotType.price} {userApplication.spotType.currency}
-                  </Badge>
-                </Flex>
-              )}
-              {isUserRegistered && !userApplication?.spotType && (
-                <Flex align="center" gap={8}>
-                  <Text fw="bold">Your Spot:</Text>
-                  <Badge color="gray" size="lg">
-                    Not yet assigned
-                  </Badge>
-                </Flex>
-              )}
             </Flex>
             <RichTextRenderer content={eventDetail.longDescription} />
           </Flex>

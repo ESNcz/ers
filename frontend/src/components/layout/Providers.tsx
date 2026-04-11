@@ -20,16 +20,13 @@ const Providers = ({ children }: ProvidersProps) => {
           },
         },
         mutationCache: new MutationCache({
-          onMutate: (_v, mutation) => {
-            if (mutation.options.meta?.skipGlobalNotifications) return;
+          onMutate: () => {
             showLoadingNotification();
           },
-          onError: (error, _v, _c, mutation) => {
-            if (mutation.options.meta?.skipGlobalNotifications) return;
+          onError: (error) => {
             showErrorNotification(error);
           },
-          onSuccess: (_d, _v, _c, mutation) => {
-            if (mutation.options.meta?.skipGlobalNotifications) return;
+          onSuccess: () => {
             onSuccessNotification();
           },
         }),

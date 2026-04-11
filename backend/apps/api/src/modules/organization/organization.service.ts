@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectEntityManager, InjectRepository } from "@nestjs/typeorm";
 import { EntityManager, FindOneOptions, Repository } from "typeorm";
-import { Organization, OrganizationMember, OrganizationJoinRequest, JoinRequestStatus } from "./entities";
+import { Organization, OrganizationMember } from "./entities";
 import { User } from "../users";
 import type { PaginationOptions } from "utilities/nest/decorators";
 import { formatPaginatedResponse } from "utilities/pagination.helper";
@@ -13,8 +13,6 @@ export class OrganizationService {
 		private readonly organizationRepository: Repository<Organization>,
 		@InjectRepository(OrganizationMember)
 		private readonly memberRepository: Repository<OrganizationMember>,
-		@InjectRepository(OrganizationJoinRequest)
-		private readonly joinRequestRepository: Repository<OrganizationJoinRequest>,
 		@InjectEntityManager()
 		private readonly entityManager: EntityManager,
 	) {}
@@ -192,82 +190,5 @@ export class OrganizationService {
 		}
 		organization.isDeleted = true;
 		return await this.organizationRepository.save(organization);
-	}
-
-	/**
-	 * Find a pending join request for a user in an organization
-	 */
-	findPendingJoinRequest(organizationId: string, userId: string) {
-		return this.joinRequestRepository.findOne({
-			where: {
-				organization: { id: organizationId },
-				user: { id: userId },
-				status: JoinRequestStatus.Pending,
-			},
-		});
-	}
-
-	/**
-	 * Create a join request
-	 */
-	createJoinRequest(organization: Organization, user: User) {
-		const joinRequest = new OrganizationJoinRequest({ organization, user });
-		return this.joinRequestRepository.save(joinRequest);
-	}
-
-	/**
-	 * Find all join requests for an organization
-	 */
-	findJoinRequestsOf(organizationId: string) {
-		return this.joinRequestRepository.find({
-			where: { organization: { id: organizationId } },
-			relations: { user: true, reviewedBy: true, organization: true },
-			order: { createdAt: "DESC" },
-		});
-	}
-
-	/**
-	 * Find a join request by ID
-	 */
-	findJoinRequestById(requestId: number) {
-		return this.joinRequestRepository.findOne({
-			where: { id: requestId },
-			relations: { user: true, organization: { manager: true }, reviewedBy: true },
-		});
-	}
-
-	/**
-	 * Accept a join request and add user as member
-	 */
-	async acceptJoinRequest(joinRequest: OrganizationJoinRequest, reviewedBy: User) {
-		return this.entityManager.transaction(async (em) => {
-			joinRequest.update({ status: JoinRequestStatus.Accepted, reviewedBy });
-			await em.save(joinRequest);
-			const member = em.create(OrganizationMember, {
-				user: joinRequest.user,
-				organization: joinRequest.organization,
-			});
-			await em.save(member);
-			return joinRequest;
-		});
-	}
-
-	/**
-	 * Reject a join request
-	 */
-	async rejectJoinRequest(joinRequest: OrganizationJoinRequest, reviewedBy: User) {
-		joinRequest.update({ status: JoinRequestStatus.Rejected, reviewedBy });
-		return this.joinRequestRepository.save(joinRequest);
-	}
-
-	/**
-	 * Find all join requests sent by a user
-	 */
-	findUserJoinRequests(userId: string) {
-		return this.joinRequestRepository.find({
-			where: { user: { id: userId } },
-			relations: { organization: true, reviewedBy: true },
-			order: { createdAt: "DESC" },
-		});
 	}
 }

@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { JSONContent } from "@tiptap/react";
 import Link from "next/link";
-import { FC, ReactNode, useMemo } from "react";
+import React, { FC, ReactNode, useMemo } from "react";
 
 type NodeRendererProps = {
   children?: ReactNode;
@@ -55,18 +55,11 @@ const parseComponents: Record<string, FC<NodeRendererProps>> = {
   text: ({ text }) => <>{text}</>, // Basic text, marks handled separately
 };
 
-const extractPlainText = (node: JSONContent): string => {
-  if (node.type === "text") return node.text ?? "";
-  if (Array.isArray(node.content)) return node.content.map(extractPlainText).join("");
-  return "";
-};
-
 interface RichTextRendererProps extends TextProps {
   content?: string;
-  textOnly?: boolean;
 }
 
-const RichTextRenderer = ({ content, textOnly, ...props }: RichTextRendererProps) => {
+const RichTextRenderer = ({ content, ...props }: RichTextRendererProps) => {
   const renderMarks = (text: string, marks?: JSONContent["marks"]): ReactNode => {
     if (!marks || marks.length === 0) return text;
 
@@ -185,15 +178,6 @@ const RichTextRenderer = ({ content, textOnly, ...props }: RichTextRendererProps
 
   if (!parsedContent?.content) {
     return content?.toString() ?? null;
-  }
-
-  if (textOnly) {
-    const plainText = parsedContent.content.map(extractPlainText).join(" ");
-    return (
-      <Text span style={{ wordWrap: "break-word" }} {...props}>
-        {plainText}
-      </Text>
-    );
   }
 
   return (

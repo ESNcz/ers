@@ -1,138 +1,152 @@
-import { Organization } from "@/utils/api.schemas";
+import { EventSimple, Organization } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
-import { DataTableColumnHeader } from "./DataTableColumnHeader";
+import { extractText } from "@/utils/table-helpers";
+import ApiImage from "@components/ApiImage/ApiImage";
+import { DataTableFacetedFilterConfig, createColumns } from "@components/data-table";
 import { ActionIcon, Flex, Text, Tooltip } from "@mantine/core";
-import { IconEdit, IconTrash, IconUsersGroup } from "@tabler/icons-react";
-import type { ColumnDef } from "@tanstack/react-table";
+import { IconCheck, IconCopy, IconEdit, IconEye, IconTrash, IconUsersGroup, IconX } from "@tabler/icons-react";
 import Link from "next/link";
+
+// export const facetedFilters: DataTableFacetedFilterConfig[] = [
+//   {
+//     columnId: "visible",
+//     title: "Status",
+//     options: [
+//       { label: "Published", value: "true", icon: IconCheck },
+//       { label: "Unpublished", value: "false", icon: IconX },
+//     ],
+//   },
+// ];
 
 export const OrganisationManagementColumns = (
   handleDeleteOrganization: (organization: Organization) => void,
   setActiveOrganisation: (organization: Organization) => void,
   openUpdateOrganizationModal: () => void,
   deleteOrganizationMutation: { isPending: boolean },
-): ColumnDef<Organization>[] => [
-  {
-    accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
-    enableSorting: false,
-    enableHiding: false,
-    cell: ({ row }) => (
-      <Text size="sm" lineClamp={2}>
-        {row.original.name}
-      </Text>
-    ),
-  },
-  {
-    accessorKey: "legalName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Legal Name" />,
-    enableSorting: false,
-    enableHiding: false,
-    cell: ({ row }) => (
-      <Text size="sm" lineClamp={2}>
-        {row.original.legalName}
-      </Text>
-    ),
-  },
-  {
-    accessorKey: "cin",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="CIN" />,
-    enableSorting: false,
-    cell: ({ row }) => (
-      <Text size="sm" lineClamp={2}>
-        {row.original.cin}
-      </Text>
-    ),
-  },
-  {
-    id: "vatin",
-    accessorKey: "vatin",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="VATIN" />,
-    enableSorting: false,
-    cell: ({ row }) => (
-      <Flex justify="center">
+) =>
+  createColumns<Organization>([
+    {
+      accessor: "name",
+      id: "name",
+      header: "Name",
+      enableSorting: false,
+      enableHiding: false,
+      render: (event) => (
         <Text size="sm" lineClamp={2}>
-          {row.original.vatin}
+          {event.name}
         </Text>
-      </Flex>
-    ),
-  },
-  {
-    id: "address",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
-    enableSorting: false,
-    enableHiding: false,
-    enableGlobalFilter: false,
-    cell: ({ row }) => (
-      <Flex direction="column" justify="start" align="start">
-        <Text>{`${row.original.address.street} ${row.original.address.houseNumber}`}</Text>
-        <Text>{`${row.original.address.zip}, ${row.original.address.city}`}</Text>
-        <Text>{row.original.address.country}</Text>
-      </Flex>
-    ),
-  },
-  {
-    id: "managerName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Manager's Name" />,
-    enableSorting: false,
-    enableHiding: false,
-    enableGlobalFilter: false,
-    cell: ({ row }) =>
-      row.original.manager ? (
-        <Text>{`${row.original.manager.firstName} ${row.original.manager.lastName}`}</Text>
-      ) : (
-        <Text>N/A</Text>
       ),
-  },
-  {
-    id: "managerUsername",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Manager's Username" />,
-    cell: ({ row }) =>
-      row.original.manager ? <Text>{row.original.manager.username}</Text> : <Text>N/A</Text>,
-  },
-  {
-    id: "operations",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Operations" />,
-    enableSorting: false,
-    enableGlobalFilter: false,
-    cell: ({ row }) => (
-      <Flex justify="space-evenly" gap={16}>
-        <Tooltip label="Organization Members">
-          <ActionIcon
-            component={Link}
-            href={routes.ORGANISATION_MEMBERS({ id: row.original.id })}
-            variant="subtle"
-            size={48}
-            color="black"
-          >
-            <IconUsersGroup width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Edit Organization">
-          <ActionIcon
-            variant="subtle"
-            size={48}
-            color="blue"
-            onClick={() => {
-              setActiveOrganisation(row.original);
-              openUpdateOrganizationModal();
-            }}
-          >
-            <IconEdit width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Delete Organization">
-          <ActionIcon
-            variant="subtle"
-            size={48}
-            color="red"
-            onClick={() => handleDeleteOrganization(row.original)}
-            loading={deleteOrganizationMutation.isPending}
-          >
-            <IconTrash width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-      </Flex>
-    ),
-  },
-];
+    },
+    {
+      accessor: "legalName",
+      id: "legalName",
+      header: "Legal Name",
+      enableSorting: false,
+      enableHiding: false,
+      render: (event) => (
+        <Text size="sm" lineClamp={2}>
+          {event.legalName}
+        </Text>
+      ),
+    },
+    {
+      accessor: "cin",
+      id: "cin",
+      header: "CIN",
+      enableSorting: false,
+      render: (event) => (
+        <Text size="sm" lineClamp={2}>
+          {event.cin}
+        </Text>
+      ),
+    },
+    {
+      accessor: "vatin",
+      id: "VATIN",
+      header: "VATIN",
+      enableSorting: false,
+      render: (event) => (
+        <Flex justify="center">
+          <Text size="sm" lineClamp={2}>
+            {event.vatin}
+          </Text>
+        </Flex>
+      ),
+    },
+    {
+      id: "Address",
+      header: "Address",
+      enableSorting: false,
+      enableHiding: false,
+      enableGlobalFilter: false,
+      render: (event) => (
+        <Flex direction="column" justify="start" align="start">
+          <Text>{`${event.address.street} ${event.address.houseNumber}`}</Text>
+          <Text>{`${event.address.zip}, ${event.address.city}`}</Text>
+          <Text>{event.address.country}</Text>
+        </Flex>
+      ),
+    },
+    {
+      id: "ManagersName",
+      header: "Manager's Name",
+
+      enableSorting: false,
+      enableHiding: false,
+      enableGlobalFilter: false,
+      render: (event) =>
+        event.manager ? <Text>{`${event.manager.firstName} ${event.manager.lastName}`}</Text> : <Text>N/A</Text>,
+    },
+    {
+      id: "ManagersUsername",
+      header: "Manager's Username",
+
+      render: (event) => (event.manager ? <Text>{`${event.manager.username}`}</Text> : <Text>N/A</Text>),
+    },
+    {
+      id: "operations",
+      header: "Operations",
+
+      enableSorting: false,
+      enableGlobalFilter: false,
+      render: (event) => (
+        <Flex justify="space-evenly" gap={16}>
+          <Tooltip label="Organization Members">
+            <ActionIcon
+              component={Link}
+              href={routes.ORGANISATION_MEMBERS({ id: event.id })}
+              variant="subtle"
+              size={48}
+              color="black"
+            >
+              <IconUsersGroup width={32} height={32} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Edit Organization">
+            <ActionIcon
+              variant="subtle"
+              size={48}
+              color="blue"
+              onClick={() => {
+                setActiveOrganisation(event);
+                openUpdateOrganizationModal();
+              }}
+            >
+              <IconEdit width={32} height={32} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete Organization">
+            <ActionIcon
+              variant="subtle"
+              size={48}
+              color="red"
+              onClick={() => handleDeleteOrganization(event)}
+              loading={deleteOrganizationMutation.isPending}
+            >
+              <IconTrash width={32} height={32} />
+            </ActionIcon>
+          </Tooltip>
+        </Flex>
+      ),
+    },
+  ]);

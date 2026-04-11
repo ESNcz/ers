@@ -307,13 +307,9 @@ export class UsersController {
 
 			{ header: "Role", key: "role" },
 			{ header: "Role Permissions", key: "rolePermissions" },
-			{ header: "Organisations", key: "organisations" },
 		];
 
-		for (const user of userList.data) {
-			const memberships = await this.organizationService.findUserMemberships(user.id);
-			const orgNames = memberships.map((m) => m.organization.name).join(", ");
-
+		userList.data.map((user) => {
 			worksheet.addRow({
 				firstName: user?.firstName,
 				lastName: user?.lastName,
@@ -331,9 +327,8 @@ ${user?.personalAddress?.country}`
 				gender: user?.gender,
 				role: user?.role?.name,
 				rolePermissions: user?.role?.permissions.toString(),
-				organisations: orgNames,
 			});
-		}
+		});
 
 		const buffer = await workbook.xlsx.writeBuffer();
 		res
