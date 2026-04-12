@@ -14,7 +14,7 @@ export function DataTableViewOptions<TData>({
       <Menu.Target>
         <Button
           variant="default"
-          size="xs"
+          size="sm"
           leftSection={<IconSettings2 size={14} />}
         >
           View

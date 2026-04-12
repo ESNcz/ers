@@ -32,7 +32,7 @@ export function DataTableFacetedFilter<TData, TValue>({
       <Menu.Target>
         <Button
           variant={selectedValues.size > 0 ? 'light' : 'default'}
-          size="xs"
+          size="sm"
           leftSection={<IconFilter size={14} />}
           rightSection={
             selectedValues.size > 0 ? (

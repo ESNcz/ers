@@ -1,21 +1,12 @@
 import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 
-function getBaseURL() {
-  if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_API_DOMAIN;
-  }
-  // Bracket notation prevents Next.js from inlining at build time
-  return process.env["API_DOMAIN"] || process.env.NEXT_PUBLIC_API_DOMAIN;
-}
-
 export const AXIOS_INSTANCE = Axios.create({ withCredentials: true });
 
-// add a second `options` argument here if you want to pass extra options to each generated query
 export const customInstance = async <T>(config: AxiosRequestConfig, options?: AxiosRequestConfig): Promise<T> => {
   const { data } = await AXIOS_INSTANCE({
     ...config,
     ...options,
-    baseURL: getBaseURL(),
+    baseURL: process.env.NEXT_PUBLIC_API_DOMAIN,
     withCredentials: true,
   });
   return data;

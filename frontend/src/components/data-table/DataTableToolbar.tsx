@@ -70,7 +70,7 @@ export function DataTableToolbar<TData>({
         {isFiltered && (
           <Button
             variant="subtle"
-            size="xs"
+            size="sm"
             onClick={() => {
               onResetFilters?.();
               setLocalSearch("");

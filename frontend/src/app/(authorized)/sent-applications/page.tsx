@@ -8,93 +8,58 @@ import Link from "next/link";
 import { useMemo } from "react";
 
 const SentApplicationsPage = () => {
-  const now = useMemo(() => new Date().getTime(), []);
-  const { data: ongoingApplications } = useGetUserApplications({
-    toSince: now,
-  });
-  const { data: upcomingApplications } = useGetUserApplications({
-    sinceSince: now,
-  });
-
-  const ongoingEvents = useMemo(() => {
-    if (!ongoingApplications?.data) return [];
-    const nowDate = new Date();
-    return ongoingApplications.data.filter(
-      (app) => new Date(app.event.until) >= nowDate,
-    );
-  }, [ongoingApplications]);
-
-  const pastEvents = useMemo(() => {
-    if (!ongoingApplications?.data) return [];
-    const nowDate = new Date();
-    return ongoingApplications.data
-      .filter((app) => new Date(app.event.until) < nowDate)
-      .sort(
-        (a, b) =>
-          new Date(b.event.since).getTime() -
-          new Date(a.event.since).getTime(),
-      );
-  }, [ongoingApplications]);
+  const now = useMemo(() => {
+    return new Date().getTime();
+  }, []);
+  const { data: upcomingEvents } = useGetUserApplications({ sinceSince: now });
+  const { data: pastEvents } = useGetUserApplications({ toSince: now });
 
   return (
     <Container size="xl">
       <Stack>
         <Title>Sent Applications</Title>
-        {ongoingEvents.length > 0 && (
+        {upcomingEvents && (
           <Stack>
             <Title order={2} size="xl">
-              Ongoing Events
+              Upcoming Events
             </Title>
-            {ongoingEvents.map((eventApplication, index) => (
-              <Anchor
-                component={Link}
-                key={`event-card-${index}-${eventApplication.id}`}
-                href={routes.EVENT_DETAIL({ id: eventApplication.event.id })}
-                underline="never"
-              >
-                <EventCard event={eventApplication.event} />
-              </Anchor>
-            ))}
+            {upcomingEvents?.data && upcomingEvents.data.length >= 1 ? (
+              upcomingEvents.data.map((eventApplication, index) => (
+                <Anchor
+                  component={Link}
+                  key={`event-card-${index}-${eventApplication.id}`}
+                  href={routes.EVENT_DETAIL({ id: eventApplication.event.id })}
+                  underline="never"
+                >
+                  <EventCard event={eventApplication.event} />
+                </Anchor>
+              ))
+            ) : (
+              <Text>No upcoming events...</Text>
+            )}
           </Stack>
         )}
-        <Stack>
-          <Title order={2} size="xl">
-            Upcoming Events
-          </Title>
-          {upcomingApplications?.data && upcomingApplications.data.length > 0 ? (
-            upcomingApplications.data.map((eventApplication, index) => (
-              <Anchor
-                component={Link}
-                key={`event-card-${index}-${eventApplication.id}`}
-                href={routes.EVENT_DETAIL({ id: eventApplication.event.id })}
-                underline="never"
-              >
-                <EventCard event={eventApplication.event} />
-              </Anchor>
-            ))
-          ) : (
-            <Text>No upcoming events...</Text>
-          )}
-        </Stack>
-        <Stack>
-          <Title order={2} size="xl">
-            Past Events
-          </Title>
-          {pastEvents.length > 0 ? (
-            pastEvents.map((eventApplication, index) => (
-              <Anchor
-                component={Link}
-                key={`event-card-${index}-${eventApplication.id}`}
-                href={routes.EVENT_DETAIL({ id: eventApplication.event.id })}
-                underline="never"
-              >
-                <EventCard event={eventApplication.event} />
-              </Anchor>
-            ))
-          ) : (
-            <Text>No past events...</Text>
-          )}
-        </Stack>
+        {pastEvents && (
+          <Stack>
+            <Title order={2} size="xl">
+              Past Events
+            </Title>
+            {pastEvents?.data && pastEvents.data.length > 0 ? (
+              pastEvents?.data?.map((eventApplication, index) => (
+                <Anchor
+                  component={Link}
+                  key={`event-card-${index}-${eventApplication.id}`}
+                  href={routes.EVENT_DETAIL({ id: eventApplication.event.id })}
+                  underline="never"
+                >
+                  <EventCard event={eventApplication.event} />
+                </Anchor>
+              ))
+            ) : (
+              <Text>No past events...</Text>
+            )}
+          </Stack>
+        )}
       </Stack>
     </Container>
   );

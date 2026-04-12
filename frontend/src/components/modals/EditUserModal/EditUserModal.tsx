@@ -1,5 +1,6 @@
 import { getGetAllUsersQueryKey, useUpdateUserById } from "@/utils/api";
 import { UpdateUser, User, UserGender } from "@/utils/api.schemas";
+import { genderOptions } from "@/utils/table-helpers";
 import Modal from "@components/Modal/Modal";
 import Select from "@components/primitives/Select";
 import { Button, Grid, Group, TextInput } from "@mantine/core";
@@ -13,13 +14,6 @@ interface EditUserModalProps {
   closeModal: () => void;
   handleOnSuccess: () => void;
 }
-
-const genderOptions = [
-  { label: "Male", value: UserGender.male },
-  { label: "Female", value: UserGender.female },
-  { label: "Non-binary", value: UserGender["non-binary"] },
-  { label: "Prefer not to say", value: UserGender["prefer-not-to-say"] },
-];
 
 const EditUserModal = ({ user, isOpened, closeModal, handleOnSuccess }: EditUserModalProps) => {
   const queryClient = useQueryClient();
@@ -52,35 +46,34 @@ const EditUserModal = ({ user, isOpened, closeModal, handleOnSuccess }: EditUser
   });
 
   useEffect(() => {
-    if (user && isOpened) {
-      form.setValues({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        username: user.username,
-        gender: user.gender as UpdateUser["gender"],
-        pronouns: user.pronouns ?? "",
-        phonePrefix: user.phonePrefix,
-        phoneNumber: user.phoneNumber,
-        personalAddress: user.personalAddress
-          ? {
-              street: user.personalAddress.street,
-              houseNumber: user.personalAddress.houseNumber,
-              zip: user.personalAddress.zip,
-              city: user.personalAddress.city,
-              country: user.personalAddress.country,
-            }
-          : undefined,
-      });
-    }
-  }, [user, isOpened]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!user && !isOpened) return;
+
+    form.setValues({
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+      username: user?.username,
+      gender: user?.gender as UpdateUser["gender"],
+      pronouns: user?.pronouns ?? "",
+      phonePrefix: user?.phonePrefix,
+      phoneNumber: user?.phoneNumber,
+      personalAddress: user?.personalAddress
+        ? {
+            street: user.personalAddress.street,
+            houseNumber: user.personalAddress.houseNumber,
+            zip: user.personalAddress.zip,
+            city: user.personalAddress.city,
+            country: user.personalAddress.country,
+          }
+        : undefined,
+    });
+  }, [user, isOpened]);
 
   const updateUserMutation = useUpdateUserById({
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [getGetAllUsersQueryKey()] });
         handleOnSuccess();
-        form.reset();
-        closeModal();
+        handleClose();
       },
     },
   });
