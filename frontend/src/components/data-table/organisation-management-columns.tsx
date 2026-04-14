@@ -28,7 +28,6 @@ export const organisationManagementColumns = (
     id: "legalName",
     accessorKey: "legalName",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Legal Name" />,
-    enableSorting: false,
     enableHiding: false,
     cell: ({ row }) => (
       <Text size="sm" lineClamp={2}>

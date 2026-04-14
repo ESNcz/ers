@@ -61,7 +61,7 @@ export const organizationMemberListColumns = (
     accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
     size: 148,
-    enableSorting: false,
+
     enableHiding: false,
     enableGlobalFilter: true,
     cell: ({ row }) => <Text>{`${row.original.user.firstName} ${row.original.user.lastName}`}</Text>,
@@ -93,7 +93,6 @@ export const organizationMemberListColumns = (
     filterFn: "arrIncludesSome",
     size: 148,
     minSize: 148,
-    enableSorting: false,
     enableGlobalFilter: true,
     cell: ({ row }) => <Text>{row.original.user.gender}</Text>,
   },
@@ -103,15 +102,14 @@ export const organizationMemberListColumns = (
     accessorFn: (row) => row.user.email,
     size: 148,
     minSize: 148,
-    enableSorting: false,
     enableGlobalFilter: true,
     cell: ({ row }) => <Text>{row.original.user.email}</Text>,
   },
   {
     id: "role",
+    accessorFn: (row) => row.user.role?.name ?? "N/A",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
     size: 148,
-    enableSorting: false,
     cell: ({ row }) => <Text>{row.original.user.role?.name ?? "N/A"}</Text>,
   },
   ...(isUserManager

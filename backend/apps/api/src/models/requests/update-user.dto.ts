@@ -5,7 +5,15 @@ import { CreateUser } from "./create-user.dto";
 import { Allow, IsOptional, ValidateNested } from "class-validator";
 
 export class UpdateUser extends PartialType(
-	PickType(CreateUser, ["password", "firstName", "lastName", "username", "gender", "phonePrefix", "phoneNumber"]),
+	PickType(CreateUser, [
+		"firstName",
+		"lastName",
+		"gender",
+		"phonePrefix",
+		"phoneNumber",
+		"birthDate",
+		"nationality",
+	]),
 ) {
 	@Allow()
 	@IsOptional()

@@ -57,7 +57,7 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
         return;
       deleteUserMutation.mutate({ id });
     },
-    [allUsers?.data, deleteUserMutation],
+    [allUsers?.data, deleteUserMutation.mutate],
   );
 
   const users = useMemo(() => allUsers?.data ?? [], [allUsers?.data]);

@@ -35,7 +35,7 @@ const ManageEventsPage = () => {
     (event: EventSimple) => {
       duplicateEventMutation.mutate({ id: event.id });
     },
-    [duplicateEventMutation],
+    [duplicateEventMutation.mutate],
   );
 
   const handleDeleteEvent = useCallback(
@@ -43,7 +43,7 @@ const ManageEventsPage = () => {
       if (!confirm(`Do you really want to delete event "${event.title}"?`)) return;
       deleteEventMutation.mutate({ eventId: event.id });
     },
-    [deleteEventMutation],
+    [deleteEventMutation.mutate],
   );
 
   const events = useMemo(() => eventList?.data ?? [], [eventList?.data]);

@@ -214,27 +214,20 @@ export interface UpdateUser {
   personalAddress?: UpdateUserPersonalAddress;
   /** @nullable */
   pronouns?: string | null;
-  /**
-   * User password
-   * @minLength 6
-   */
-  password?: string;
   /** First name */
   firstName?: string;
   /** Last name */
   lastName?: string;
-  /**
-   * Must not contain special characters
-   * @minLength 6
-   * @pattern /^[a-zA-Z0-9_-]+$/
-   */
-  username?: string;
   /** User gender */
   gender?: UpdateUserGender;
   /** User phone number prefix */
   phonePrefix?: string;
   /** User phone number */
   phoneNumber?: string;
+  /** User birthdate */
+  birthDate?: string;
+  /** User nationality */
+  nationality?: string;
 }
 
 export interface UpdatePhoto {

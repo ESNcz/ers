@@ -41,7 +41,7 @@ const ManageOrganisationsPage = () => {
       }
       deleteOrganizationMutation.mutate({ id: organization.id });
     },
-    [deleteOrganizationMutation],
+    [deleteOrganizationMutation.mutate],
   );
 
   const organisations = useMemo(() => organisationsList ?? [], [organisationsList]);

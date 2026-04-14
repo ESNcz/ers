@@ -1,11 +1,14 @@
-import { getGetAllUsersQueryKey, useUpdateUserById } from "@/utils/api";
+import { useUpdateUserById } from "@/utils/api";
 import { UpdateUser, User, UserGender } from "@/utils/api.schemas";
+import { userValidators } from "@/utils/editFormValidators";
 import { genderOptions } from "@/utils/table-helpers";
 import Modal from "@components/Modal/Modal";
+import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
-import { Button, Grid, Group, TextInput } from "@mantine/core";
-import { Form, isNotEmpty, useForm } from "@mantine/form";
-import { useQueryClient } from "@tanstack/react-query";
+import { Button, Flex, Grid, Group, SimpleGrid, TextInput } from "@mantine/core";
+import { Form, useForm } from "@mantine/form";
+import CountryList from "country-list-with-dial-code-and-flag";
+import dayjs from "dayjs";
 import { useEffect } from "react";
 
 interface EditUserModalProps {
@@ -16,62 +19,58 @@ interface EditUserModalProps {
 }
 
 const EditUserModal = ({ user, isOpened, closeModal, handleOnSuccess }: EditUserModalProps) => {
-  const queryClient = useQueryClient();
-
   const form = useForm<Partial<UpdateUser>>({
     mode: "uncontrolled",
     initialValues: {
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
-      username: user?.username ?? "",
+      birthDate: user?.birthDate ?? undefined,
+      nationality: user?.nationality ?? "",
       gender: (user?.gender as UpdateUser["gender"]) ?? UserGender["prefer-not-to-say"],
       pronouns: user?.pronouns ?? "",
       phonePrefix: user?.phonePrefix ?? "",
       phoneNumber: user?.phoneNumber ?? "",
-      personalAddress: user?.personalAddress
-        ? {
-            street: user.personalAddress.street,
-            houseNumber: user.personalAddress.houseNumber,
-            zip: user.personalAddress.zip,
-            city: user.personalAddress.city,
-            country: user.personalAddress.country,
-          }
-        : undefined,
+      personalAddress: {
+        street: user?.personalAddress?.street ?? "",
+        houseNumber: user?.personalAddress?.houseNumber ?? "",
+        zip: user?.personalAddress?.zip ?? "",
+        city: user?.personalAddress?.city ?? "",
+        country: user?.personalAddress?.country ?? "",
+      },
     },
-    validate: {
-      firstName: isNotEmpty("First name is required"),
-      lastName: isNotEmpty("Last name is required"),
-      username: isNotEmpty("Username is required"),
-    },
+    validateInputOnChange: true,
+    validate: userValidators,
   });
 
   useEffect(() => {
-    if (!user && !isOpened) return;
+    if (!user || !isOpened) return;
 
-    form.setValues({
-      firstName: user?.firstName,
-      lastName: user?.lastName,
-      username: user?.username,
-      gender: user?.gender as UpdateUser["gender"],
-      pronouns: user?.pronouns ?? "",
-      phonePrefix: user?.phonePrefix,
-      phoneNumber: user?.phoneNumber,
-      personalAddress: user?.personalAddress
-        ? {
-            street: user.personalAddress.street,
-            houseNumber: user.personalAddress.houseNumber,
-            zip: user.personalAddress.zip,
-            city: user.personalAddress.city,
-            country: user.personalAddress.country,
-          }
-        : undefined,
-    });
+    const values: Partial<UpdateUser> = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      birthDate: user.birthDate ?? undefined,
+      nationality: user.nationality ?? "",
+      gender: user.gender as UpdateUser["gender"],
+      pronouns: user.pronouns ?? "",
+      phonePrefix: user.phonePrefix,
+      phoneNumber: user.phoneNumber,
+      personalAddress: {
+        street: user.personalAddress?.street ?? "",
+        houseNumber: user.personalAddress?.houseNumber ?? "",
+        zip: user.personalAddress?.zip ?? "",
+        city: user.personalAddress?.city ?? "",
+        country: user.personalAddress?.country ?? "",
+      },
+    };
+    form.setInitialValues(values);
+    form.setValues(values);
+    form.resetDirty();
+    form.resetTouched();
   }, [user, isOpened]);
 
   const updateUserMutation = useUpdateUserById({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: [getGetAllUsersQueryKey()] });
         handleOnSuccess();
         handleClose();
       },
@@ -79,13 +78,15 @@ const EditUserModal = ({ user, isOpened, closeModal, handleOnSuccess }: EditUser
   });
 
   const handleSubmit = (values: Partial<UpdateUser>) => {
-    form.validate();
-    if (form.isValid() && user) {
-      updateUserMutation.mutate({
-        id: user.id,
-        data: values as UpdateUser,
-      });
-    }
+    if (!user) return;
+    const isAddressEmpty = !values.personalAddress || Object.values(values.personalAddress).every((v) => !v);
+    updateUserMutation.mutate({
+      id: user.id,
+      data: {
+        ...values,
+        personalAddress: isAddressEmpty ? undefined : values.personalAddress,
+      } as UpdateUser,
+    });
   };
 
   const handleClose = () => {
@@ -100,49 +101,98 @@ const EditUserModal = ({ user, isOpened, closeModal, handleOnSuccess }: EditUser
   return (
     <Modal size="xl" opened={isOpened} onClose={handleClose} title={`Edit User - ${user.firstName} ${user.lastName}`}>
       <Form form={form} onSubmit={handleSubmit}>
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <TextInput label="First Name" {...form.getInputProps("firstName")} />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <TextInput label="Last Name" {...form.getInputProps("lastName")} />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <TextInput label="Username" {...form.getInputProps("username")} />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <Select
-              label="Gender"
-              data={genderOptions}
-              value={form.getValues().gender}
-              onChange={(value) => form.setFieldValue("gender", value as UpdateUser["gender"])}
+        <Flex direction="column" gap={12}>
+          <SimpleGrid cols={{ base: 1, md: 2 }}>
+            <TextInput label="First Name" {...form.getInputProps("firstName")} required />
+            <TextInput label="Last Name" {...form.getInputProps("lastName")} required />
+          </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, md: 2 }}>
+            <DateInput
+              label="Birthdate"
+              defaultValue={null}
+              placeholder="Birthdate"
+              defaultLevel="year"
+              value={form.getValues().birthDate ? dayjs(form.getValues().birthDate).toDate() : null}
+              onChange={(value) => {
+                if (value) form.setFieldValue("birthDate", dayjs(value).toISOString());
+              }}
+              error={form.errors.birthDate}
+              required
             />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Select
+              label="Nationality"
+              data={CountryList.getAll()
+                .filter(
+                  (value, index, array) =>
+                    index === array.findIndex((t) => t.name === value.name || t.code === value.code),
+                )
+                .map((country) => ({
+                  label: `(${country.code}) ${country.name}`,
+                  value: country.code,
+                }))}
+              searchable
+              maxDropdownHeight={200}
+              comboboxProps={{ position: "bottom-start", middlewares: { flip: false, shift: false } }}
+              {...form.getInputProps("nationality")}
+              required
+            />
+          </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, md: 2 }}>
+            <Select label="Gender" data={genderOptions} {...form.getInputProps("gender")} required />
             <TextInput label="Pronouns" {...form.getInputProps("pronouns")} />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <TextInput label="Phone Prefix" {...form.getInputProps("phonePrefix")} />
-          </Grid.Col>
-          <Grid.Col span={{ base: 6, md: 3 }}>
-            <TextInput label="Phone Number" {...form.getInputProps("phoneNumber")} />
-          </Grid.Col>
-          <Grid.Col span={8}>
-            <TextInput label="Street" {...form.getInputProps("personalAddress.street")} />
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <TextInput label="House Number" {...form.getInputProps("personalAddress.houseNumber")} />
-          </Grid.Col>
-          <Grid.Col span={6}>
+          </SimpleGrid>
+          <Grid>
+            <Grid.Col span={4}>
+              <Select
+                label="Prefix"
+                data={CountryList.getAll()
+                  .filter(
+                    (value, index, array) => index === array.findIndex((t) => t.countryCode === value.countryCode),
+                  )
+                  .map((country) => ({
+                    label: `${country.flag} (${country.countryCode}) ${country.code}`,
+                    value: country.countryCode,
+                  }))}
+                searchable
+                maxDropdownHeight={200}
+                comboboxProps={{ position: "bottom-start", middlewares: { flip: false, shift: false } }}
+                {...form.getInputProps("phonePrefix")}
+                required
+              />
+            </Grid.Col>
+            <Grid.Col span={8}>
+              <TextInput label="Phone Number" {...form.getInputProps("phoneNumber")} required />
+            </Grid.Col>
+          </Grid>
+          <Grid>
+            <Grid.Col span={8}>
+              <TextInput label="Street" {...form.getInputProps("personalAddress.street")} />
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <TextInput label="House Number" {...form.getInputProps("personalAddress.houseNumber")} />
+            </Grid.Col>
+          </Grid>
+          <SimpleGrid cols={{ base: 1, md: 2 }}>
             <TextInput label="ZIP Code" {...form.getInputProps("personalAddress.zip")} />
-          </Grid.Col>
-          <Grid.Col span={6}>
             <TextInput label="City" {...form.getInputProps("personalAddress.city")} />
-          </Grid.Col>
-          <Grid.Col span={12}>
-            <TextInput label="Country" {...form.getInputProps("personalAddress.country")} />
-          </Grid.Col>
-        </Grid>
+          </SimpleGrid>
+          <Select
+            label="Country"
+            data={CountryList.getAll()
+              .filter(
+                (value, index, array) =>
+                  index === array.findIndex((t) => t.name === value.name || t.code === value.code),
+              )
+              .map((country) => ({
+                label: `(${country.code}) ${country.name}`,
+                value: country.code,
+              }))}
+            searchable
+            maxDropdownHeight={200}
+            comboboxProps={{ position: "bottom-start", middlewares: { flip: false, shift: false } }}
+            {...form.getInputProps("personalAddress.country")}
+          />
+        </Flex>
         <Group justify="center" mt="lg">
           <Button type="submit" disabled={!isTouchedDirty} loading={updateUserMutation.isPending}>
             Save Changes

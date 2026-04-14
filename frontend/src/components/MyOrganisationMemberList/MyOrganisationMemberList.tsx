@@ -79,7 +79,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         memberId: member.id,
       });
     },
-    [deleteOrganizationMemberMutation],
+    [deleteOrganizationMemberMutation.mutate],
   );
 
   const handleAddMemberToOrganization = useCallback(
@@ -91,7 +91,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         },
       });
     },
-    [addOrganizationMemberMutation],
+    [addOrganizationMemberMutation.mutate],
   );
 
   const transferOrganisationManagerMutation = useTransferManager({
@@ -118,7 +118,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         userId,
       });
     },
-    [transferOrganisationManagerMutation],
+    [transferOrganisationManagerMutation.mutate],
   );
 
   const refetchOrganisationMembersInfo = () => {

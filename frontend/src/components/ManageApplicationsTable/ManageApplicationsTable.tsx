@@ -88,7 +88,7 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
         data: { spotId },
       });
     },
-    [updateApplicationSpotMutation],
+    [updateApplicationSpotMutation.mutate],
   );
 
   const deleteApplicationMutation = useDeleteEventApplication({
@@ -115,7 +115,7 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
       }
       deleteApplicationMutation.mutate({ id: application.id });
     },
-    [deleteApplicationMutation],
+    [deleteApplicationMutation.mutate],
   );
 
   const handleEditApplication = useCallback(
@@ -140,7 +140,12 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
 
   const columns = useMemo(
     () =>
-      applicationManagementColumns(spots, handleChangeApplicationSpot, handleEditApplication, handleDeleteApplication),
+      applicationManagementColumns({
+        spots,
+        handleChangeApplicationSpot,
+        handleEditApplication,
+        handleDeleteApplication,
+      }),
     [spots, handleChangeApplicationSpot, handleEditApplication, handleDeleteApplication],
   );
 
