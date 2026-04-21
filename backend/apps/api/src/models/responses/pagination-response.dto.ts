@@ -9,6 +9,9 @@ export class PaginationDto {
 
 	@ApiProperty({ example: 5, description: "Total number of pages" })
 	maxPages: number;
+
+	@ApiProperty({ example: 42, description: "Total number of items across all pages" })
+	totalCount: number;
 }
 
 export class PaginationResponseDto<T> {

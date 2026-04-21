@@ -8,7 +8,8 @@ import CreateEventModal from "@components/modals/CreateEventModal/CreateEventMod
 import { Button, Container, Flex, ScrollArea, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useCallback, useMemo } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 
 const ManageEventsPage = () => {
   const [isModalOpen, { open: openModal, close: closeModal }] = useDisclosure(false);
@@ -28,29 +29,44 @@ const ManageEventsPage = () => {
       },
     },
   });
-
-  const { data: eventList, refetch: refetchManagementEvents } = useGetManagementEvents();
-
-  const handleDuplicateEvent = useCallback(
-    (event: EventSimple) => {
-      duplicateEventMutation.mutate({ id: event.id });
-    },
-    [duplicateEventMutation.mutate],
+  const { data: eventList, refetch: refetchManagementEvents } = useGetManagementEvents(
+    { all: true },
+    { query: { placeholderData: keepPreviousData } },
   );
 
-  const handleDeleteEvent = useCallback(
-    (event: EventSimple) => {
-      if (!confirm(`Do you really want to delete event "${event.title}"?`)) return;
-      deleteEventMutation.mutate({ eventId: event.id });
-    },
-    [deleteEventMutation.mutate],
-  );
+  const handleDuplicateEvent = (event: EventSimple) => {
+    duplicateEventMutation.mutate({ id: event.id });
+  };
+
+  const handleDeleteEvent = (event: EventSimple) => {
+    if (!confirm(`Do you really want to delete event "${event.title}"?`)) return;
+    deleteEventMutation.mutate({ eventId: event.id });
+  };
 
   const events = useMemo(() => eventList?.data ?? [], [eventList?.data]);
-  const columns = useMemo(
-    () => eventManagementColumns(handleDuplicateEvent, handleDeleteEvent),
-    [handleDuplicateEvent, handleDeleteEvent],
-  );
+  const columns = useMemo(() => eventManagementColumns(handleDuplicateEvent, handleDeleteEvent), []);
+
+  if (!eventList?.data) {
+    return (
+      <Container size="xl">
+        <Stack>
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            justify="space-between"
+            align={{ base: "start", md: "center" }}
+            w="100%"
+            gap={24}
+          >
+            <Title order={1}>Manage Events</Title>
+            <Button onClick={openModal} leftSection={<IconPlus />}>
+              Add Event
+            </Button>
+          </Flex>
+          <DataTable columns={columns} data={[]} emptyMessage="Loading..." />
+        </Stack>
+      </Container>
+    );
+  }
 
   return (
     <Container size="xl">

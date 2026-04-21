@@ -93,6 +93,7 @@ export const peopleManagementColumns = (
     id: "isVerified",
     accessorFn: (row) => String(row.isVerified),
     header: ({ column }) => <DataTableColumnHeader column={column} title="Verified" />,
+    filterFn: (row, id, value: string[]) => value.includes(String(row.getValue(id))),
     cell: ({ row }) =>
       row.original.isVerified ? (
         <Flex justify="center">

@@ -9,7 +9,7 @@ import UpdateOrganisationModal from "@components/modals/UpdateOrganizationModal/
 import { Button, Container, Flex, ScrollArea, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 const ManageOrganisationsPage = () => {
   const [isCreateOrganizationModalOpen, { open: openAddOrganizationModal, close: closeAddOrganizationModal }] =
@@ -34,15 +34,12 @@ const ManageOrganisationsPage = () => {
     refetchOrganisationsList();
   };
 
-  const handleDeleteOrganization = useCallback(
-    (organization: Organization) => {
-      if (!confirm(`Do you really want to delete organization ${organization.name}?`)) {
-        return;
-      }
-      deleteOrganizationMutation.mutate({ id: organization.id });
-    },
-    [deleteOrganizationMutation.mutate],
-  );
+  const handleDeleteOrganization = (organization: Organization) => {
+    if (!confirm(`Do you really want to delete organization ${organization.name}?`)) {
+      return;
+    }
+    deleteOrganizationMutation.mutate({ id: organization.id });
+  };
 
   const organisations = useMemo(() => organisationsList ?? [], [organisationsList]);
 
@@ -54,8 +51,32 @@ const ManageOrganisationsPage = () => {
         openUpdateOrganizationModal,
         deleteOrganizationMutation,
       ),
-    [handleDeleteOrganization, setActiveOrganisation, openUpdateOrganizationModal, deleteOrganizationMutation],
+    [],
   );
+
+  if (!organisationsList) {
+    return (
+      <Container size="xl">
+        <Stack>
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            justify="space-between"
+            align={{ base: "start", md: "center" }}
+            w="100%"
+            gap={24}
+          >
+            <Title order={1}>Manage Organizations</Title>
+            <Button onClick={openAddOrganizationModal} leftSection={<IconPlus />}>
+              Add Organization
+            </Button>
+          </Flex>
+          <ScrollArea w="100%">
+            <DataTable columns={columns} data={[]} emptyMessage="No Organizations..." />
+          </ScrollArea>
+        </Stack>
+      </Container>
+    );
+  }
 
   return (
     <Container size="xl">

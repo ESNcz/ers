@@ -29,8 +29,8 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconMail, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
-import { useCallback, useMemo, useState } from "react";
+import { IconEdit, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
 
 interface ManageApplicationsTableProps {
   eventId: number;
@@ -51,7 +51,6 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
   const [currentSpot, setCurrentSpot] = useState<EventSpotSimple | null>(null);
   const [currentApplication, setCurrentApplication] = useState<EventApplicationDetailedWithApplications | null>(null);
 
-  const [isSpotNotifModalOpen, { open: openSpotNotifModal, close: closeSpotNotifModal }] = useDisclosure(false);
   const [isCreateSpotModalOpen, { open: openCreateSpotModal, close: closeCreateSpotModal }] = useDisclosure(false);
   const [isUpdateSpotModalOpen, { open: openUpdateSpotModal, close: closeUpdateSpotModal }] = useDisclosure(false);
 
@@ -81,15 +80,12 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
     },
   });
 
-  const handleChangeApplicationSpot = useCallback(
-    (applicationId: number, spotId: number | null) => {
-      updateApplicationSpotMutation.mutate({
-        applicationId,
-        data: { spotId },
-      });
-    },
-    [updateApplicationSpotMutation.mutate],
-  );
+  const handleChangeApplicationSpot = (applicationId: number, spotId: number | null) => {
+    updateApplicationSpotMutation.mutate({
+      applicationId,
+      data: { spotId },
+    });
+  };
 
   const deleteApplicationMutation = useDeleteEventApplication({
     mutation: {
@@ -104,27 +100,21 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
     deleteEventSpotMutation.mutate({ id: spot.id });
   };
 
-  const handleDeleteApplication = useCallback(
-    (application: EventApplicationDetailedWithApplications) => {
-      if (
-        !confirm(
-          `Do you really want to delete application for user "${application.user.firstName} ${application.user.lastName} (${application.user.username})"?`,
-        )
-      ) {
-        return;
-      }
-      deleteApplicationMutation.mutate({ id: application.id });
-    },
-    [deleteApplicationMutation.mutate],
-  );
+  const handleDeleteApplication = (application: EventApplicationDetailedWithApplications) => {
+    if (
+      !confirm(
+        `Do you really want to delete application for user "${application.user.firstName} ${application.user.lastName} (${application.user.username})"?`,
+      )
+    ) {
+      return;
+    }
+    deleteApplicationMutation.mutate({ id: application.id });
+  };
 
-  const handleEditApplication = useCallback(
-    (application: EventApplicationDetailedWithApplications) => {
-      setCurrentApplication(application);
-      openEditApplicationModal();
-    },
-    [openEditApplicationModal],
-  );
+  const handleEditApplication = (application: EventApplicationDetailedWithApplications) => {
+    setCurrentApplication(application);
+    openEditApplicationModal();
+  };
 
   const exportToSheet = useGenerateSheetEventApplication(eventId, {
     request: { responseType: "blob" },
@@ -146,7 +136,7 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
         handleEditApplication,
         handleDeleteApplication,
       }),
-    [spots, handleChangeApplicationSpot, handleEditApplication, handleDeleteApplication],
+    [eventSpotsList],
   );
 
   return (

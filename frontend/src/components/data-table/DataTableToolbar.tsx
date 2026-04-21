@@ -1,7 +1,7 @@
 import { Button, Group, TextInput } from "@mantine/core";
 import { IconSearch, IconX } from "@tabler/icons-react";
 import type { Table } from "@tanstack/react-table";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DataTableFacetedFilter } from "./DataTableFacetedFilter";
 import { DataTableViewOptions } from "./DataTableViewOptions";
@@ -29,13 +29,10 @@ export function DataTableToolbar<TData>({
   const [localSearch, setLocalSearch] = useState(globalFilter);
   const isFiltered = table.getState().columnFilters.length > 0 || globalFilter.length > 0;
 
-  const debouncedUpdate = useCallback(
-    (value: string) => {
-      const id = setTimeout(() => onGlobalFilterChange(value), 300);
-      return () => clearTimeout(id);
-    },
-    [onGlobalFilterChange],
-  );
+  const debouncedUpdate = (value: string) => {
+    const id = setTimeout(() => onGlobalFilterChange(value), 300);
+    return () => clearTimeout(id);
+  };
 
   useEffect(() => {
     const cleanup = debouncedUpdate(localSearch);

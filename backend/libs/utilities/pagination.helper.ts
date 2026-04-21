@@ -8,6 +8,7 @@ export type FormatPaginatedResponseType<T> = {
 		currentPage: number;
 		perPage: number;
 		maxPages: number;
+		totalCount: number;
 	};
 };
 
@@ -22,6 +23,7 @@ export function formatPaginatedResponse<T>(
 			currentPage: pagination?.page || 1,
 			perPage: pagination?.perPage || 10,
 			maxPages: pagination?.all ? 1 : Math.ceil(totalCount / pagination?.perPage) || undefined,
+			totalCount,
 		},
 	};
 }

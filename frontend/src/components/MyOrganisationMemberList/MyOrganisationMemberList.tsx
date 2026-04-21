@@ -3,7 +3,6 @@
 import {
   useAddOrganizationMembers,
   useDeleteOrganizationMembers,
-  useGetAllUsers,
   useGetCurrentUser,
   useGetOrganisationById,
   useOrganizationMembers,
@@ -14,11 +13,13 @@ import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTable } from "@components/data-table";
 import {
   organizationMemberFacetedFilters,
-  organizationMemberGlobalFilterFn,
   organizationMemberListColumns,
 } from "@components/data-table/organization-member-list-columns";
-import { Flex, Stack, Title } from "@mantine/core";
-import { useCallback, useMemo } from "react";
+import AddOrganisationMemberModal from "@components/modals/AddOrganisationMemberModal/AddOrganisationMemberModal";
+import { Button, Flex, Stack, Title } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconUserPlus } from "@tabler/icons-react";
+import { useMemo } from "react";
 
 interface MyOrganisationMemberListProps {
   organizationId: string;
@@ -29,7 +30,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
   const { data: currentOrganisation, refetch: refetchCurrentOrganisation } = useGetOrganisationById(organizationId);
   const { data: organizationMembers, refetch: refetchOrganisationMembers } = useOrganizationMembers(organizationId);
 
-  const { data: allUsersList, refetch: refetchAllUsers } = useGetAllUsers({ all: true });
+  const [isAddModalOpened, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
 
   const isUserManager = useMemo(() => {
     return (
@@ -42,6 +43,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
     mutation: {
       onSuccess: () => {
         refetchOrganisationMembersInfo();
+        closeAddModal();
       },
     },
   });
@@ -58,41 +60,28 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
     [organizationMembers],
   );
 
-  const nonMemberRows: OrganizationMember[] = useMemo(() => {
-    if (!isUserManager || !allUsersList?.data) return [];
-    return allUsersList.data
-      .filter((user) => !memberUserIds.has(user.id))
-      .map((user) => ({ id: `non-member-${user.id}`, user }) as OrganizationMember);
-  }, [allUsersList, memberUserIds, isUserManager]);
+  const handleDeleteOrganizationMembers = (member: OrganizationMember) => {
+    if (
+      !confirm(
+        `Do you really want to remove ${member.user.firstName} ${member.user.lastName} (${member.user.username}) from ${currentOrganisation?.name}?`,
+      )
+    ) {
+      return;
+    }
+    deleteOrganizationMemberMutation.mutate({
+      id: organizationId,
+      memberId: member.id,
+    });
+  };
 
-  const handleDeleteOrganizationMembers = useCallback(
-    (member: OrganizationMember) => {
-      if (
-        !confirm(
-          `Do you really want to remove ${member.user.firstName} ${member.user.lastName} (${member.user.username}) from ${currentOrganisation?.name}?`,
-        )
-      ) {
-        return;
-      }
-      deleteOrganizationMemberMutation.mutate({
-        id: organizationId,
-        memberId: member.id,
-      });
-    },
-    [deleteOrganizationMemberMutation.mutate],
-  );
-
-  const handleAddMemberToOrganization = useCallback(
-    (userId: string) => {
-      addOrganizationMemberMutation.mutate({
-        id: organizationId,
-        data: {
-          userIds: [userId],
-        },
-      });
-    },
-    [addOrganizationMemberMutation.mutate],
-  );
+  const handleAddMemberToOrganization = (userId: string) => {
+    addOrganizationMemberMutation.mutate({
+      id: organizationId,
+      data: {
+        userIds: [userId],
+      },
+    });
+  };
 
   const transferOrganisationManagerMutation = useTransferManager({
     mutation: {
@@ -102,59 +91,57 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
     },
   });
 
-  const handleTransferSectionManager = useCallback(
-    (organisationId: string, userId: string) => {
-      const user = organizationMembers?.data?.find((m) => m.user.id === userId)?.user;
-      if (
-        user &&
-        !confirm(
-          `Do you really want to transfer organisation manager to ${user.firstName} ${user.lastName} (${user.username})?`,
-        )
-      ) {
-        return;
-      }
-      transferOrganisationManagerMutation.mutate({
-        organisationId,
-        userId,
-      });
-    },
-    [transferOrganisationManagerMutation.mutate],
-  );
-
+  const handleTransferSectionManager = (organisationId: string, userId: string) => {
+    const user = organizationMembers?.data?.find((m) => m.user.id === userId)?.user;
+    if (
+      user &&
+      !confirm(
+        `Do you really want to transfer organisation manager to ${user.firstName} ${user.lastName} (${user.username})?`,
+      )
+    ) {
+      return;
+    }
+    transferOrganisationManagerMutation.mutate({
+      organisationId,
+      userId,
+    });
+  };
   const refetchOrganisationMembersInfo = () => {
     refetchCurrentOrganisation();
-    refetchAllUsers();
     refetchOrganisationMembers();
   };
 
-  const tableData = useMemo(() => {
-    const members = organizationMembers?.data ?? [];
-    return [...members, ...nonMemberRows];
-  }, [organizationMembers?.data, nonMemberRows]);
+  const tableData = useMemo(() => organizationMembers?.data ?? [], [organizationMembers?.data]);
 
   const columns = useMemo(() => {
-    if (!currentUser || !currentOrganisation) return [];
     return organizationMemberListColumns(
-      currentUser.id,
-      currentOrganisation,
+      currentUser?.id ?? "",
+      currentOrganisation ?? null,
       handleTransferSectionManager,
       handleDeleteOrganizationMembers,
       deleteOrganizationMemberMutation.isPending,
       isUserManager,
-      isUserManager ? handleAddMemberToOrganization : undefined,
-      memberUserIds,
     );
-  }, [
-    currentUser,
-    currentOrganisation,
-    handleTransferSectionManager,
-    handleDeleteOrganizationMembers,
-    deleteOrganizationMemberMutation.isPending,
-    isUserManager,
-    handleAddMemberToOrganization,
-    memberUserIds,
-  ]);
-  if (!currentOrganisation || !currentUser) return null;
+  }, [currentUser?.role, currentOrganisation]);
+
+  if (!currentUser || !organizationMembers?.data) {
+    return (
+      <Stack>
+        <Flex
+          w="100%"
+          direction={{ base: "column", md: "row" }}
+          justify="space-between"
+          align={{ base: "start", md: "center" }}
+          gap={16}
+        >
+          <Title order={1}>My Organisation</Title>
+          <Title order={2}>{currentOrganisation?.name}</Title>
+        </Flex>
+
+        <DataTable columns={[]} data={[]} emptyMessage="Loading..." />
+      </Stack>
+    );
+  }
 
   return (
     <Stack>
@@ -166,15 +153,30 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         gap={16}
       >
         <Title order={1}>My Organisation</Title>
-        <Title order={2}>{currentOrganisation?.name}</Title>
+        <Flex direction={{ base: "column", md: "row" }} gap={10}>
+          <Title order={2}>{currentOrganisation?.name}</Title>
+          {isUserManager && (
+            <Button leftSection={<IconUserPlus size={18} />} onClick={openAddModal}>
+              Add member
+            </Button>
+          )}
+        </Flex>
       </Flex>
       <DataTable
         columns={columns}
         data={tableData}
-        globalFilterFn={organizationMemberGlobalFilterFn}
         facetedFilters={organizationMemberFacetedFilters}
         emptyMessage="No members found."
       />
+      {isUserManager && (
+        <AddOrganisationMemberModal
+          isOpened={isAddModalOpened}
+          closeModal={closeAddModal}
+          memberUserIds={memberUserIds}
+          onAddMember={handleAddMemberToOrganization}
+          isPending={addOrganizationMemberMutation.isPending}
+        />
+      )}
     </Stack>
   );
 };

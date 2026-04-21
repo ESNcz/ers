@@ -267,6 +267,8 @@ export interface PaginationDto {
   perPage: number;
   /** Total number of pages */
   maxPages: number;
+  /** Total number of items across all pages */
+  totalCount: number;
 }
 
 export type PaginationResponseDtoDataItem = { [key: string]: unknown };

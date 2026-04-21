@@ -13,7 +13,7 @@ import EditUserModal from "@components/modals/EditUserModal/EditUserModal";
 import { Button, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTableExport } from "@tabler/icons-react";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 interface ManagePeopleListProps {}
 
@@ -31,7 +31,10 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
     },
   });
   const { data: currentUser, refetch: refetchCurrentUser } = useGetCurrentUser();
-  const { data: allUsers, refetch: refetchUsers } = useGetAllUsers({ all: true });
+
+  const { data: allUsers, refetch: refetchUsers } = useGetAllUsers({
+    all: true,
+  });
 
   const exportToSheet = useGenerateSheetUsers({
     request: {
@@ -45,20 +48,17 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
     });
   };
 
-  const handleDeleteUser = useCallback(
-    (id: string) => {
-      const deleteUser = allUsers?.data?.find((f) => f.id === id);
-      if (
-        deleteUser &&
-        !confirm(
-          `Do you really want to delete user "${deleteUser?.firstName} ${deleteUser?.lastName} (${deleteUser?.username})"?`,
-        )
+  const handleDeleteUser = (id: string) => {
+    const deleteUser = allUsers?.data?.find((f) => f.id === id);
+    if (
+      deleteUser &&
+      !confirm(
+        `Do you really want to delete user "${deleteUser?.firstName} ${deleteUser?.lastName} (${deleteUser?.username})"?`,
       )
-        return;
-      deleteUserMutation.mutate({ id });
-    },
-    [allUsers?.data, deleteUserMutation.mutate],
-  );
+    )
+      return;
+    deleteUserMutation.mutate({ id });
+  };
 
   const users = useMemo(() => allUsers?.data ?? [], [allUsers?.data]);
 
@@ -72,10 +72,34 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
         openChangeRoleModal,
         openEditUserModal,
       ),
-    [currentUser?.id, currentUser?.role, handleDeleteUser, setSelectedUserId, openChangeRoleModal, openEditUserModal],
+    // when currentUser or their role changes, we need to recalculate permissions for each row, so we need to update columns
+    [currentUser?.role],
   );
 
-  if (!currentUser || !allUsers?.data) return null;
+  if (!currentUser || !allUsers?.data) {
+    return (
+      <Stack>
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          justify="space-between"
+          align={{ base: "start", md: "center" }}
+          w="100%"
+          gap={24}
+        >
+          <Title order={1}>All Users</Title>
+          <Flex gap={16}>
+            <Button onClick={exportDataXLSX} leftSection={<IconTableExport />} color="green" variant="outline">
+              Export Data
+            </Button>
+            <Button onClick={openCreateRoleModal} leftSection={<IconPlus />}>
+              Add Role
+            </Button>
+          </Flex>
+        </Flex>
+        <DataTable columns={columns} data={[]} emptyMessage="Loading..." />
+      </Stack>
+    );
+  }
 
   return (
     <Stack>

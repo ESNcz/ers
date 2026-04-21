@@ -16,6 +16,11 @@ export function DataTable<TData>({
   enableVirtualization = false,
   pageSize = 10,
   pageSizeOptions,
+  manualPagination,
+  pageCount,
+  totalRows,
+  paginationState,
+  onPaginationChange,
   toolbar: customToolbar,
   emptyMessage = "No results found.",
   className,
@@ -30,6 +35,10 @@ export function DataTable<TData>({
     enableRowSelection,
     enablePagination: enablePagination,
     pageSize,
+    manualPagination,
+    pageCount,
+    paginationState,
+    onPaginationChange,
     initialSorting,
     initialColumnFilters,
     initialColumnVisibility,
@@ -91,7 +100,12 @@ export function DataTable<TData>({
 
       {/* Pagination */}
       {enablePagination && (
-        <DataTablePagination table={table} pageSizeOptions={pageSizeOptions} showRowSelection={enableRowSelection} />
+        <DataTablePagination
+          table={table}
+          pageSizeOptions={pageSizeOptions}
+          showRowSelection={enableRowSelection}
+          totalRows={totalRows}
+        />
       )}
     </Stack>
   );

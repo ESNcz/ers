@@ -7,19 +7,6 @@ import type { ColumnDef, FilterFn } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "./DataTableColumnHeader";
 import type { DataTableFacetedFilterConfig } from "./types";
 
-export const organizationMemberGlobalFilterFn: FilterFn<OrganizationMember> = (row, _columnId, filterValue) => {
-  const search = (filterValue as string).toLowerCase();
-  const { user } = row.original;
-  return [
-    user.firstName,
-    user.lastName,
-    `${user.firstName} ${user.lastName}`,
-    user.email,
-    user.gender,
-    user.role?.name,
-  ].some((val) => val?.toLowerCase().includes(search));
-};
-
 export const organizationMemberFacetedFilters: DataTableFacetedFilterConfig[] = [
   {
     columnId: "gender",
@@ -35,7 +22,7 @@ export const organizationMemberFacetedFilters: DataTableFacetedFilterConfig[] = 
 
 export const organizationMemberListColumns = (
   currentUserId: string,
-  currentOrganisation: Organization,
+  currentOrganisation: Organization | null,
   handleTransferSectionManager: (organisationId: string, userId: string) => void,
   handleDeleteOrganizationMembers: (member: OrganizationMember) => void,
   deleteOrganizationMemberMutationIsPending: boolean,
@@ -61,7 +48,6 @@ export const organizationMemberListColumns = (
     accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
     size: 148,
-
     enableHiding: false,
     enableGlobalFilter: true,
     cell: ({ row }) => <Text>{`${row.original.user.firstName} ${row.original.user.lastName}`}</Text>,
@@ -154,7 +140,7 @@ export const organizationMemberListColumns = (
                     variant="subtle"
                     size={48}
                     color="yellow"
-                    onClick={() => handleTransferSectionManager(currentOrganisation.id, member.user.id)}
+                    onClick={() => handleTransferSectionManager(currentOrganisation?.id ?? "", member.user.id)}
                     disabled={currentOrganisation?.manager?.id === member.user.id}
                   >
                     <IconCrown width={32} height={32} />

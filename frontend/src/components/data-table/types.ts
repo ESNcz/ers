@@ -2,6 +2,7 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   FilterFn,
+  PaginationState,
   SortingState,
   VisibilityState,
   Table,
@@ -33,6 +34,11 @@ export interface DataTableProps<TData> {
   virtualContainerHeight?: number
   pageSize?: number
   pageSizeOptions?: number[]
+  manualPagination?: boolean
+  pageCount?: number
+  totalRows?: number
+  paginationState?: PaginationState
+  onPaginationChange?: (pagination: PaginationState) => void
   onRowSelectionChange?: (rows: Row<TData>[]) => void
   toolbar?: (table: Table<TData>) => React.ReactNode
   emptyMessage?: string
