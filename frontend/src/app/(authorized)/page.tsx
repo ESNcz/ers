@@ -13,55 +13,48 @@ const Home = () => {
   const { data: upcomingEvents } = useGetEvents({ sinceSince: newTime });
 
   if (!upcomingEvents?.data || !ongoingEvents?.data) {
-    return null;
+    return (
+      <Center>
+        <Loader />
+      </Center>
+    );
   }
 
   return (
     <Container size="xl">
       <Stack>
-        {ongoingEvents && (
+        {ongoingEvents.data.length > 0 && (
           <Stack>
-            {ongoingEvents.data.length > 0 && (
-              <>
-                <Title>Ongoing Events</Title>
-
-                {ongoingEvents.data.map((event, index) => (
-                  <Anchor
-                    component={Link}
-                    key={`event-card-${index}-${event.id}`}
-                    href={routes.EVENT_DETAIL({ id: event.id })}
-                    underline="never"
-                  >
-                    <EventCard event={event} />
-                  </Anchor>
-                ))}
-              </>
-            )}
+            <Title>Ongoing Events</Title>
+            {ongoingEvents.data.map((event, index) => (
+              <Anchor
+                component={Link}
+                key={`event-card-${index}-${event.id}`}
+                href={routes.EVENT_DETAIL({ id: event.id })}
+                underline="never"
+              >
+                <EventCard event={event} />
+              </Anchor>
+            ))}
           </Stack>
         )}
         <Title>Upcoming Events</Title>
-        {upcomingEvents ? (
-          <Stack>
-            {upcomingEvents.data.length > 0 ? (
-              upcomingEvents.data.map((event, index) => (
-                <Anchor
-                  component={Link}
-                  key={`event-card-${index}-${event.id}`}
-                  href={routes.EVENT_DETAIL({ id: event.id })}
-                  underline="never"
-                >
-                  <EventCard event={event} />
-                </Anchor>
-              ))
-            ) : (
-              <Text>No upcoming events</Text>
-            )}
-          </Stack>
-        ) : (
-          <Center>
-            <Loader />
-          </Center>
-        )}
+        <Stack>
+          {upcomingEvents.data.length > 0 ? (
+            upcomingEvents.data.map((event, index) => (
+              <Anchor
+                component={Link}
+                key={`event-card-${index}-${event.id}`}
+                href={routes.EVENT_DETAIL({ id: event.id })}
+                underline="never"
+              >
+                <EventCard event={event} />
+              </Anchor>
+            ))
+          ) : (
+            <Text>No upcoming events</Text>
+          )}
+        </Stack>
       </Stack>
     </Container>
   );

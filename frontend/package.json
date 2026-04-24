@@ -27,6 +27,7 @@
     "@mantine/tiptap": "^8.3.8",
     "@tabler/icons-react": "^3.35.0",
     "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-table": "^8.21.3",
     "@tiptap/extension-character-count": "^3.13.0",
     "@tiptap/extension-color": "^3.13.0",
     "@tiptap/extension-highlight": "^3.13.0",

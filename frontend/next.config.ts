@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: false,
+  // reactCompiler: true,
   env: {
     NEXT_PUBLIC_WEB_DOMAIN: process.env.WEB_DOMAIN,
     NEXT_PUBLIC_API_DOMAIN: process.env.API_DOMAIN,

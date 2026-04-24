@@ -115,6 +115,11 @@ export class EventApplicationsService {
 				invoiceAddress: true,
 				...options?.relations,
 			},
+			order: {
+				event: {
+					since: "ASC",
+				},
+			},
 			take: pagination?.all ? pagination.perPage : undefined,
 			skip: pagination?.all ? (pagination.page - 1) * pagination.perPage : undefined,
 		});

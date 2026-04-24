@@ -32,6 +32,15 @@ export class CreateEvent {
 	@Transform(DateTransform)
 	registrationDeadline: string;
 
+	/**
+	 * Deadline for managers to assign the priority list. Defaults to event start date if not provided.
+	 * @example 2024-12-20T16:48:34.681Z
+	 */
+	@IsOptional()
+	@IsValidDate()
+	@Transform(DateTransform)
+	priorityListDeadline?: string;
+
 	@IsOptional()
 	links?: CreateEventLinkPartial[] = [];
 

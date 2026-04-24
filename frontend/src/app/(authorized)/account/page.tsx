@@ -272,6 +272,7 @@ const AccountPage = () => {
             <TextInput label="Username" {...form.getInputProps("username")} />
             <Select
               label="Gender"
+              key={form.key("gender")}
               data={Object.entries(CreateUserGender).map(([key, gender]) => {
                 return {
                   label: gender, // (String(gender).charAt(0).toUpperCase() + String(gender).slice(1)).replaceAll("-", " "),
@@ -286,18 +287,7 @@ const AccountPage = () => {
             <Grid.Col span={4}>
               <Select
                 label="Prefix"
-                defaultValue={
-                  form.values.phonePrefix
-                    ? () => {
-                        if (!form.values.phonePrefix) return null;
-                        const country = CountryList.findOneByDialCode(form.values.phonePrefix);
-                        return {
-                          label: `${country?.flag} (${country?.countryCode}) ${country?.code}`,
-                          value: country?.code,
-                        };
-                      }
-                    : null
-                }
+                key={form.key("phonePrefix")}
                 data={CountryList.getAll()
                   .filter(
                     (value, index, array) => index === array.findIndex((t) => t.countryCode === value.countryCode),

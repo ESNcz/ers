@@ -6,3 +6,4 @@ postgres_data
 .env
 certbot
 database/*
+.DS_Store

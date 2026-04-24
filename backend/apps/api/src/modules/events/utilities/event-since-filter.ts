@@ -10,7 +10,7 @@ export const filterSince = (filter?: EventFilter) => {
 	if (!filter) return {};
 
 	if (filter.since && filter.to) {
-		return Between(filter.since, filter.to);
+		return { since: Between(filter.since, filter.to) };
 	}
 
 	if (filter.since) {

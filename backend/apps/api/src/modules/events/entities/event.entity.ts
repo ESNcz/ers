@@ -87,6 +87,9 @@ export class Event extends BaseEntity {
 	@Column()
 	registrationDeadline: Date;
 
+	@Column({ nullable: true })
+	priorityListDeadline: Date | null;
+
 	/**
 	 * If true, generate invoices after {@link registrationDeadline}
 	 */

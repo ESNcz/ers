@@ -129,6 +129,7 @@ export const RolePermissionsItem = {
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",
+  userupdate: "user.update",
   userupdateRole: "user.updateRole",
   userdelete: "user.delete",
 } as const;
@@ -213,27 +214,20 @@ export interface UpdateUser {
   personalAddress?: UpdateUserPersonalAddress;
   /** @nullable */
   pronouns?: string | null;
-  /**
-   * User password
-   * @minLength 6
-   */
-  password?: string;
   /** First name */
   firstName?: string;
   /** Last name */
   lastName?: string;
-  /**
-   * Must not contain special characters
-   * @minLength 6
-   * @pattern /^[a-zA-Z0-9_-]+$/
-   */
-  username?: string;
   /** User gender */
   gender?: UpdateUserGender;
   /** User phone number prefix */
   phonePrefix?: string;
   /** User phone number */
   phoneNumber?: string;
+  /** User birthdate */
+  birthDate?: string;
+  /** User nationality */
+  nationality?: string;
 }
 
 export interface UpdatePhoto {
@@ -273,6 +267,8 @@ export interface PaginationDto {
   perPage: number;
   /** Total number of pages */
   maxPages: number;
+  /** Total number of items across all pages */
+  totalCount: number;
 }
 
 export type PaginationResponseDtoDataItem = { [key: string]: unknown };
@@ -416,6 +412,8 @@ export interface Event {
   links: EventLink[];
   visible: boolean;
   registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
   /** If true, generate invoices after {@link registrationDeadline} */
   generateInvoices: boolean;
   /**
@@ -704,6 +702,8 @@ export interface EventDetail {
   termsAndConditionsLink: string;
   createdAt: string;
   registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
   /**
    * Additional registration form
 Each event can have different "requirements"
@@ -740,6 +740,8 @@ export interface CreateEvent {
   since: string;
   until: string;
   registrationDeadline: string;
+  /** Deadline for managers to assign the priority list. Defaults to event start date if not provided. */
+  priorityListDeadline?: string;
   links?: CreateEventLinkPartial[];
   visible?: boolean;
   /** Additional registration properties
@@ -800,6 +802,8 @@ export interface UpdateEvent {
   since?: string;
   until?: string;
   registrationDeadline?: string;
+  /** Deadline for managers to assign the priority list. Defaults to event start date if not provided. */
+  priorityListDeadline?: string;
   visible?: boolean;
   /** Generate invoices after {@link registrationDeadline} */
   generateInvoices?: boolean;
@@ -883,6 +887,7 @@ export const CreateRolePermissionsItem = {
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",
+  userupdate: "user.update",
   userupdateRole: "user.updateRole",
   userdelete: "user.delete",
 } as const;
@@ -919,11 +924,6 @@ export interface CreateSugarCubeDto {
   isAnonymous: boolean;
 }
 
-/**
- * @nullable
- */
-export type SugarCubeFromUser = EventApplication | null;
-
 export interface SugarCube {
   id: number;
   /** Message */
@@ -932,8 +932,7 @@ export interface SugarCube {
   isAnonymous: boolean;
   /** Whether the sugar cube has been reported */
   isReported: boolean;
-  /** @nullable */
-  fromUser: SugarCubeFromUser;
+  fromUser: EventApplication;
   toUser: EventApplication;
   event: Event;
   createdAt: string;
@@ -1102,6 +1101,7 @@ export const GetRoleAllPermissions200Item = {
   rolecreate: "role.create",
   roleupdate: "role.update",
   roledelete: "role.delete",
+  userupdate: "user.update",
   userupdateRole: "user.updateRole",
   userdelete: "user.delete",
 } as const;

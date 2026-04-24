@@ -44,3 +44,6 @@ jspm_packages
 .next
 next-env.d.ts
 certificates
+
+.DS_Store
+dist

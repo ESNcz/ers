@@ -29,6 +29,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
       title: eventDetail.title,
       visible: eventDetail.visible,
       registrationDeadline: eventDetail.registrationDeadline,
+      priorityListDeadline: eventDetail.priorityListDeadline ?? undefined,
       capacity: eventDetail.capacity,
       shortDescription: eventDetail.shortDescription,
       longDescription: eventDetail.longDescription,
@@ -51,6 +52,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
       onSuccess: (data) => {
         form.setInitialValues({
           ...data,
+          priorityListDeadline: data.priorityListDeadline ?? undefined,
           links: data.links.map(({ name, link, id }) => ({ id, name, link, customId: crypto.randomUUID() })),
         });
         form.reset();
@@ -103,6 +105,20 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
             />
           </SimpleGrid>
           <SimpleGrid cols={2}>
+            <DateTimePicker
+              label="Priority List Deadline"
+              placeholder="Defaults to event start date"
+              value={form.values.priorityListDeadline ? dayjs(form.values.priorityListDeadline).toDate() : null}
+              onChange={(value) => {
+                form.setFieldValue("priorityListDeadline", value ? dayjs(value).toISOString() : undefined);
+              }}
+              clearable
+              timePickerProps={{
+                withDropdown: true,
+              }}
+            />
+          </SimpleGrid>
+          <SimpleGrid cols={2}>
             <DateInput
               label="Date Since"
               value={dayjs(form.values.since).toDate()}
@@ -122,6 +138,9 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
           </SimpleGrid>
           <RichTextEditor label="Short Description" {...form.getInputProps("shortDescription")} letterLimit={300} />
           <RichTextEditor label="Long Description" {...form.getInputProps("longDescription")} />
+          <TextInput label="Terms and Conditions Link" {...form.getInputProps("termsAndConditionsLink")} />
+          <TextInput label="Code of Conduct Link" {...form.getInputProps("codeOfConductLink")} />
+          <TextInput label="Photo Consent Link" {...form.getInputProps("photoPolicyLink")} />
         </Flex>
         <Fieldset legend="Link tree" variant="filled" p={16}>
           <LinkTree links={form.values.links ?? []} onChange={(links) => form.setFieldValue("links", links)} />

@@ -10,7 +10,7 @@ import {
   useGetEventApplications,
   useUserOrganizationMemberships,
 } from "@/utils/api";
-import { hasEveryPermissions, hasSomePermissions, isUserAdmin, isUserManager } from "@/utils/checkPermissions";
+import { hasEveryPermissions, hasSomePermissions, isUserManager } from "@/utils/checkPermissions";
 import routes from "@/utils/routes";
 import { dateWithTime, dayMonthYear } from "@/utils/time";
 import ApiImage from "@components/ApiImage/ApiImage";
@@ -76,6 +76,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
   });
 
   const isRegistrationOpen = dayjs(eventDetail?.registrationDeadline).isAfter(dayjs());
+  const isPriorityListOpen = dayjs(eventDetail?.priorityListDeadline ?? eventDetail?.since).isAfter(dayjs());
 
   const deleteEventApplication = useDeleteEventApplication({
     mutation: {
@@ -88,6 +89,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
   const isUserRegistered = useMemo(() => {
     return eventApplications?.some((f) => f.user.id === currentUser?.id);
   }, [eventApplications, id]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
@@ -109,6 +111,8 @@ const EventDetail = ({ id }: EventDetailProps) => {
   if (!eventApplications || !eventDetail || !currentUser) {
     return null;
   }
+
+  const isRegisteredOrAdmin = isUserRegistered || hasSomePermissions(currentUser.role, ["event.reviewSugarCubes"]);
 
   return eventDetail ? (
     <>
@@ -176,15 +180,17 @@ const EventDetail = ({ id }: EventDetailProps) => {
                 <Button
                   onClick={openModalPriorityList}
                   color="darkBlue"
-                  disabled={!(isUserAdmin(currentUser.role) || isRegistrationOpen)}
+                  disabled={!isPriorityListOpen}
                 >
                   Priority list
                 </Button>
-
-                <Button component={Link} href={routes.SUGAR_CUBES({ id: Number(id) })} color="darkBlue">
-                  Sugar Cubes
-                </Button>
               </>
+            )}
+
+            {isRegisteredOrAdmin && (
+              <Button component={Link} href={routes.SUGAR_CUBES({ id: Number(id) })} color="darkBlue">
+                Sugar Cubes
+              </Button>
             )}
 
             <Divider my={8} />
