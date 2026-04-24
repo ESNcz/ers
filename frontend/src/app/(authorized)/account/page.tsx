@@ -160,7 +160,6 @@ const AccountPage = () => {
   });
 
   const handleUpdateUser = (values: UpdateUser) => {
-    console.log("value", values);
     updateUserMutation.mutate({
       data: values,
     });
