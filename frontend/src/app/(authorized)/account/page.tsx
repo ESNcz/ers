@@ -6,6 +6,7 @@ import { apiImageURL } from "@/utils/apiImageURL";
 import { Dropzone } from "@components/Dropzone/Dropzone";
 import ImageEditor from "@components/ImageEditor/ImageEditor";
 import getCroppedImg from "@components/ImageEditor/imageEdit";
+import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
 import {
   Accordion,
@@ -28,6 +29,7 @@ import { Form, isNotEmpty, useForm } from "@mantine/form";
 import { useHover } from "@mantine/hooks";
 import { IconMoodEdit } from "@tabler/icons-react";
 import CountryList from "country-list-with-dial-code-and-flag";
+import dayjs from "dayjs";
 import React, { useEffect, useMemo, useState } from "react";
 import { FileWithPath } from "react-dropzone-esm";
 import { Area } from "react-easy-crop";
@@ -73,6 +75,7 @@ const AccountPage = () => {
       username: currentUser.username,
       gender: currentUser.gender,
       pronouns: currentUser.pronouns ?? undefined,
+      birthDate: currentUser.birthDate ?? undefined,
       phonePrefix: currentUser.phonePrefix,
       phoneNumber: currentUser.phoneNumber,
       personalAddress: currentUser.personalAddress ?? {
@@ -95,9 +98,10 @@ const AccountPage = () => {
     initialValues: {
       firstName: undefined,
       lastName: undefined,
-      username: undefined,
+      // username: undefined,
       gender: undefined,
       pronouns: undefined,
+      birthDate: undefined,
       password: undefined,
       confirmPassword: undefined,
       phonePrefix: undefined,
@@ -141,8 +145,13 @@ const AccountPage = () => {
   const updateUserMutation = useUpdateCurrentUser({
     mutation: {
       onSuccess: (data) => {
-        form.setInitialValues(data);
-        form.setValues(data);
+        const normalized = {
+          ...data,
+          // // birthDate from User type is string | null it needs to be undefined for UpdateUserProps
+          birthDate: data.birthDate ?? undefined,
+        };
+        form.setInitialValues(normalized);
+        form.setValues(normalized);
         form.resetDirty();
         form.resetTouched();
         fetchCurrentUser();
@@ -151,6 +160,7 @@ const AccountPage = () => {
   });
 
   const handleUpdateUser = (values: UpdateUser) => {
+    console.log("value", values);
     updateUserMutation.mutate({
       data: values,
     });
@@ -283,6 +293,17 @@ const AccountPage = () => {
             />
             <TextInput label="Pronouns" {...form.getInputProps("pronouns")} />
           </SimpleGrid>
+          <DateInput
+            label="Birthdate"
+            defaultValue={null}
+            placeholder="Birthdate"
+            defaultLevel="year"
+            value={form.getValues().birthDate ? dayjs(form.getValues().birthDate).toDate() : null}
+            onChange={(value) => {
+              if (value) form.setFieldValue("birthDate", dayjs(value).toISOString());
+            }}
+            error={form.errors.birthDate}
+          />
           <Grid>
             <Grid.Col span={4}>
               <Select
