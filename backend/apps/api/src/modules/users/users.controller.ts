@@ -133,7 +133,7 @@ export class UsersController {
     @Body() body: UpdateUser,
     @CurrentUser() requestUser: User,
   ) {
-    const lowerCaseUsername = body?.username.toLowerCase();
+    const lowerCaseUsername = body?.username?.toLowerCase();
     if (body.username && lowerCaseUsername !== requestUser.username) {
       const exists = await this.usersService.exist({
         username: lowerCaseUsername,
