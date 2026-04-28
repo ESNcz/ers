@@ -90,7 +90,6 @@ const EventDetail = ({ id }: EventDetailProps) => {
     return eventApplications?.some((f) => f.user.id === currentUser?.id);
   }, [eventApplications, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
     const eventApplicationId = eventApplications?.find((f) => f.user.id === currentUser?.id)?.id;
@@ -177,11 +176,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
                   Event Applications
                 </Button>
 
-                <Button
-                  onClick={openModalPriorityList}
-                  color="darkBlue"
-                  disabled={!isPriorityListOpen}
-                >
+                <Button onClick={openModalPriorityList} color="darkBlue" disabled={!isPriorityListOpen}>
                   Priority list
                 </Button>
               </>

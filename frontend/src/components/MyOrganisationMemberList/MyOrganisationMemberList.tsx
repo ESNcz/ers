@@ -28,7 +28,9 @@ interface MyOrganisationMemberListProps {
 const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListProps) => {
   const { data: currentUser } = useGetCurrentUser();
   const { data: currentOrganisation, refetch: refetchCurrentOrganisation } = useGetOrganisationById(organizationId);
-  const { data: organizationMembers, refetch: refetchOrganisationMembers } = useOrganizationMembers(organizationId);
+  const { data: organizationMembers, refetch: refetchOrganisationMembers } = useOrganizationMembers(organizationId, {
+    all: true,
+  });
 
   const [isAddModalOpened, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
 
