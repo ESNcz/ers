@@ -320,6 +320,8 @@ export class UsersController {
       },
     );
 
+    const orgMap = await this.organizationService.findAllMembershipsGroupedByUser();
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Export");
 
@@ -338,6 +340,7 @@ export class UsersController {
 
       { header: "Role", key: "role" },
       { header: "Role Permissions", key: "rolePermissions" },
+      { header: "Organisations", key: "organisations" },
     ];
 
     userList.data.map((user) => {
@@ -358,6 +361,7 @@ ${user?.personalAddress?.country}`
         gender: user?.gender,
         role: user?.role?.name,
         rolePermissions: user?.role?.permissions.toString(),
+        organisations: (orgMap.get(user.id) ?? []).map((o) => o.name).join(", "),
       });
     });
 

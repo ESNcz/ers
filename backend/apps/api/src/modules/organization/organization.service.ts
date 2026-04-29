@@ -143,6 +143,27 @@ export class OrganizationService {
   }
 
   /**
+   * Fetch all organisation memberships in a single query, grouped by user id.
+   */
+  async findAllMembershipsGroupedByUser(): Promise<
+    Map<string, Organization[]>
+  > {
+    const members = await this.memberRepository.find({
+      where: { organization: { isDeleted: false } },
+      relations: { organization: true, user: true },
+    });
+
+    const map = new Map<string, Organization[]>();
+    for (const m of members) {
+      if (!m.user?.id || !m.organization) continue;
+      const list = map.get(m.user.id) ?? [];
+      list.push(m.organization);
+      map.set(m.user.id, list);
+    }
+    return map;
+  }
+
+  /**
    * Add new members to the organization
    * @param organization Organization
    * @param addMembers Members
