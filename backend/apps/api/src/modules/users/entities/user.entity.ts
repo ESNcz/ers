@@ -10,11 +10,13 @@ import {
   Entity,
   Index,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 
 import { Address } from "@api/modules/addresses/entities";
+import type { OrganizationMember } from "@api/modules/organization/entities";
 import { Photo } from "@api/modules/photo";
 import { hashPassword } from "../../auth/utilities/crypto";
 import { Role } from "../../roles";
@@ -87,6 +89,10 @@ export class User extends BaseEntity {
 
 	@ManyToOne(() => Role, { cascade: true, eager: true, onDelete: "SET NULL" })
 	role: Role | null;
+
+	@ApiHideProperty()
+	@OneToMany("OrganizationMember", (m: OrganizationMember) => m.user)
+	memberships: OrganizationMember[];
 
 	@Column({ default: false, select: false })
 	isDeleted: boolean;

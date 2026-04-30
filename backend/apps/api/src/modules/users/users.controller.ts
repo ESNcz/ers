@@ -310,17 +310,7 @@ export class UsersController {
   )
   @Get("export/users")
   async generateSheetUsers(@Res() res: Response) {
-    const userList = await this.usersService.find(
-      { all: true },
-      {
-        relations: {
-          personalAddress: true,
-          role: true,
-        },
-      },
-    );
-
-    const orgMap = await this.organizationService.findAllMembershipsGroupedByUser();
+    const userList = await this.usersService.findAllForExport();
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Export");
@@ -343,7 +333,7 @@ export class UsersController {
       { header: "Organisations", key: "organisations" },
     ];
 
-    userList.data.map((user) => {
+    userList.map((user) => {
       worksheet.addRow({
         firstName: user?.firstName,
         lastName: user?.lastName,
@@ -361,7 +351,10 @@ ${user?.personalAddress?.country}`
         gender: user?.gender,
         role: user?.role?.name,
         rolePermissions: user?.role?.permissions.toString(),
-        organisations: (orgMap.get(user.id) ?? []).map((o) => o.name).join(", "),
+        organisations: (user.memberships ?? [])
+          .filter((m) => m.organization)
+          .map((m) => m.organization.name)
+          .join(", "),
       });
     });
 
