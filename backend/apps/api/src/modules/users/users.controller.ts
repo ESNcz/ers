@@ -11,6 +11,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Res,
   UnauthorizedException,
   UseGuards,
@@ -23,6 +24,7 @@ import {
   ApiExtraModels,
   ApiNoContentResponse,
   ApiOkResponse,
+  ApiQuery,
   ApiTags,
   getSchemaPath,
 } from "@nestjs/swagger";
@@ -271,11 +273,23 @@ export class UsersController {
       },
     },
   })
+  @ApiQuery({
+    name: "excludeOrganizationId",
+    type: String,
+    required: false,
+    description:
+      "If provided, excludes users that are already members of this organization (UUID).",
+  })
   @Get("all")
-  getAllUsers(@Pagination() pagination?: PaginationOptions) {
-    return this.usersService.find(pagination, {
-      relations: { personalAddress: true, role: true },
-    });
+  getAllUsers(
+    @Pagination() pagination?: PaginationOptions,
+    @Query("excludeOrganizationId") excludeOrganizationId?: string,
+  ) {
+    return this.usersService.find(
+      pagination,
+      { relations: { personalAddress: true, role: true } },
+      { excludeOrganizationId },
+    );
   }
 
   /**
