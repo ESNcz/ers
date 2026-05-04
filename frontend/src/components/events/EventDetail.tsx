@@ -75,8 +75,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
     },
   });
 
-  const isRegistrationOpen = dayjs(eventDetail?.registrationDeadline).isAfter(dayjs());
-  const isPriorityListOpen = dayjs(eventDetail?.priorityListDeadline ?? eventDetail?.since).isAfter(dayjs());
+  const isPriorityListOpen = dayjs(eventDetail?.priorityListDeadline ?? eventDetail?.until).isAfter(dayjs());
 
   const deleteEventApplication = useDeleteEventApplication({
     mutation: {

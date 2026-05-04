@@ -27,7 +27,7 @@ import {
   getSchemaPath,
 } from "@nestjs/swagger";
 import { FormDataRequest } from "nestjs-form-data";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 import { CookieGuard } from "../auth/providers/guards";
 import { Event, EventsService } from "./index";
@@ -195,9 +195,6 @@ export class EventsController {
     event.createdByUser = currentUser;
     event.visible = body.visible;
     event.registrationDeadline = new Date(body.registrationDeadline);
-    event.priorityListDeadline = body.priorityListDeadline
-      ? new Date(body.priorityListDeadline)
-      : new Date(body.since);
     event.registrationForm = body.registrationForm;
     event.capacity = body.capacity;
     event.codeOfConductLink = body.codeOfConductLink;
@@ -205,6 +202,16 @@ export class EventsController {
     event.termsAndConditionsLink = body.termsAndConditionsLink;
     event.links = newCreatedLinks;
     event.applications = [];
+
+    let priorityListDeadline = new Date(body.priorityListDeadline);
+
+    if (dayjs(priorityListDeadline).isAfter(event.until)) {
+      throw new BadRequestException(
+        "Priority list deadline cannot be set after the event has ended",
+      );
+    }
+
+    event.priorityListDeadline = priorityListDeadline ?? event.until;
 
     event = await this.eventsService.save(event);
     return this.eventSimpleWithApplicationsMapper.map(event);
@@ -293,13 +300,11 @@ export class EventsController {
     if (!event) throw new NotFoundException("Event not found");
 
     if (
-      dayjs(event.until).isBefore(dayjs()) &&
-      body.priorityListDeadline !== undefined &&
-      (!event.priorityListDeadline ||
-        !dayjs(body.priorityListDeadline).isSame(event.priorityListDeadline))
+      body.priorityListDeadline &&
+      dayjs(body.priorityListDeadline).isAfter(dayjs(event.until))
     ) {
       throw new BadRequestException(
-        "Cannot modify priority list deadline: the event is finished",
+        "Priority list deadline cannot be set after the event has ended",
       );
     }
 

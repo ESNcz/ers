@@ -29,7 +29,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
       title: eventDetail.title,
       visible: eventDetail.visible,
       registrationDeadline: eventDetail.registrationDeadline,
-      priorityListDeadline: eventDetail.priorityListDeadline ?? undefined,
+      priorityListDeadline: eventDetail.priorityListDeadline ?? eventDetail.until,
       capacity: eventDetail.capacity,
       shortDescription: eventDetail.shortDescription,
       longDescription: eventDetail.longDescription,
@@ -52,7 +52,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
       onSuccess: (data) => {
         form.setInitialValues({
           ...data,
-          priorityListDeadline: data.priorityListDeadline ?? undefined,
+          priorityListDeadline: data.priorityListDeadline ?? data.until,
           links: data.links.map(({ name, link, id }) => ({ id, name, link, customId: crypto.randomUUID() })),
         });
         form.reset();
@@ -107,7 +107,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
           <SimpleGrid cols={2}>
             <DateTimePicker
               label="Priority List Deadline"
-              placeholder="Defaults to event start date"
+              placeholder="Defaults to event end date"
               value={form.values.priorityListDeadline ? dayjs(form.values.priorityListDeadline).toDate() : null}
               onChange={(value) => {
                 form.setFieldValue("priorityListDeadline", value ? dayjs(value).toISOString() : undefined);
