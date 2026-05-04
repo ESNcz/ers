@@ -76,7 +76,7 @@ export const organizationMemberListColumns = (
     id: "gender",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Gender" />,
     accessorFn: (row) => row.user.gender,
-    filterFn: "arrIncludesSome",
+    filterFn: (row, id, value: string[]) => value.includes(String(row.getValue(id))),
     size: 148,
     minSize: 148,
     enableGlobalFilter: true,
