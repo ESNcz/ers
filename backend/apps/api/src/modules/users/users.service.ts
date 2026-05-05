@@ -98,35 +98,14 @@ export class UsersService {
 
   /**
    * Find all users ordered by lastName
-   * @param pagination Pagination options
-   * @param options Find options
-   * @param filters Optional extra filters (e.g. exclude users already in an organization)
    * @returns FormatPaginatedResponseType<User[]>
    */
-  async find(
-    pagination?: PaginationOptions,
-    options?: FindManyOptions<User>,
-    filters?: { excludeOrganizationId?: string },
-  ) {
-    const where: FindOptionsWhere<User> = { isDeleted: false };
-
-    if (filters?.excludeOrganizationId) {
-      const members = await this.UsersRepository.manager.find(
-        OrganizationMember,
-        {
-          where: { organization: { id: filters.excludeOrganizationId } },
-          relations: { user: true },
-        },
-      );
-      const memberIds = members.map((m) => m.user.id);
-      if (memberIds.length > 0) {
-        where.id = Not(In(memberIds));
-      }
-    }
-
+  async find(pagination?: PaginationOptions, options?: FindManyOptions<User>) {
     const [users, totalCount] = await this.UsersRepository.findAndCount({
       order: { createdAt: "ASC" },
-      where,
+      where: {
+        isDeleted: false,
+      },
       relations: {
         ...options?.relations,
       },
@@ -138,6 +117,26 @@ export class UsersService {
     });
 
     return formatPaginatedResponse<User>(users, totalCount, pagination);
+  }
+
+  /**
+   * Find all users with their memberships and organisations, intended for the export endpoint.
+   * Single query that joins personalAddress, role and memberships.organization.
+   */
+  findAllForExport(): Promise<User[]> {
+    return this.UsersRepository.createQueryBuilder("user")
+      .leftJoinAndSelect("user.personalAddress", "personalAddress")
+      .leftJoinAndSelect("user.role", "role")
+      .leftJoinAndSelect("user.memberships", "member")
+      .leftJoinAndSelect(
+        "member.organization",
+        "organization",
+        "organization.isDeleted = :isDeleted",
+        { isDeleted: false },
+      )
+      .where("user.isDeleted = :userIsDeleted", { userIsDeleted: false })
+      .orderBy("user.createdAt", "ASC")
+      .getMany();
   }
 
   /**

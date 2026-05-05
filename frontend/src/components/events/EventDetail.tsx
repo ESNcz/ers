@@ -75,8 +75,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
     },
   });
 
-  const isRegistrationOpen = dayjs(eventDetail?.registrationDeadline).isAfter(dayjs());
-  const isPriorityListOpen = dayjs(eventDetail?.priorityListDeadline ?? eventDetail?.since).isAfter(dayjs());
+  const isPriorityListOpen = dayjs(eventDetail?.priorityListDeadline ?? eventDetail?.until).isAfter(dayjs());
 
   const deleteEventApplication = useDeleteEventApplication({
     mutation: {
@@ -89,7 +88,6 @@ const EventDetail = ({ id }: EventDetailProps) => {
   const isUserRegistered = useMemo(() => {
     return eventApplications?.some((f) => f.user.id === currentUser?.id);
   }, [eventApplications, id]); // eslint-disable-line react-hooks/exhaustive-deps
-
 
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
@@ -177,11 +175,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
                   Event Applications
                 </Button>
 
-                <Button
-                  onClick={openModalPriorityList}
-                  color="darkBlue"
-                  disabled={!isPriorityListOpen}
-                >
+                <Button onClick={openModalPriorityList} color="darkBlue" disabled={!isPriorityListOpen}>
                   Priority list
                 </Button>
               </>

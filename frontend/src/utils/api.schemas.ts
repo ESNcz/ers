@@ -218,6 +218,11 @@ export interface UpdateUser {
   firstName?: string;
   /** Last name */
   lastName?: string;
+  /**
+   * User password
+   * @minLength 6
+   */
+  password?: string;
   /** User gender */
   gender?: UpdateUserGender;
   /** User phone number prefix */

@@ -13,7 +13,7 @@ export class OrganizationMember {
 	)
 	organization: Organization;
 
-	@ManyToOne(() => User, { nullable: false, onDelete: "CASCADE" })
+	@ManyToOne(() => User, (user) => user.memberships, { nullable: false, onDelete: "CASCADE" })
 	user: User;
 
 	@CreateDateColumn()
