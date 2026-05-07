@@ -467,6 +467,8 @@ export interface EventSimpleWithApplications {
   title: string;
   createdByUser: User;
   registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
   visible: boolean;
   /** Links */
   termsAndConditionsLink: string;
@@ -673,6 +675,49 @@ export interface UpdateApplicationSlotDto {
   spotId: number | null;
 }
 
+export interface NotifySpotAssignmentRecipient {
+  /** Application ID */
+  applicationId: number;
+  /** Recipient full name */
+  name: string;
+  /** Recipient email address */
+  email: string;
+}
+
+export interface NotifySpotAssignmentFailure {
+  /** Application ID */
+  applicationId: number;
+  /** Recipient full name */
+  name: string;
+  /** Recipient email address */
+  email: string;
+  /** Reason of the failure */
+  reason: string;
+}
+
+export interface NotifySpotAssignmentSkipped {
+  /** Application ID */
+  applicationId: number;
+  /** Participant full name */
+  name: string;
+  /** Reason the participant was skipped (e.g. 'no spot assigned', 'missing email') */
+  reason: string;
+}
+
+export interface NotifySpotAssignmentResponse {
+  /** Recipients who received the notification email */
+  sent: NotifySpotAssignmentRecipient[];
+  /** Recipients for which sending failed */
+  failed: NotifySpotAssignmentFailure[];
+  /** Applications skipped (no spot assigned or missing email) */
+  skipped: NotifySpotAssignmentSkipped[];
+}
+
+export interface RetryNotifySpotAssignmentDto {
+  /** Application IDs to retry the notification for */
+  applicationIds: number[];
+}
+
 export interface EventDetailLink {
   id: number;
   name: string;
@@ -780,6 +825,8 @@ export interface EventSimple {
   title: string;
   createdByUser: User;
   registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
   visible: boolean;
   /** Links */
   termsAndConditionsLink: string;
