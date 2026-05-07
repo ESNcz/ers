@@ -1,5 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import sharp from "sharp";
 import { FileStorageService } from "../file-storage";
 import { Photo } from "./entities";
 import { Repository } from "typeorm";
@@ -9,6 +10,8 @@ import path from "node:path";
 
 @Injectable()
 export class PhotoService {
+	private readonly logger = new Logger(PhotoService.name);
+
 	constructor(
 		@InjectRepository(Photo)
 		private readonly photoRepository: Repository<Photo>,
@@ -20,14 +23,23 @@ export class PhotoService {
 	}
 
 	/**
-	 * Save photo
-	 * @param data Photo data
-	 * @param directoryName Target directory name
-	 * @returns
+	 * Save photo. Resizes to fit 512x512 and converts to WebP.
+	 * Falls back to the original buffer if processing fails (e.g. invalid image).
 	 */
 	async save(data: Buffer, directoryName: string): Promise<Photo | null> {
+		let processed = data;
+		try {
+			processed = await sharp(data)
+				.rotate()
+				.resize(512, 512, { fit: "inside", withoutEnlargement: true })
+				.webp({ quality: 80 })
+				.toBuffer();
+		} catch (error) {
+			this.logger.warn(`Image optimization failed, storing original buffer: ${error instanceof Error ? error.message : error}`);
+		}
+
 		const fileName = crypto.randomUUID();
-		const result = await this.fileStorageService.save(path.join(directoryName, fileName), data);
+		const result = await this.fileStorageService.save(path.join(directoryName, fileName), processed);
 		if (!result) return null;
 
 		const photo = new Photo();
