@@ -677,7 +677,7 @@ export class EventApplicationsController {
         const fullName = `${application.user.firstName} ${application.user.lastName}`;
         try {
           await this.mailService.sendSpotAssignmentNotification({
-            to: { name: fullName, address: application.user.email + "t" },
+            to: { name: fullName, address: application.user.email },
             eventId: event.id,
             eventName: event.title,
             since: event.since,
