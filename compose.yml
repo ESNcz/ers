@@ -86,6 +86,7 @@ services:
       context: ./frontend
       args:
         - NEXT_PUBLIC_API_DOMAIN=${API_DOMAIN:-localhost:4000}
+        - GIT_COMMIT_SHA=${GIT_COMMIT_SHA:-unknown}
     environment:
       - NEXT_PUBLIC_WEB_DOMAIN=${WEB_DOMAIN:-localhost:3000}
       - NEXT_PUBLIC_API_DOMAIN=${API_DOMAIN:-localhost:4000}

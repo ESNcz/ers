@@ -58,7 +58,7 @@ export class SugarCubesController {
 	@ApiOkResponse({ type: SugarCube, isArray: true })
 	@Get("event/:eventId/reported")
 	async getReportedSugarCubes(@CurrentUser() currentUser: User, @Param("eventId", ParseIntPipe) eventId: number) {
-    if(!currentUser.role.hasPermission(Permission.EventReviewSugarCubes)){
+    if(!currentUser.role?.hasPermission(Permission.EventReviewSugarCubes)){
       throw new MethodNotAllowedException("You are allowed to review reported sugar cubes.");
     }
 		return await this.sugarCubesService.getReportedSugarCubes(eventId);

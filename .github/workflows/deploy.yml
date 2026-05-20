@@ -17,4 +17,4 @@ jobs:
           script: |
             cd /root/ers
             git pull origin main
-            docker compose -f compose.yml build --no-cache && docker compose -f compose.yml up -d --force-recreate
+            GIT_COMMIT_SHA=${{ github.sha }} docker compose -f compose.yml build --no-cache && docker compose -f compose.yml up -d --force-recreate
