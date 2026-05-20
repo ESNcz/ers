@@ -19,7 +19,7 @@ COPY . .
 
 # Install pnpm and dependencies
 RUN npm install -g pnpm
-RUN npm cache clean --force && rm -rf node_modules && pnpm install --frozen-lockfile --prod=false
+RUN npm cache clean --force && rm -rf node_modules && pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
 # Build the NestJS project
 RUN pnpm run build ${PROJECT_NAME}
@@ -52,7 +52,7 @@ COPY --from=builder /app/pnpm-lock.yaml ./
 COPY --from=builder /app/templates/ ./templates/
 
 # Install prod dependencies
-RUN pnpm install --frozen-lockfile --prod=true
+RUN pnpm install --frozen-lockfile --prod=true --ignore-scripts
 RUN apk add --no-cache curl
 
 EXPOSE $PORT_API
