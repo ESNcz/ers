@@ -540,7 +540,7 @@ export class EventApplicationsController {
         application?.invoiceMethod === "different"
           ? `${application?.invoicedTo}`
           : application?.invoiceMethod === "organisation"
-            ? `${organization.name}`
+            ? `${organization.legalName}`
             : `${user.firstName} ${user.lastName}`;
 
       worksheet.addRow({
@@ -572,7 +572,8 @@ ${user?.personalAddress?.country}`
           `${invoicedTo}
 ${application?.invoiceAddress?.street} ${application?.invoiceAddress?.houseNumber}
 ${application?.invoiceAddress?.zip} ${application?.invoiceAddress?.city}
-${application?.invoiceAddress?.country}`,
+${application?.invoiceAddress?.country}
+IČO: ${organization.cin}`,
         allergies: application?.allergies,
         foodRestrictions: application?.foodRestriction,
         healthLimitations: application?.healthLimitations,
