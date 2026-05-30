@@ -172,12 +172,12 @@ export class EventApplicationsController {
       relations: { personalAddress: true },
     });
 
-    if (!user.personalAddress)
+    if (!user?.personalAddress)
       throw new ForbiddenException("User must have valid personal address");
 
     let application = new EventApplication({
       user: currentUser,
-      personalAddress: user.personalAddress.copy(),
+      personalAddress: user?.personalAddress.copy(),
       invoiceMethod: body.invoiceMethod,
       invoicedTo: body.invoicedTo,
       additionalInformation: body.additionalInformation ?? "",
@@ -340,7 +340,7 @@ export class EventApplicationsController {
       });
     }
 
-    if (body.additionalFormData) {
+    if (body?.additionalFormData) {
       const event = await this.eventService.findById(application.event.id, {
         relations: { spotTypes: true },
         select: { registrationForm: {}, id: true },
@@ -470,7 +470,7 @@ export class EventApplicationsController {
 
     if (
       !(
-        currentUser.id === application.user.id ||
+        currentUser.id === application?.user.id ||
         currentUser.role?.hasOneOfPermissions([
           Permission.EventManageApplications,
         ])
@@ -540,13 +540,13 @@ export class EventApplicationsController {
         application?.invoiceMethod === "different"
           ? `${application?.invoicedTo}`
           : application?.invoiceMethod === "organisation"
-            ? `${organization.legalName}`
+            ? `${organization?.legalName ?? ""}`
             : `${user.firstName} ${user.lastName}`;
 
       worksheet.addRow({
         organisation:
           organization !== null
-            ? application.organization.name
+            ? application.organization?.name
             : application.customOrganization?.name,
         spotName: spotType?.name,
         spotPrice: spotType?.price,
@@ -573,7 +573,7 @@ ${user?.personalAddress?.country}`
 ${application?.invoiceAddress?.street} ${application?.invoiceAddress?.houseNumber}
 ${application?.invoiceAddress?.zip} ${application?.invoiceAddress?.city}
 ${application?.invoiceAddress?.country}
-IČO: ${organization.cin}`,
+${organization?.cin  ? `IČO: ${organization.cin}` : ""}`,
         allergies: application?.allergies,
         foodRestrictions: application?.foodRestriction,
         healthLimitations: application?.healthLimitations,

@@ -45,7 +45,7 @@ export class EventApplication extends BaseEntity {
 	event: Event;
 
 	@ManyToOne(() => Organization, { nullable: true })
-	organization: Organization;
+	organization: Organization | null;
 
 	@OneToOne(
 		() => EventCustomOrganization,

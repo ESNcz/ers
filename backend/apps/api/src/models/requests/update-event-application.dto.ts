@@ -54,7 +54,7 @@ export class UpdateEventApplication extends PartialType(
 	})
 	@IsObject()
 	@IsNotEmptyObject()
-	@Type(null, {
+	@Type(undefined, {
 		keepDiscriminatorProperty: true,
 		discriminator: {
 			property: "type",
