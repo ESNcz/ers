@@ -988,6 +988,10 @@ export type ResendVerificationParams = {
 
 export type GetAllUsersParams = {
   /**
+   * If provided, excludes users that are already members of this organization (UUID).
+   */
+  excludeOrganizationId?: string;
+  /**
    * Current page number
    */
   page?: number;

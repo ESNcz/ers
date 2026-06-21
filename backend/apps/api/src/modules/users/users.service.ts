@@ -3,9 +3,16 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import bcrypt from "bcryptjs";
 import { isEmail } from "class-validator";
-import { FindManyOptions, FindOptionsWhere, In, Repository } from "typeorm";
+import {
+  FindManyOptions,
+  FindOptionsWhere,
+  In,
+  Not,
+  Repository,
+} from "typeorm";
 import type { PaginationOptions } from "utilities/nest/decorators";
 import { formatPaginatedResponse } from "utilities/pagination.helper";
+import { OrganizationMember } from "../organization/entities";
 import { User } from "./entities";
 
 type UserId = User["id"];

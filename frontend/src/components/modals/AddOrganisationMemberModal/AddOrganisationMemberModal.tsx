@@ -9,17 +9,15 @@ import { useMemo, useState } from "react";
 interface AddOrganisationMemberModalProps {
   isOpened: boolean;
   closeModal: () => void;
-  memberUserIds: Set<string>;
+  organizationId: string;
   onAddMember: (userId: string) => void;
   isPending: boolean;
 }
 
-const PAGE_SIZE = 20;
-
 const AddOrganisationMemberModal = ({
   isOpened,
   closeModal,
-  memberUserIds,
+  organizationId,
   onAddMember,
   isPending,
 }: AddOrganisationMemberModalProps) => {
@@ -27,21 +25,20 @@ const AddOrganisationMemberModal = ({
   const hasSearch = !!search.trim();
 
   const { data: allUsersList, isFetching } = useGetAllUsers(
-    hasSearch ? { all: true } : { page: 1, perPage: PAGE_SIZE },
+    hasSearch ? { all: true, excludeOrganizationId: organizationId } : { excludeOrganizationId: organizationId },
     { query: { enabled: isOpened } },
   );
 
   const candidates = useMemo(() => {
     const q = search.trim().toLowerCase();
     const allUsers = allUsersList?.data ?? [];
-    const nonMembers = allUsers.filter((u) => !memberUserIds.has(u.id));
-    if (!q) return nonMembers;
-    return nonMembers.filter((u) =>
+    if (!q) return allUsers;
+    return allUsers.filter((u) =>
       [u.firstName, u.lastName, `${u.firstName} ${u.lastName}`, u.username, u.email].some((v) =>
         v?.toLowerCase().includes(q),
       ),
     );
-  }, [allUsersList?.data, memberUserIds, search]);
+  }, [allUsersList?.data, search]);
 
   const totalCount = allUsersList?.pagination?.totalCount;
 
@@ -54,7 +51,7 @@ const AddOrganisationMemberModal = ({
           value={search}
           onChange={(e) => setSearch(e.currentTarget.value)}
         />
-        {!hasSearch && totalCount !== undefined && totalCount > PAGE_SIZE ? (
+        {!hasSearch && totalCount !== undefined && totalCount ? (
           <Text size="xs" c="dimmed">
             Showing {candidates.length} of {totalCount} — type to search all users.
           </Text>

@@ -28,9 +28,10 @@ interface MyOrganisationMemberListProps {
 const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListProps) => {
   const { data: currentUser } = useGetCurrentUser();
   const { data: currentOrganisation, refetch: refetchCurrentOrganisation } = useGetOrganisationById(organizationId);
-  const { data: organizationMembers, refetch: refetchOrganisationMembers } = useOrganizationMembers(organizationId, {
-    all: true,
-  });
+  const { data: organizationMembers, refetch: refetchOrganisationMembers } = useOrganizationMembers(
+    organizationId,
+    { all: true },
+  );
 
   const [isAddModalOpened, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
 
@@ -56,11 +57,6 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
       },
     },
   });
-
-  const memberUserIds = useMemo(
-    () => new Set(organizationMembers?.data?.map((m) => m.user.id) ?? []),
-    [organizationMembers],
-  );
 
   const handleDeleteOrganizationMembers = (member: OrganizationMember) => {
     if (
@@ -174,7 +170,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         <AddOrganisationMemberModal
           isOpened={isAddModalOpened}
           closeModal={closeAddModal}
-          memberUserIds={memberUserIds}
+          organizationId={organizationId}
           onAddMember={handleAddMemberToOrganization}
           isPending={addOrganizationMemberMutation.isPending}
         />
