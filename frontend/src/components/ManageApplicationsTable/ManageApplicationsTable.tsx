@@ -6,13 +6,20 @@ import {
   useGenerateSheetEventApplication,
   useGetEventApplications,
   useGetEventSpots,
+  useNotifySpotAssignment,
   useUpdateUserApplicationSpot,
 } from "@/utils/api";
-import { type EventApplicationDetailedWithApplications, type EventSpotSimple } from "@/utils/api.schemas";
+import {
+  type EventApplicationDetailedWithApplications,
+  type EventSpotSimple,
+  type NotifySpotAssignmentResponse,
+} from "@/utils/api.schemas";
 import { downloadFile } from "@/utils/downloadFile";
+import { showErrorNotification } from "@/utils/notifications";
 import { DataTable } from "@components/data-table";
 import { applicationManagementColumns } from "@components/data-table/application-management-columns";
 import CreateSpotModal from "@components/modals/CreateSpotModal/CreateSpotModal";
+import SpotNotificationResultModal from "@components/modals/SpotNotificationResultModal/SpotNotificationResultModal";
 import UpdateEventApplicationModal from "@components/modals/UpdateEventApplicationModal/UpdateEventApplicationModal";
 import UpdateSpotModal from "@components/modals/UpdateSpotModal/UpdateSpotModal";
 import {
@@ -29,7 +36,8 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
+import { notifications } from "@mantine/notifications";
+import { IconEdit, IconMail, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 
 interface ManageApplicationsTableProps {
@@ -56,6 +64,12 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
 
   const [isEditApplicationModalOpen, { open: openEditApplicationModal, close: closeEditApplicationModal }] =
     useDisclosure(false);
+
+  const [
+    isNotificationResultModalOpen,
+    { open: openNotificationResultModal, close: closeNotificationResultModal },
+  ] = useDisclosure(false);
+  const [notificationResult, setNotificationResult] = useState<NotifySpotAssignmentResponse | null>(null);
 
   const spots: ComboboxData = useMemo(() => {
     return (
@@ -126,6 +140,42 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
     });
   };
 
+  const applicationsWithSpotCount = useMemo(
+    () => (applicationsList ?? []).filter((a) => a.spotType).length,
+    [applicationsList],
+  );
+
+  const notifySpotAssignmentMutation = useNotifySpotAssignment({
+    mutation: {
+      onSuccess: (data) => {
+        setNotificationResult(data);
+        openNotificationResultModal();
+      },
+      onError: (error) => {
+        showErrorNotification(error as never);
+      },
+    },
+  });
+
+  const handleNotifySpotAssignment = () => {
+    if (applicationsWithSpotCount === 0) {
+      notifications.show({
+        title: "No applications with assigned spots",
+        message: "Assign spots to participants before sending notifications.",
+        color: "yellow",
+      });
+      return;
+    }
+    if (
+      !confirm(
+        `Send a spot assignment notification email to ${applicationsWithSpotCount} participant(s)?\nThis action cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    notifySpotAssignmentMutation.mutate({ eventId });
+  };
+
   const applications = useMemo(() => applicationsList ?? [], [applicationsList]);
 
   const columns = useMemo(
@@ -143,7 +193,17 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
     <>
       <Flex justify="space-between" align="center" w="100%" wrap="wrap" gap={16}>
         <Title order={1}>Manage Event Applications</Title>
-        <Flex gap={16}>
+        <Flex gap={16} wrap="wrap">
+          <Button
+            onClick={handleNotifySpotAssignment}
+            leftSection={<IconMail />}
+            color="darkBlue"
+            variant="outline"
+            loading={notifySpotAssignmentMutation.isPending}
+            disabled={applicationsWithSpotCount === 0}
+          >
+            Assigned Spot Notification
+          </Button>
           <Button onClick={exportDataXLSX} leftSection={<IconTableExport />} color="green" variant="outline">
             Export Data
           </Button>
@@ -215,6 +275,13 @@ const ManageApplicationsTable = ({ eventId }: ManageApplicationsTableProps) => {
           closeModal={closeUpdateSpotModal}
         />
       )}
+      <SpotNotificationResultModal
+        isOpened={isNotificationResultModalOpen}
+        closeModal={closeNotificationResultModal}
+        eventId={eventId}
+        result={notificationResult}
+        onResultUpdate={setNotificationResult}
+      />
     </>
   );
 };

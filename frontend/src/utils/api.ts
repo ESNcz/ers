@@ -56,6 +56,7 @@ import type {
   GetUserApplicationsParams,
   InitialiseType,
   LoginUser,
+  NotifySpotAssignmentResponse,
   Organization,
   OrganizationMember,
   OrganizationMemberWithoutUser,
@@ -63,6 +64,7 @@ import type {
   OrganizationMembersParams,
   ResendVerificationParams,
   ResetPasswordDto,
+  RetryNotifySpotAssignmentDto,
   Role,
   SendEmailDTO,
   Settings,
@@ -879,6 +881,64 @@ export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUs
   return query;
 }
 
+export const updateCurrentUserPhoto = (updatePhoto: UpdatePhoto, options?: SecondParameter<typeof customInstance>) => {
+  const formData = new FormData();
+  formData.append(`file`, updatePhoto.file);
+
+  return customInstance<User>(
+    { url: `/users/photo`, method: "PATCH", headers: { "Content-Type": "multipart/form-data" }, data: formData },
+    options,
+  );
+};
+
+export const getUpdateCurrentUserPhotoMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCurrentUserPhoto>>,
+    TError,
+    { data: UpdatePhoto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, TError, { data: UpdatePhoto }, TContext> => {
+  const mutationKey = ["updateCurrentUserPhoto"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, { data: UpdatePhoto }> = (
+    props,
+  ) => {
+    const { data } = props ?? {};
+
+    return updateCurrentUserPhoto(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateCurrentUserPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof updateCurrentUserPhoto>>>;
+export type UpdateCurrentUserPhotoMutationBody = UpdatePhoto;
+export type UpdateCurrentUserPhotoMutationError = ErrorType<unknown>;
+
+export const useUpdateCurrentUserPhoto = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateCurrentUserPhoto>>,
+      TError,
+      { data: UpdatePhoto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, TError, { data: UpdatePhoto }, TContext> => {
+  const mutationOptions = getUpdateCurrentUserPhotoMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 /**
  * Update user data by admin
  */
@@ -991,64 +1051,6 @@ export const useDeleteUser = <TError = ErrorType<unknown>, TContext = unknown>(
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext> => {
   const mutationOptions = getDeleteUserMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const updateCurrentUserPhoto = (updatePhoto: UpdatePhoto, options?: SecondParameter<typeof customInstance>) => {
-  const formData = new FormData();
-  formData.append(`file`, updatePhoto.file);
-
-  return customInstance<User>(
-    { url: `/users/photo`, method: "PATCH", headers: { "Content-Type": "multipart/form-data" }, data: formData },
-    options,
-  );
-};
-
-export const getUpdateCurrentUserPhotoMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateCurrentUserPhoto>>,
-    TError,
-    { data: UpdatePhoto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, TError, { data: UpdatePhoto }, TContext> => {
-  const mutationKey = ["updateCurrentUserPhoto"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, { data: UpdatePhoto }> = (
-    props,
-  ) => {
-    const { data } = props ?? {};
-
-    return updateCurrentUserPhoto(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type UpdateCurrentUserPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof updateCurrentUserPhoto>>>;
-export type UpdateCurrentUserPhotoMutationBody = UpdatePhoto;
-export type UpdateCurrentUserPhotoMutationError = ErrorType<unknown>;
-
-export const useUpdateCurrentUserPhoto = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof updateCurrentUserPhoto>>,
-      TError,
-      { data: UpdatePhoto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, TError, { data: UpdatePhoto }, TContext> => {
-  const mutationOptions = getUpdateCurrentUserPhotoMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
@@ -3004,6 +3006,152 @@ export const useUpdateUserApplicationSpot = <TError = ErrorType<void>, TContext 
   TContext
 > => {
   const mutationOptions = getUpdateUserApplicationSpotMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Send a spot assignment notification email to every participant
+of the given event whose application has a spot assigned.
+ */
+export const notifySpotAssignment = (
+  eventId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<NotifySpotAssignmentResponse | NotifySpotAssignmentResponse>(
+    { url: `/events/${eventId}/notify-spot-assignment`, method: "POST", signal },
+    options,
+  );
+};
+
+export const getNotifySpotAssignmentMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof notifySpotAssignment>>,
+    TError,
+    { eventId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof notifySpotAssignment>>, TError, { eventId: number }, TContext> => {
+  const mutationKey = ["notifySpotAssignment"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof notifySpotAssignment>>, { eventId: number }> = (
+    props,
+  ) => {
+    const { eventId } = props ?? {};
+
+    return notifySpotAssignment(eventId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type NotifySpotAssignmentMutationResult = NonNullable<Awaited<ReturnType<typeof notifySpotAssignment>>>;
+
+export type NotifySpotAssignmentMutationError = ErrorType<void>;
+
+export const useNotifySpotAssignment = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof notifySpotAssignment>>,
+      TError,
+      { eventId: number },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof notifySpotAssignment>>, TError, { eventId: number }, TContext> => {
+  const mutationOptions = getNotifySpotAssignmentMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Retry sending spot assignment notification for a specific
+subset of applications (e.g. previously failed sends).
+ */
+export const retryNotifySpotAssignment = (
+  eventId: number,
+  retryNotifySpotAssignmentDto: RetryNotifySpotAssignmentDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<NotifySpotAssignmentResponse | NotifySpotAssignmentResponse>(
+    {
+      url: `/events/${eventId}/notify-spot-assignment/retry`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: retryNotifySpotAssignmentDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getRetryNotifySpotAssignmentMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof retryNotifySpotAssignment>>,
+    TError,
+    { eventId: number; data: RetryNotifySpotAssignmentDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof retryNotifySpotAssignment>>,
+  TError,
+  { eventId: number; data: RetryNotifySpotAssignmentDto },
+  TContext
+> => {
+  const mutationKey = ["retryNotifySpotAssignment"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof retryNotifySpotAssignment>>,
+    { eventId: number; data: RetryNotifySpotAssignmentDto }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return retryNotifySpotAssignment(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RetryNotifySpotAssignmentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof retryNotifySpotAssignment>>
+>;
+export type RetryNotifySpotAssignmentMutationBody = RetryNotifySpotAssignmentDto;
+export type RetryNotifySpotAssignmentMutationError = ErrorType<void>;
+
+export const useRetryNotifySpotAssignment = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof retryNotifySpotAssignment>>,
+      TError,
+      { eventId: number; data: RetryNotifySpotAssignmentDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof retryNotifySpotAssignment>>,
+  TError,
+  { eventId: number; data: RetryNotifySpotAssignmentDto },
+  TContext
+> => {
+  const mutationOptions = getRetryNotifySpotAssignmentMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

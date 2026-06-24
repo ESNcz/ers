@@ -7,6 +7,7 @@ import {
   ForbiddenException,
   Get,
   Header,
+  Logger,
   NotFoundException,
   NotImplementedException,
   Param,
@@ -25,6 +26,7 @@ import {
   ApiExtraModels,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiProperty,
   ApiQuery,
   ApiTags,
   getSchemaPath,
@@ -58,14 +60,84 @@ import {
 import { Address } from "@api/modules/addresses/entities";
 import { UpdateApplicationSlotDto } from "@api/modules/events/dto/update-application-slot.dto";
 import { UpdateEventApplicationPrioritiesDto } from "@api/modules/events/dto/update-event-application-priorities.dto";
+import { MailService } from "@api/modules/mail/mail.service";
 import { Permission } from "@api/modules/roles";
 import dayjs from "dayjs";
 import * as ExcelJS from "exceljs";
 import { dayMonthYear } from "utilities/time";
 
+class NotifySpotAssignmentRecipient {
+  @ApiProperty({ description: "Application ID" })
+  applicationId: number;
+
+  @ApiProperty({ description: "Recipient full name" })
+  name: string;
+
+  @ApiProperty({ description: "Recipient email address" })
+  email: string;
+}
+
+class NotifySpotAssignmentFailure {
+  @ApiProperty({ description: "Application ID" })
+  applicationId: number;
+
+  @ApiProperty({ description: "Recipient full name" })
+  name: string;
+
+  @ApiProperty({ description: "Recipient email address" })
+  email: string;
+
+  @ApiProperty({ description: "Reason of the failure" })
+  reason: string;
+}
+
+class NotifySpotAssignmentSkipped {
+  @ApiProperty({ description: "Application ID" })
+  applicationId: number;
+
+  @ApiProperty({ description: "Participant full name" })
+  name: string;
+
+  @ApiProperty({
+    description:
+      "Reason the participant was skipped (e.g. 'no spot assigned', 'missing email')",
+  })
+  reason: string;
+}
+
+class RetryNotifySpotAssignmentDto {
+  @ApiProperty({
+    type: [Number],
+    description: "Application IDs to retry the notification for",
+  })
+  applicationIds: number[];
+}
+
+class NotifySpotAssignmentResponse {
+  @ApiProperty({
+    type: [NotifySpotAssignmentRecipient],
+    description: "Recipients who received the notification email",
+  })
+  sent: NotifySpotAssignmentRecipient[];
+
+  @ApiProperty({
+    type: [NotifySpotAssignmentFailure],
+    description: "Recipients for which sending failed",
+  })
+  failed: NotifySpotAssignmentFailure[];
+
+  @ApiProperty({
+    type: [NotifySpotAssignmentSkipped],
+    description: "Applications skipped (no spot assigned or missing email)",
+  })
+  skipped: NotifySpotAssignmentSkipped[];
+}
+
 @ApiTags("Event applications")
 @Controller("events")
 export class EventApplicationsController {
+  private readonly logger = new Logger(EventApplicationsController.name);
+
   constructor(
     private readonly eventApplicationsService: EventApplicationsService,
     private readonly eventService: EventsService,
@@ -73,6 +145,7 @@ export class EventApplicationsController {
     private readonly organizationService: OrganizationService,
     private readonly eventSpotsService: EventSpotsService,
     private readonly fileStorageService: FileStorageService,
+    private readonly mailService: MailService,
 
     private readonly eventApplicationSimpleWithApplicationsMapper: EventApplicationSimpleWithApplicationsMapper,
   ) {}
@@ -489,6 +562,152 @@ export class EventApplicationsController {
     await application.save();
 
     return application;
+  }
+
+  /**
+   * Send a spot assignment notification email to every participant
+   * of the given event whose application has a spot assigned.
+   */
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: NotifySpotAssignmentResponse })
+  @ApiNotFoundResponse({ description: "Event not found" })
+  @UseGuards(CookieGuard)
+  @Post(":eventId/notify-spot-assignment")
+  async notifySpotAssignment(
+    @CurrentUser() currentUser: User,
+    @Param("eventId", ParseIntPipe) eventId: number,
+  ): Promise<NotifySpotAssignmentResponse> {
+    if (
+      !currentUser.role?.hasOneOfPermissions([
+        Permission.EventManageApplications,
+      ])
+    ) {
+      throw new UnauthorizedException(
+        "You don't have permission to perform this action",
+      );
+    }
+
+    const event = await this.eventService.findById(eventId);
+    if (!event) throw new NotFoundException("Event not found");
+
+    const applications =
+      await this.eventApplicationsService.findByEventId(eventId);
+
+    return this.sendSpotAssignmentEmailsForApplications(applications, event);
+  }
+
+  /**
+   * Retry sending spot assignment notification for a specific
+   * subset of applications (e.g. previously failed sends).
+   */
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: NotifySpotAssignmentResponse })
+  @ApiNotFoundResponse({ description: "Event not found" })
+  @UseGuards(CookieGuard)
+  @Post(":eventId/notify-spot-assignment/retry")
+  async retryNotifySpotAssignment(
+    @CurrentUser() currentUser: User,
+    @Param("eventId", ParseIntPipe) eventId: number,
+    @Body() body: RetryNotifySpotAssignmentDto,
+  ): Promise<NotifySpotAssignmentResponse> {
+    if (
+      !currentUser.role?.hasOneOfPermissions([
+        Permission.EventManageApplications,
+      ])
+    ) {
+      throw new UnauthorizedException(
+        "You don't have permission to perform this action",
+      );
+    }
+
+    const event = await this.eventService.findById(eventId);
+    if (!event) throw new NotFoundException("Event not found");
+
+    if (!body.applicationIds || body.applicationIds.length === 0) {
+      return { sent: [], failed: [], skipped: [] };
+    }
+
+    const allApplications =
+      await this.eventApplicationsService.findByEventId(eventId);
+
+    const targetIds = new Set(body.applicationIds);
+    const applications = allApplications.filter((app) => targetIds.has(app.id));
+
+    return this.sendSpotAssignmentEmailsForApplications(applications, event);
+  }
+
+  /**
+   * Shared logic: try to send a spot assignment email to each provided
+   * application. Returns a detailed report of sent/failed/skipped entries.
+   */
+  private async sendSpotAssignmentEmailsForApplications(
+    applications: EventApplication[],
+    event: { id: number; title: string; since: Date; until: Date },
+  ): Promise<NotifySpotAssignmentResponse> {
+    const sent: NotifySpotAssignmentRecipient[] = [];
+    const failed: NotifySpotAssignmentFailure[] = [];
+    const skipped: NotifySpotAssignmentSkipped[] = [];
+    const eligible: EventApplication[] = [];
+
+    for (const application of applications) {
+      const fullName =
+        `${application.user?.firstName ?? ""} ${application.user?.lastName ?? ""}`.trim() ||
+        "Unknown user";
+      if (!application.spotType) {
+        skipped.push({
+          applicationId: application.id,
+          name: fullName,
+          reason: "no spot assigned",
+        });
+        continue;
+      }
+      if (!application.user?.email) {
+        skipped.push({
+          applicationId: application.id,
+          name: fullName,
+          reason: "missing email",
+        });
+        continue;
+      }
+      eligible.push(application);
+    }
+
+    await Promise.all(
+      eligible.map(async (application) => {
+        const fullName = `${application.user.firstName} ${application.user.lastName}`;
+        try {
+          await this.mailService.sendSpotAssignmentNotification({
+            to: { name: fullName, address: application.user.email },
+            eventId: event.id,
+            eventName: event.title,
+            since: event.since,
+            until: event.until,
+            spotName: application.spotType.name,
+            spotPrice: application.spotType.price,
+            spotCurrency: application.spotType.currency,
+          });
+          sent.push({
+            applicationId: application.id,
+            name: fullName,
+            email: application.user.email,
+          });
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          failed.push({
+            applicationId: application.id,
+            name: fullName,
+            email: application.user.email,
+            reason,
+          });
+          this.logger.error(
+            `Failed to send spot assignment email to ${application.user.email} for event ${event.id}`,
+            error instanceof Error ? error.stack : reason,
+          );
+        }
+      }),
+    );
+
+    return { sent, failed, skipped };
   }
 
   @ApiBearerAuth()

@@ -39,10 +39,12 @@ import {
   IconCancel,
   IconCash,
   IconChevronDown,
+  IconClock,
   IconEdit,
   IconInfoCircle,
   IconInvoice,
   IconPhoto,
+  IconTicket,
   IconUsersGroup,
   IconWritingSign,
 } from "@tabler/icons-react";
@@ -88,6 +90,12 @@ const EventDetail = ({ id }: EventDetailProps) => {
   const isUserRegistered = useMemo(() => {
     return eventApplications?.some((f) => f.user.id === currentUser?.id);
   }, [eventApplications, id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const userApplication = useMemo(() => {
+    return eventApplications?.find((f) => f.user.id === currentUser?.id);
+  }, [eventApplications, currentUser?.id]);
+
+  const userSpot = userApplication?.spotType ?? null;
 
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
@@ -191,6 +199,31 @@ const EventDetail = ({ id }: EventDetailProps) => {
 
             <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 1, xl: 1 }}>
               <Flex direction="column" gap={16}>
+                {isUserRegistered && (
+                  <Blockquote
+                    color={userSpot ? "green" : "blue"}
+                    icon={userSpot ? <IconTicket /> : <IconClock />}
+                    p={16}
+                  >
+                    {userSpot ? (
+                      <>
+                        <Text span fw="bold">
+                          Your spot:
+                        </Text>{" "}
+                        <Text span>
+                          {userSpot.name} — {userSpot.price} {userSpot.currency}
+                        </Text>
+                      </>
+                    ) : (
+                      <>
+                        <Text span fw="bold">
+                          Your spot:
+                        </Text>{" "}
+                        <Text span>not assigned yet</Text>
+                      </>
+                    )}
+                  </Blockquote>
+                )}
                 {currentUser.personalAddress === null && (
                   <Blockquote color="red" icon={<IconInfoCircle />} p={20} mt={16}>
                     Fill your <Anchor href={routes.ACCOUNT}>personal address</Anchor> on your account profile before
