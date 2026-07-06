@@ -2,21 +2,21 @@ import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, U
 
 @Entity("settings")
 export class Settings extends BaseEntity {
-	@PrimaryGeneratedColumn("uuid")
-	id: string;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
-	@Column({ type: "text", nullable: true })
-	termsAndConditions?: string;
+  @Column({ type: "text", nullable: true })
+  termsAndConditions?: string;
 
-	@Column({ type: "text", nullable: true })
-	privacyPolicy?: string;
+  @Column({ type: "text", nullable: true })
+  privacyPolicy?: string;
 
-	@Column({ type: "text", nullable: true })
-	footerDescription?: string;
+  @Column({ type: "text", nullable: true })
+  footerDescription?: string;
 
-	@CreateDateColumn()
-	createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
-	@UpdateDateColumn()
-	updatedAt: Date;
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

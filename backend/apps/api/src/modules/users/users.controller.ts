@@ -1,3 +1,4 @@
+import { MailerService } from "@nestjs-modules/mailer";
 import {
   BadRequestException,
   Body,
@@ -7,6 +8,7 @@ import {
   Get,
   Header,
   InternalServerErrorException,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -15,6 +17,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -26,27 +29,23 @@ import {
   ApiTags,
   getSchemaPath,
 } from "@nestjs/swagger";
+import * as ExcelJS from "exceljs";
+import { Response } from "express";
 import { FormDataRequest, MemoryStoredFile } from "nestjs-form-data";
-
-import { OrganizationService } from "../organization";
-import { PhotoService } from "../photo";
-import { User, UsersService } from "./index";
 
 import { CurrentUser } from "@api/decorators";
 import { CreateUser, UpdatePhoto, UpdateUser } from "@api/models/requests";
 import { OrganizationMemberWithoutUser } from "@api/models/responses";
-import {
-  PaginationDto,
-  PaginationResponseDto,
-} from "@api/models/responses/pagination-response.dto";
+import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagination-response.dto";
 import { Address } from "@api/modules/addresses/entities";
 import { AuthService } from "@api/modules/auth";
+import { CookieGuard } from "@api/modules/auth/providers/guards";
+import { OrganizationService } from "@api/modules/organization";
+import { PhotoService } from "@api/modules/photo";
 import { Permission } from "@api/modules/roles";
-import { MailerService } from "@nestjs-modules/mailer";
-import { ConfigService } from "@nestjs/config";
-import * as ExcelJS from "exceljs";
 import { Pagination, PaginationOptions } from "utilities/nest/decorators";
-import { CookieGuard } from "../auth/providers/guards";
+
+import { User, UsersService } from "./index";
 
 @ApiTags("Users")
 @Controller("users")
@@ -64,12 +63,8 @@ export class UsersController {
   @Post()
   async createUser(@Body() body: CreateUser) {
     const lowerCaseUsername = body.username.toLowerCase();
-    const exist = await this.usersService.exist([
-      { email: body.email },
-      { username: lowerCaseUsername },
-    ]);
-    if (exist)
-      throw new ConflictException("User with email or username already exist");
+    const exist = await this.usersService.exist([{ email: body.email }, { username: lowerCaseUsername }]);
+    if (exist) throw new ConflictException("User with email or username already exist");
 
     let newUser = new User({
       email: body.email,
@@ -96,10 +91,9 @@ export class UsersController {
     }
 
     newUser = await this.usersService.save(newUser);
-    newUser.password = undefined;
+    Reflect.deleteProperty(newUser, "password");
 
-    const verificationToken =
-      await this.authService.createEmailVerificationToken(newUser);
+    const verificationToken = await this.authService.createEmailVerificationToken(newUser);
     const verifyUrl = `${this.configService.getOrThrow("WEB_DOMAIN")}/verify?token=${verificationToken}`;
 
     // TODO - Move to MailController
@@ -129,10 +123,7 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Patch()
-  async updateCurrentUser(
-    @Body() body: UpdateUser,
-    @CurrentUser() requestUser: User,
-  ) {
+  async updateCurrentUser(@Body() body: UpdateUser, @CurrentUser() requestUser: User) {
     const lowerCaseUsername = body?.username?.toLowerCase();
     if (body.username && lowerCaseUsername !== requestUser.username) {
       const exists = await this.usersService.exist({
@@ -144,6 +135,7 @@ export class UsersController {
     const user = await this.usersService.findById(requestUser.id, {
       relations: { personalAddress: true },
     });
+    if (!user) throw new NotFoundException("User not found");
 
     // For safety reasons set each property individually
     user.password = body.password ?? user.password;
@@ -158,13 +150,12 @@ export class UsersController {
     user.phoneNumber = body.phoneNumber ?? user.phoneNumber;
 
     if (body.personalAddress) {
-      if (user.personalAddress)
-        user.personalAddress.update(body.personalAddress);
+      if (user.personalAddress) user.personalAddress.update(body.personalAddress);
       else user.personalAddress = new Address(body.personalAddress);
     }
 
     const newUser = await this.usersService.save(user);
-    newUser.password = undefined;
+    Reflect.deleteProperty(newUser, "password");
     return newUser;
   }
 
@@ -181,14 +172,13 @@ export class UsersController {
     @CurrentUser() requestUser: User,
   ) {
     if (!requestUser.role?.hasOneOfPermissions([Permission.UserUpdate])) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     const user = await this.usersService.findById(userId, {
       relations: { personalAddress: true },
     });
+    if (!user) throw new NotFoundException("User not found");
 
     user.firstName = body.firstName ?? user.firstName;
     user.lastName = body.lastName ?? user.lastName;
@@ -200,13 +190,12 @@ export class UsersController {
     user.phoneNumber = body.phoneNumber ?? user.phoneNumber;
 
     if (body.personalAddress) {
-      if (user.personalAddress)
-        user.personalAddress.update(body.personalAddress);
+      if (user.personalAddress) user.personalAddress.update(body.personalAddress);
       else user.personalAddress = new Address(body.personalAddress);
     }
 
     const updatedUser = await this.usersService.save(user);
-    updatedUser.password = undefined;
+    Reflect.deleteProperty(updatedUser, "password");
     return updatedUser;
   }
 
@@ -225,10 +214,7 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Patch("photo")
-  async updateCurrentUserPhoto(
-    @CurrentUser() user: User,
-    @Body() body: UpdatePhoto,
-  ) {
+  async updateCurrentUserPhoto(@CurrentUser() user: User, @Body() body: UpdatePhoto) {
     const photo = await this.photoService.save(body.file.buffer, "user_photo");
     if (!photo) throw new InternalServerErrorException();
 
@@ -288,26 +274,15 @@ export class UsersController {
     description: "User has been deleted or anonymized",
   })
   @Delete(":id")
-  async deleteUser(
-    @CurrentUser() currentUser: User,
-    @Param("id", ParseUUIDPipe) userId: string,
-  ): Promise<void> {
-    if (
-      !currentUser.role?.hasOneOfPermissions([Permission.UserDelete]) &&
-      currentUser.id !== userId
-    ) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+  async deleteUser(@CurrentUser() currentUser: User, @Param("id", ParseUUIDPipe) userId: string): Promise<void> {
+    if (!currentUser.role?.hasOneOfPermissions([Permission.UserDelete]) && currentUser.id !== userId) {
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     await this.usersService.deleteUser(userId);
   }
 
-  @Header(
-    "Content-disposition",
-    "attachment; filename=EventApplicationExport.xlsx",
-  )
+  @Header("Content-disposition", "attachment; filename=EventApplicationExport.xlsx")
   @Get("export/users")
   async generateSheetUsers(@Res() res: Response) {
     const userList = await this.usersService.findAllForExport();
@@ -359,10 +334,7 @@ ${user?.personalAddress?.country}`
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-    res
-      // @ts-ignore
-      .type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-      .send(buffer);
+    res.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").send(buffer);
     return buffer;
   }
 }

@@ -1,1 +1,1 @@
-export * from "../../organization.service";
+export * from "@api/modules/organization/organization.service";
