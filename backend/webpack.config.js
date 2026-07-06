@@ -5,6 +5,5 @@ module.exports = function (options, webpack) {
     ...options,
     //watch: isWatchMode,
     mode: isDevelopment ? "development" : options.mode,
-  }
-
-}
+  };
+};

@@ -4,7 +4,7 @@ import { ApiExcludeController } from "@nestjs/swagger";
 @ApiExcludeController()
 @Controller("health")
 export class HealthController {
-	@HttpCode(HttpStatus.OK)
-	@Get()
-	health() {}
+  @HttpCode(HttpStatus.OK)
+  @Get()
+  health() {}
 }

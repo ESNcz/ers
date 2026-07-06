@@ -1,1 +1,1 @@
-export * from "../../roles.service";
+export * from "@api/modules/roles/roles.service";

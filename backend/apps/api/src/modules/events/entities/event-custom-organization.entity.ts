@@ -1,29 +1,29 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+
 import { EventApplication } from "./event-application.entity";
 
 @Entity()
 export class EventCustomOrganization {
-	@PrimaryGeneratedColumn()
-	id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-	@OneToOne(
-		() => EventApplication,
-		(application) => application.customOrganization,
-		{ nullable: false, onDelete: "CASCADE" },
-	)
-	@JoinColumn()
-	application: EventApplication;
+  @OneToOne(() => EventApplication, (application) => application.customOrganization, {
+    nullable: false,
+    onDelete: "CASCADE",
+  })
+  @JoinColumn()
+  application: EventApplication;
 
-	@Column()
-	name: string;
+  @Column()
+  name: string;
 
-	@Column()
-	country: string;
+  @Column()
+  country: string;
 
-	@CreateDateColumn()
-	createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
-	constructor(base?: Partial<EventCustomOrganization>) {
-		Object.assign(this, base);
-	}
+  constructor(base?: Partial<EventCustomOrganization>) {
+    Object.assign(this, base);
+  }
 }

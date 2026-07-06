@@ -19,5 +19,5 @@
     - Organization
     - Applicant name
     - Paid
-  
+
 - [ ] My sent applications

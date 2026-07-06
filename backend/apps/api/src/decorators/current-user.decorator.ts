@@ -1,8 +1,8 @@
 import {
-	BadRequestException,
-	type ExecutionContext,
-	UnauthorizedException,
-	createParamDecorator,
+  BadRequestException,
+  type ExecutionContext,
+  UnauthorizedException,
+  createParamDecorator,
 } from "@nestjs/common";
 import type { Request } from "express";
 
@@ -13,12 +13,12 @@ import type { Request } from "express";
  */
 // biome-ignore lint/suspicious/noExplicitAny: NestJS define this same
 export const CurrentUser = (...dataOrPipes: any) =>
-	createParamDecorator((_, ctx: ExecutionContext) => {
-		if (ctx.getType() !== "http") throw new BadRequestException("Invalid context");
+  createParamDecorator((_, ctx: ExecutionContext) => {
+    if (ctx.getType() !== "http") throw new BadRequestException("Invalid context");
 
-		const request = ctx.switchToHttp().getRequest<Request>();
+    const request = ctx.switchToHttp().getRequest<Request>();
 
-		if (!request.user) throw new UnauthorizedException();
+    if (!request.user) throw new UnauthorizedException();
 
-		return request.user;
-	})(...dataOrPipes);
+    return request.user;
+  })(...dataOrPipes);

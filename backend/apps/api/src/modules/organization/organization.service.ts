@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectEntityManager, InjectRepository } from "@nestjs/typeorm";
 import { EntityManager, FindOneOptions, Repository } from "typeorm";
-import { Organization, OrganizationMember } from "./entities";
-import { User } from "../users";
+
+import { User } from "@api/modules/users";
 import type { PaginationOptions } from "utilities/nest/decorators";
 import { formatPaginatedResponse } from "utilities/pagination.helper";
+
+import { Organization, OrganizationMember } from "./entities";
 
 @Injectable()
 export class OrganizationService {
@@ -82,15 +84,9 @@ export class OrganizationService {
         },
       },
       take: pagination?.all ? undefined : pagination?.perPage,
-      skip: pagination?.all
-        ? undefined
-        : (pagination?.page - 1) * pagination?.perPage,
+      skip: pagination?.all ? undefined : (pagination?.page - 1) * pagination?.perPage,
     });
-    return await formatPaginatedResponse<OrganizationMember>(
-      members,
-      totalCount,
-      pagination,
-    );
+    return await formatPaginatedResponse<OrganizationMember>(members, totalCount, pagination);
   }
 
   /**
@@ -100,11 +96,7 @@ export class OrganizationService {
    * @param options
    * @returns OrganizationMember | null Membership
    */
-  findMemberByUserId(
-    organizationId: string,
-    userId: string,
-    options?: FindOneOptions<OrganizationMember>,
-  ) {
+  findMemberByUserId(organizationId: string, userId: string, options?: FindOneOptions<OrganizationMember>) {
     return this.memberRepository.findOne({
       where: {
         organization: {
@@ -150,11 +142,7 @@ export class OrganizationService {
    */
   async addMembers(organization: Organization, addMembers: User[]) {
     return this.entityManager.transaction(async (em) => {
-      return em.save(
-        addMembers.map((user) =>
-          em.create(OrganizationMember, { user, organization }),
-        ),
-      );
+      return em.save(addMembers.map((user) => em.create(OrganizationMember, { user, organization })));
     });
   }
 

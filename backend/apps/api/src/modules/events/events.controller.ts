@@ -26,26 +26,23 @@ import {
   ApiTags,
   getSchemaPath,
 } from "@nestjs/swagger";
+import dayjs from "dayjs";
 import { FormDataRequest } from "nestjs-form-data";
-import dayjs, { Dayjs } from "dayjs";
 
-import { CookieGuard } from "../auth/providers/guards";
-import { Event, EventsService } from "./index";
-import { EventSpot } from "./entities";
-import { PhotoService } from "../photo";
-import type { User } from "../users";
+import { CurrentUser } from "@api/decorators";
+import { EventSimpleWithApplicationsMapper } from "@api/mappers";
+import { CreateEvent, UpdateEvent, UpdatePhoto } from "@api/models/requests";
+import { EventDetail, EventSimple } from "@api/models/responses";
+import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagination-response.dto";
+import { CookieGuard } from "@api/modules/auth/providers/guards";
+import { PhotoService } from "@api/modules/photo";
+import { Permission } from "@api/modules/roles";
+import type { User } from "@api/modules/users";
+import { Pagination, PaginationOptions } from "utilities/nest/decorators";
 import { ParseDatePipe } from "utilities/nest/pipes";
 
-import { CurrentUser } from "../../decorators";
-import { EventSimpleWithApplicationsMapper } from "../../mappers";
-import { CreateEvent, UpdateEvent, UpdatePhoto } from "../../models/requests";
-import { EventDetail, EventSimple } from "../../models/responses";
-import { Pagination, PaginationOptions } from "utilities/nest/decorators";
-import {
-  PaginationDto,
-  PaginationResponseDto,
-} from "../../models/responses/pagination-response.dto";
-import { Permission } from "@api/modules/roles";
+import { EventSpot } from "./entities";
+import { Event, EventsService } from "./index";
 
 @ApiTags("Events")
 @Controller("events")
@@ -82,10 +79,7 @@ export class EventsController {
   })
   @Get("ongoing")
   async getOngoingEvents(@Pagination() pagination?: PaginationOptions) {
-    return this.eventsService.findOngoing(
-      { visible: true, relations: { applications: true } },
-      pagination,
-    );
+    return this.eventsService.findOngoing({ visible: true, relations: { applications: true } }, pagination);
   }
 
   /**
@@ -164,25 +158,14 @@ export class EventsController {
    */
   @ApiCreatedResponse({ type: EventSimple, description: "Created event" })
   @ApiForbiddenResponse({
-    description:
-      "User is not member of event organization or does not have required permissions",
+    description: "User is not member of event organization or does not have required permissions",
   })
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Post()
-  async createEvent(
-    @CurrentUser() currentUser: User,
-    @Body() body: CreateEvent,
-  ) {
-    if (
-      !currentUser.role?.hasOneOfPermissions([
-        Permission.EventCreate,
-        Permission.EventDuplicate,
-      ])
-    ) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+  async createEvent(@CurrentUser() currentUser: User, @Body() body: CreateEvent) {
+    if (!currentUser.role?.hasOneOfPermissions([Permission.EventCreate, Permission.EventDuplicate])) {
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
     const newCreatedLinks = await this.eventsService.createLinks(body.links);
 
@@ -203,12 +186,10 @@ export class EventsController {
     event.links = newCreatedLinks;
     event.applications = [];
 
-    let priorityListDeadline = new Date(body.priorityListDeadline);
+    const priorityListDeadline = new Date(body.priorityListDeadline);
 
     if (dayjs(priorityListDeadline).isAfter(event.until)) {
-      throw new BadRequestException(
-        "Priority list deadline cannot be set after the event has ended",
-      );
+      throw new BadRequestException("Priority list deadline cannot be set after the event has ended");
     }
 
     event.priorityListDeadline = priorityListDeadline ?? event.until;
@@ -224,19 +205,9 @@ export class EventsController {
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Post(":id")
-  async duplicateEvent(
-    @Param("id", ParseIntPipe) id: number,
-    @CurrentUser() currentUser: User,
-  ) {
-    if (
-      !currentUser.role?.hasOneOfPermissions([
-        Permission.EventCreate,
-        Permission.EventDuplicate,
-      ])
-    ) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+  async duplicateEvent(@Param("id", ParseIntPipe) id: number, @CurrentUser() currentUser: User) {
+    if (!currentUser.role?.hasOneOfPermissions([Permission.EventCreate, Permission.EventDuplicate])) {
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     const event = await this.eventsService.findByIdDetailed(id);
@@ -259,9 +230,7 @@ export class EventsController {
       registrationDeadline: event.registrationDeadline,
       priorityListDeadline: event.priorityListDeadline,
       generateInvoices: event.generateInvoices,
-      spotTypes: event.spotTypes.map(
-        (e) => new EventSpot({ name: e.name, price: e.price }),
-      ),
+      spotTypes: event.spotTypes.map((e) => new EventSpot({ name: e.name, price: e.price })),
       links: newCreatedLinks,
     });
 
@@ -271,8 +240,7 @@ export class EventsController {
 
   @ApiOkResponse({ type: EventDetail, description: "Updated event" })
   @ApiForbiddenResponse({
-    description:
-      "User is not member of event organization or does not have required permissions",
+    description: "User is not member of event organization or does not have required permissions",
   })
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
@@ -289,9 +257,7 @@ export class EventsController {
         Permission.EventUpdate,
       ])
     ) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     let event = await this.eventsService.findByIdDetailed(eventId, {
@@ -299,13 +265,8 @@ export class EventsController {
     });
     if (!event) throw new NotFoundException("Event not found");
 
-    if (
-      body.priorityListDeadline &&
-      dayjs(body.priorityListDeadline).isAfter(dayjs(event.until))
-    ) {
-      throw new BadRequestException(
-        "Priority list deadline cannot be set after the event has ended",
-      );
+    if (body.priorityListDeadline && dayjs(body.priorityListDeadline).isAfter(dayjs(event.until))) {
+      throw new BadRequestException("Priority list deadline cannot be set after the event has ended");
     }
 
     const newCreatedLinks = await this.eventsService.createLinks(body.links);
@@ -325,8 +286,7 @@ export class EventsController {
    * Organization permissions required: `create.event`
    */
   @ApiForbiddenResponse({
-    description:
-      "User is not member of event organization or does not have required permissions",
+    description: "User is not member of event organization or does not have required permissions",
   })
   @ApiNotFoundResponse({ description: "Event not found" })
   @ApiConsumes("multipart/form-data")
@@ -340,9 +300,7 @@ export class EventsController {
     @Body() body: UpdatePhoto,
   ) {
     if (!currentUser.role?.hasOneOfPermissions([Permission.EventUpdate])) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     const event = await this.eventsService.findByIdDetailed(eventId, {
@@ -363,14 +321,9 @@ export class EventsController {
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Delete(":eventId")
-  async deleteEvent(
-    @CurrentUser() currentUser: User,
-    @Param("eventId", ParseIntPipe) eventId: number,
-  ) {
+  async deleteEvent(@CurrentUser() currentUser: User, @Param("eventId", ParseIntPipe) eventId: number) {
     if (!currentUser.role?.hasOneOfPermissions([Permission.EventUpdate])) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     const event = await this.eventsService.findById(eventId);
@@ -390,9 +343,7 @@ export class EventsController {
     @Body() body: CreateEvent,
   ) {
     if (!currentUser.role?.hasOneOfPermissions([Permission.EventUpdate])) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     const event = await this.eventsService.findById(eventId);
@@ -416,9 +367,7 @@ export class EventsController {
     @Param("linkId", ParseIntPipe) linkId: number,
   ) {
     if (!currentUser.role?.hasOneOfPermissions([Permission.EventUpdate])) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     const event = await this.eventsService.findEventByLink(linkId);

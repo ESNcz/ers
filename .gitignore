@@ -7,3 +7,4 @@ postgres_data
 certbot
 database/*
 .DS_Store
+.claude

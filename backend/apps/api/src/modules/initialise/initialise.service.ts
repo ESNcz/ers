@@ -1,15 +1,16 @@
-import { ConflictException, Injectable } from "@nestjs/common";
-import { InjectEntityManager, InjectRepository } from "@nestjs/typeorm";
-import { User } from "@api/modules/users/entities";
-import { EntityManager, Repository } from "typeorm";
-import { Organization } from "../organization";
-import { InitialiseType } from "@api/models/requests/init.dto";
-import { Permission, Role } from "@api/modules/roles";
-import { OrganizationMember } from "@api/modules/organization/entities";
-import { AuthService } from "@api/modules/auth";
-import { ConfigService } from "@nestjs/config";
 import { MailerService } from "@nestjs-modules/mailer";
+import { ConflictException, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { InjectEntityManager, InjectRepository } from "@nestjs/typeorm";
+import { EntityManager, Repository } from "typeorm";
+
+import { InitialiseType } from "@api/models/requests/init.dto";
 import { Address } from "@api/modules/addresses/entities";
+import { AuthService } from "@api/modules/auth";
+import { Organization } from "@api/modules/organization";
+import { OrganizationMember } from "@api/modules/organization/entities";
+import { Permission, Role } from "@api/modules/roles";
+import { User } from "@api/modules/users/entities";
 
 @Injectable()
 export class InitialiseService {
@@ -37,97 +38,92 @@ export class InitialiseService {
    * @returns
    */
   async initialiseSystem(init: InitialiseType) {
-    const { user, role, organization } = await this.entityManager.transaction(
-      async (em) => {
-        const userCount = await this.UsersRepository.count();
-        const organizationCount = await this.OrganisationRepository.count({
-          where: { isDeleted: false },
-        });
+    const { user, role, organization } = await this.entityManager.transaction(async (em) => {
+      const userCount = await this.UsersRepository.count();
+      const organizationCount = await this.OrganisationRepository.count({
+        where: { isDeleted: false },
+      });
 
-        if (userCount > 0 && organizationCount > 0) {
-          throw new ConflictException("System is already initialised");
-        }
+      if (userCount > 0 && organizationCount > 0) {
+        throw new ConflictException("System is already initialised");
+      }
 
-        const { user, organization } = init;
+      const { user, organization } = init;
 
-        // Create Admin Role with All Permissions
-        let adminRole = this.RoleRepository.create({
-          name: "Admin",
-          permissions: Object.values(Permission), // Assign all permissions
-        });
-        adminRole = await this.RoleRepository.save(adminRole);
+      // Create Admin Role with All Permissions
+      let adminRole = this.RoleRepository.create({
+        name: "Admin",
+        permissions: Object.values(Permission), // Assign all permissions
+      });
+      adminRole = await this.RoleRepository.save(adminRole);
 
-        // Create Personal Address for the User
-        let personalAddress = user?.personalAddress
-          ? this.AddressRepository.create({
-              street: user.personalAddress.street,
-              city: user.personalAddress.city,
-              houseNumber: user.personalAddress.houseNumber,
-              zip: user.personalAddress.zip,
-              country: user.personalAddress.country,
-            })
-          : null;
+      // Create Personal Address for the User
+      let personalAddress = user?.personalAddress
+        ? this.AddressRepository.create({
+            street: user.personalAddress.street,
+            city: user.personalAddress.city,
+            houseNumber: user.personalAddress.houseNumber,
+            zip: user.personalAddress.zip,
+            country: user.personalAddress.country,
+          })
+        : null;
 
-        if (personalAddress) {
-          personalAddress = await this.AddressRepository.save(personalAddress);
-        }
+      if (personalAddress) {
+        personalAddress = await this.AddressRepository.save(personalAddress);
+      }
 
-        // Create Admin User with Hashed Password
-        let adminUser = this.UsersRepository.create({
-          email: user.email,
-          username: user.username,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          password: user.password,
-          birthDate: user.birthDate,
-          nationality: user.nationality,
-          role: adminRole, // add created an admin role
-          personalAddress: personalAddress, // add personal address
-        });
-        adminUser = await this.UsersRepository.save(adminUser);
+      // Create Admin User with Hashed Password
+      let adminUser = this.UsersRepository.create({
+        email: user.email,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        password: user.password,
+        birthDate: user.birthDate,
+        nationality: user.nationality,
+        role: adminRole, // add created an admin role
+        personalAddress: personalAddress, // add personal address
+      });
+      adminUser = await this.UsersRepository.save(adminUser);
 
-        // Create Organisation with Address
-        let organizationAddress = this.AddressRepository.create({
-          street: organization.address.street,
-          city: organization.address.city,
-          houseNumber: organization.address.houseNumber,
-          zip: organization.address.zip,
-          country: organization.address.country,
-        });
-        organizationAddress =
-          await this.AddressRepository.save(organizationAddress);
+      // Create Organisation with Address
+      let organizationAddress = this.AddressRepository.create({
+        street: organization.address.street,
+        city: organization.address.city,
+        houseNumber: organization.address.houseNumber,
+        zip: organization.address.zip,
+        country: organization.address.country,
+      });
+      organizationAddress = await this.AddressRepository.save(organizationAddress);
 
-        let newOrganization = this.OrganisationRepository.create({
-          name: organization.name,
-          legalName: organization.legalName ?? organization.name,
-          cin: organization?.cin ?? null,
-          vatin: organization?.vatin ?? null,
-          address: organizationAddress, // add create organisation address
-        });
-        newOrganization =
-          await this.OrganisationRepository.save(newOrganization);
+      let newOrganization = this.OrganisationRepository.create({
+        name: organization.name,
+        legalName: organization.legalName ?? organization.name,
+        cin: organization?.cin ?? null,
+        vatin: organization?.vatin ?? null,
+        address: organizationAddress, // add create organisation address
+      });
+      newOrganization = await this.OrganisationRepository.save(newOrganization);
 
-        // Add Admin User as a Member of the Organisation
-        const organizationMember = this.organizationMembersRepository.create({
-          user: adminUser,
-          organization: newOrganization,
-        });
-        await this.organizationMembersRepository.save(organizationMember);
+      // Add Admin User as a Member of the Organisation
+      const organizationMember = this.organizationMembersRepository.create({
+        user: adminUser,
+        organization: newOrganization,
+      });
+      await this.organizationMembersRepository.save(organizationMember);
 
-        // Assign Admin User as Manager of the Organisation
-        newOrganization.manager = adminUser;
-        await this.OrganisationRepository.save(newOrganization);
+      // Assign Admin User as Manager of the Organisation
+      newOrganization.manager = adminUser;
+      await this.OrganisationRepository.save(newOrganization);
 
-        return {
-          user: adminUser,
-          organization: newOrganization,
-          role: adminRole,
-        };
-      },
-    );
+      return {
+        user: adminUser,
+        organization: newOrganization,
+        role: adminRole,
+      };
+    });
 
-    const verificationToken =
-      await this.authService.createEmailVerificationToken(user);
+    const verificationToken = await this.authService.createEmailVerificationToken(user);
     const verifyUrl = `${this.configService.getOrThrow("WEB_DOMAIN")}/verify?token=${verificationToken}`;
 
     // TODO - Move to MailController
@@ -162,9 +158,7 @@ export class InitialiseService {
     const isInitialised = countUser > 0 && countOrganisation > 0;
     return {
       isInitialised: isInitialised,
-      message: isInitialised
-        ? "Initial setup already fulfilled"
-        : "Initial setup not fulfilled",
+      message: isInitialised ? "Initial setup already fulfilled" : "Initial setup not fulfilled",
     };
   }
 }

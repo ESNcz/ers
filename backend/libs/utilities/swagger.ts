@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 import type { INestApplication } from "@nestjs/common";
-import { SwaggerModule, type OpenAPIObject } from "@nestjs/swagger";
-import type { Response, Express } from "express";
+import { type OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
+import type { Express, Response } from "express";
 
 const getTemplate = (openApi: Omit<OpenAPIObject, "paths">, path: string) => `
 <!DOCTYPE html>
@@ -35,39 +35,39 @@ const getTemplate = (openApi: Omit<OpenAPIObject, "paths">, path: string) => `
 `;
 
 export const includeSwagger = (
-	app: INestApplication<Express>,
-	openApi: Omit<OpenAPIObject, "paths">,
-	path = "/docs",
+  app: INestApplication<Express>,
+  openApi: Omit<OpenAPIObject, "paths">,
+  path = "/docs",
 ) => {
-	const absolutePath = path.startsWith("/") ? path : `/${path}`;
+  const absolutePath = path.startsWith("/") ? path : `/${path}`;
 
-	const document = SwaggerModule.createDocument(app, openApi, {
-		operationIdFactory: (_, methodKey: string) => {
-			// Convert "getUsers" to "Get Users"
-			const methodName = methodKey
-				.replace(/([A-Z])/g, " $1")
-				// Capitalize first letter
-				.replace(/^./, (str) => str.toUpperCase());
+  const document = SwaggerModule.createDocument(app, openApi, {
+    operationIdFactory: (_, methodKey: string) => {
+      // Convert "getUsers" to "Get Users"
+      const methodName = methodKey
+        .replace(/([A-Z])/g, " $1")
+        // Capitalize first letter
+        .replace(/^./, (str) => str.toUpperCase());
 
-			return methodName.trim();
-		},
-	});
+      return methodName.trim();
+    },
+  });
 
-	const jsonAbsolutePath = `${absolutePath}-json`;
-	const template = getTemplate(openApi, jsonAbsolutePath);
+  const jsonAbsolutePath = `${absolutePath}-json`;
+  const template = getTemplate(openApi, jsonAbsolutePath);
 
-	app.use(jsonAbsolutePath, (_, res) => {
-		res.json(document);
-	});
-	// Serve custom documentation page
-	app.use(absolutePath, (_, res: Response) => res.send(template));
+  app.use(jsonAbsolutePath, (_, res) => {
+    res.json(document);
+  });
+  // Serve custom documentation page
+  app.use(absolutePath, (_, res: Response) => res.send(template));
 
-	// biome-ignore lint/suspicious/noExplicitAny: NestJS does not expose direct httpServer access. This is for informative, can be deleted
-	const httpServer = (app as any).httpServer as Express;
-	httpServer.on("listening", () => {
-		// biome-ignore lint/suspicious/noExplicitAny: Express does not expose direct `address` method
-		const test = httpServer as any;
-		const { port } = test.address();
-		Logger.log(`Listening docs on: http://localhost:${port}${absolutePath}`, "Swagger");
-	});
+  // biome-ignore lint/suspicious/noExplicitAny: NestJS does not expose direct httpServer access. This is for informative, can be deleted
+  const httpServer = (app as any).httpServer as Express;
+  httpServer.on("listening", () => {
+    // biome-ignore lint/suspicious/noExplicitAny: Express does not expose direct `address` method
+    const test = httpServer as any;
+    const { port } = test.address();
+    Logger.log(`Listening docs on: http://localhost:${port}${absolutePath}`, "Swagger");
+  });
 };
