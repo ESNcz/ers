@@ -9,6 +9,7 @@ export class UpdateUser extends PartialType(
   PickType(CreateUser, [
     "firstName",
     "lastName",
+    "username",
     "password",
     "gender",
     "phonePrefix",

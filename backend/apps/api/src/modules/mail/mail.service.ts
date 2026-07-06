@@ -12,8 +12,8 @@ export class MailService {
   testSend() {
     this.mailerService
       .sendMail({
-        from: { name: "No Reply", address: this.configService.get<string>("MAIL_USER") },
-        to: [{ name: "No Reply", address: this.configService.get<string>("MAIL_USER") }],
+        from: { name: "No Reply", address: this.configService.getOrThrow<string>("MAIL_USER") },
+        to: [{ name: "No Reply", address: this.configService.getOrThrow<string>("MAIL_USER") }],
         subject: "Testing Mail Module",
         template: "verify-email",
         context: {

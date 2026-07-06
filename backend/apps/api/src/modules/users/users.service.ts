@@ -105,8 +105,8 @@ export class UsersService {
         ...options?.relations,
       },
       // TODO - fix apgination if "all" is undefined fetch all
-      take: pagination.all ? undefined : pagination.perPage,
-      skip: pagination.all ? undefined : (pagination.page - 1) * pagination.perPage,
+      take: pagination?.all ? undefined : (pagination?.perPage ?? 10),
+      skip: pagination?.all ? undefined : ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 10),
     });
 
     return formatPaginatedResponse<User>(users, totalCount, pagination);

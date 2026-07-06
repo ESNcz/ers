@@ -8,6 +8,7 @@ import {
   Get,
   Header,
   InternalServerErrorException,
+  NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -90,7 +91,7 @@ export class UsersController {
     }
 
     newUser = await this.usersService.save(newUser);
-    newUser.password = undefined;
+    Reflect.deleteProperty(newUser, "password");
 
     const verificationToken = await this.authService.createEmailVerificationToken(newUser);
     const verifyUrl = `${this.configService.getOrThrow("WEB_DOMAIN")}/verify?token=${verificationToken}`;
@@ -134,6 +135,7 @@ export class UsersController {
     const user = await this.usersService.findById(requestUser.id, {
       relations: { personalAddress: true },
     });
+    if (!user) throw new NotFoundException("User not found");
 
     // For safety reasons set each property individually
     user.password = body.password ?? user.password;
@@ -153,7 +155,7 @@ export class UsersController {
     }
 
     const newUser = await this.usersService.save(user);
-    newUser.password = undefined;
+    Reflect.deleteProperty(newUser, "password");
     return newUser;
   }
 
@@ -176,6 +178,7 @@ export class UsersController {
     const user = await this.usersService.findById(userId, {
       relations: { personalAddress: true },
     });
+    if (!user) throw new NotFoundException("User not found");
 
     user.firstName = body.firstName ?? user.firstName;
     user.lastName = body.lastName ?? user.lastName;
@@ -192,7 +195,7 @@ export class UsersController {
     }
 
     const updatedUser = await this.usersService.save(user);
-    updatedUser.password = undefined;
+    Reflect.deleteProperty(updatedUser, "password");
     return updatedUser;
   }
 

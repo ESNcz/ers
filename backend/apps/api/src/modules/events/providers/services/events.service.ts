@@ -94,8 +94,8 @@ export class EventsService {
         links: true,
       },
       order: { since: "ASC" },
-      take: pagination?.all ? undefined : pagination?.perPage,
-      skip: pagination?.all ? undefined : (pagination?.page - 1) * pagination?.perPage,
+      take: pagination?.all ? undefined : (pagination?.perPage ?? 10),
+      skip: pagination?.all ? undefined : ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 10),
     });
 
     return formatPaginatedResponse<Event>(events, totalCount, pagination);
@@ -116,8 +116,8 @@ export class EventsService {
         since: "ASC",
       },
       // TODO - fix apgination if "all" is undefined fetch all
-      take: pagination.all ? undefined : pagination.perPage,
-      skip: pagination.all ? undefined : (pagination.page - 1) * pagination.perPage,
+      take: pagination?.all ? undefined : (pagination?.perPage ?? 10),
+      skip: pagination?.all ? undefined : ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 10),
     });
     return formatPaginatedResponse<Event>(events, totalCount, pagination);
   }
@@ -150,7 +150,7 @@ export class EventsService {
     });
   }
 
-  async createLinks(linksDto: UpdateEventLinkPartial[] | CreateEventLinkPartial[]) {
+  async createLinks(linksDto: UpdateEventLinkPartial[] | CreateEventLinkPartial[] = []) {
     const newLinks = this.linksRepository.create(linksDto.map((link) => ({ name: link.name, link: link.link })));
     return this.linksRepository.save(newLinks);
   }
@@ -163,8 +163,9 @@ export class EventsService {
     const link = await this.linksRepository.findOne({
       where: { id: linkId },
     });
+    if (!link) return;
 
-    await this.linksRepository.delete(link);
+    await this.linksRepository.delete(link.id);
   }
 
   async deleteLinks(eventId: number) {

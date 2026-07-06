@@ -113,6 +113,7 @@ export class OrganizationsController {
     const organisationMember = await this.organizationService.findMemberByUserId(organisationId, userId, {
       relations: { user: true },
     });
+    if (!organization || !organisationMember) throw new NotFoundException("Organization or member not found");
 
     organization.update({ manager: organisationMember.user });
     return await this.organizationService.save(organization);

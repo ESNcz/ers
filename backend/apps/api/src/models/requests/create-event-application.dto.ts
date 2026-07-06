@@ -87,7 +87,7 @@ export class CreateEventApplication {
   })
   @IsObject()
   @IsNotEmptyObject()
-  @Type(null, {
+  @Type(undefined, {
     keepDiscriminatorProperty: true,
     discriminator: {
       property: "type",

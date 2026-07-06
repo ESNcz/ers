@@ -21,7 +21,7 @@ export class InitialiseController {
 
     response
       .cookie(INIT_COOKIE, result.isInitialised ? "1" : "0", {
-        domain: isProduction ? process.env.WEB_DOMAIN.split("https://")[1] : "localhost",
+        domain: isProduction ? process.env.WEB_DOMAIN?.split("https://")[1] : "localhost",
         httpOnly: true,
         secure: true,
         sameSite: "none",
@@ -38,7 +38,7 @@ export class InitialiseController {
     const init = await this.initialiseService.initialiseSystem(body);
     response
       .cookie(INIT_COOKIE, init.user ? "1" : "0", {
-        domain: isProduction ? process.env.WEB_DOMAIN.split("https://")[1] : "localhost",
+        domain: isProduction ? process.env.WEB_DOMAIN?.split("https://")[1] : "localhost",
         httpOnly: true,
         secure: true,
         sameSite: "none",

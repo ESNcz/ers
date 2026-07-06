@@ -176,9 +176,9 @@ export class EventsController {
     event.since = new Date(body.since);
     event.until = new Date(body.until);
     event.createdByUser = currentUser;
-    event.visible = body.visible;
+    event.visible = body.visible ?? true;
     event.registrationDeadline = new Date(body.registrationDeadline);
-    event.registrationForm = body.registrationForm;
+    event.registrationForm = body.registrationForm ?? null;
     event.capacity = body.capacity;
     event.codeOfConductLink = body.codeOfConductLink;
     event.photoPolicyLink = body.photoPolicyLink;
@@ -186,13 +186,13 @@ export class EventsController {
     event.links = newCreatedLinks;
     event.applications = [];
 
-    const priorityListDeadline = new Date(body.priorityListDeadline);
+    const priorityListDeadline = body.priorityListDeadline ? new Date(body.priorityListDeadline) : event.until;
 
     if (dayjs(priorityListDeadline).isAfter(event.until)) {
       throw new BadRequestException("Priority list deadline cannot be set after the event has ended");
     }
 
-    event.priorityListDeadline = priorityListDeadline ?? event.until;
+    event.priorityListDeadline = priorityListDeadline;
 
     event = await this.eventsService.save(event);
     return this.eventSimpleWithApplicationsMapper.map(event);
@@ -211,6 +211,7 @@ export class EventsController {
     }
 
     const event = await this.eventsService.findByIdDetailed(id);
+    if (!event) throw new NotFoundException("Event not found");
 
     const newCreatedLinks = await this.eventsService.createLinks(event.links);
 

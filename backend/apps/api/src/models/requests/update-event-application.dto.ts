@@ -47,6 +47,8 @@ export class UpdateEventApplication extends PartialType(
     "healthLimitations",
     "additionalInformation",
     "invoiceAddress",
+    "spotTypeId",
+    "additionalFormData",
   ]),
 ) {
   @ApiProperty({

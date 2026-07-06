@@ -15,14 +15,15 @@ export type FormatPaginatedResponseType<T> = {
 export function formatPaginatedResponse<T>(
   data: T[], //Event[] | EventApplication[] | User[] | OrganizationMember[],
   totalCount: number,
-  pagination: PaginationOptions,
+  pagination?: PaginationOptions,
 ): FormatPaginatedResponseType<T> {
+  const perPage = pagination?.perPage || 10;
   return {
     data,
     pagination: {
       currentPage: pagination?.page || 1,
-      perPage: pagination?.perPage || 10,
-      maxPages: pagination?.all ? 1 : Math.ceil(totalCount / pagination?.perPage) || undefined,
+      perPage,
+      maxPages: pagination?.all ? 1 : Math.ceil(totalCount / perPage),
       totalCount,
     },
   };

@@ -51,7 +51,7 @@ export class AuthController {
 
     response
       .cookie("AuthCookie", token, {
-        domain: isProduction ? process.env.WEB_DOMAIN.split("https://")[1] : "localhost",
+        domain: isProduction ? process.env.WEB_DOMAIN?.split("https://")[1] : "localhost",
         httpOnly: true,
         secure: true,
         sameSite: "none",
@@ -74,7 +74,7 @@ export class AuthController {
   async logoutUser(@Res({ passthrough: true }) response: Response) {
     response
       .clearCookie("AuthCookie", {
-        domain: isProduction ? process.env.WEB_DOMAIN.split("https://")[1] : "localhost",
+        domain: isProduction ? process.env.WEB_DOMAIN?.split("https://")[1] : "localhost",
         httpOnly: true,
         secure: true,
         sameSite: "none",
@@ -89,7 +89,7 @@ export class AuthController {
   async removeCookie(@Res({ passthrough: true }) response: Response) {
     response
       .clearCookie("AuthCookie", {
-        domain: isProduction ? process.env.WEB_DOMAIN.split("https://")[1] : "localhost",
+        domain: isProduction ? process.env.WEB_DOMAIN?.split("https://")[1] : "localhost",
         httpOnly: true,
         secure: true,
         sameSite: "none",
@@ -113,7 +113,7 @@ export class AuthController {
 
     await this.mailerService.sendMail({
       to: [{ name: `${user.firstName} ${user.lastName}`, address: user.email }],
-      from: { name: "No Reply", address: this.configService.get<string>("MAIL_USER") },
+      from: { name: "No Reply", address: this.configService.getOrThrow<string>("MAIL_USER") },
       subject: "Password Reset Request",
       template: "reset-password", // create this template!
       context: {
@@ -178,7 +178,7 @@ export class AuthController {
     try {
       // TODO - Move to MailController (resend verification)
       await this.mailerService.sendMail({
-        from: { name: "No Reply", address: this.configService.get<string>("MAIL_USER") },
+        from: { name: "No Reply", address: this.configService.getOrThrow<string>("MAIL_USER") },
         to: [{ name: `${user.firstName} ${user.lastName}`, address: user.email }],
         subject: "Verify your email - resend",
         template: "verify-email",

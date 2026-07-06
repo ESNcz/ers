@@ -14,13 +14,14 @@ export class JsonSchemaValidatorConstraint implements ValidatorConstraintInterfa
   validate(schema: object, _args?: ValidationArguments): boolean {
     try {
       ajv.compile(schema);
-    } catch (error) {
+      return true;
+    } catch {
       return false;
     }
   }
 
   defaultMessage(args?: ValidationArguments): string {
-    return `${args.property}: Invalid JSON schema structure`;
+    return `${args?.property}: Invalid JSON schema structure`;
   }
 }
 

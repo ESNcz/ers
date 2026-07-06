@@ -29,6 +29,7 @@ const PaginationTypeEnhancer =
   (defaultOptions?: Partial<PaginationOptions>): ParamDecoratorEnhancer =>
   (target: Record<string, unknown>, propertyKey: string): void => {
     const descriptor = Reflect.getOwnPropertyDescriptor(target, propertyKey);
+    if (!descriptor) return;
     ApiQuery(<ApiQueryWithDefault>{
       name: "page",
       type: Number,

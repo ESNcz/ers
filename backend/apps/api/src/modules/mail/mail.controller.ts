@@ -22,7 +22,7 @@ export class MailController {
   @ApiBadRequestResponse({ type: Error, description: "E-mail not sent" })
   @Post()
   async sendMail(@Body() body: SendEmailDTO, @CurrentUser() user: User) {
-    if (!user.role.isAdmin()) {
+    if (!user.role?.isAdmin()) {
       throw new ForbiddenException("You dont have permissions to send e-mail");
     }
 

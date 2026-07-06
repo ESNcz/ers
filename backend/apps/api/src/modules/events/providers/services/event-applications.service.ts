@@ -83,8 +83,8 @@ export class EventApplicationsService {
         spotType: true,
       },
       // TODO - fix apgination if "all" is undefined fetch all
-      take: pagination.all ? undefined : pagination.perPage,
-      skip: pagination.all ? undefined : (pagination.page - 1) * pagination.perPage,
+      take: pagination?.all ? undefined : (pagination?.perPage ?? 10),
+      skip: pagination?.all ? undefined : ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 10),
     });
   }
 
@@ -121,8 +121,8 @@ export class EventApplicationsService {
           since: "ASC",
         },
       },
-      take: pagination?.all ? pagination.perPage : undefined,
-      skip: pagination?.all ? (pagination.page - 1) * pagination.perPage : undefined,
+      take: pagination?.all ? undefined : (pagination?.perPage ?? 10),
+      skip: pagination?.all ? undefined : ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 10),
     });
     return formatPaginatedResponse(eventApplications, totalCount, pagination);
   }

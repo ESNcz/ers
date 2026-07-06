@@ -27,17 +27,17 @@ export class PhotoController {
     });
 
     // To provide mime type, whole stream must be read (TODO: Save mime type in the future or convert all images to same type)
-    const chunks = [];
+    const chunks: Buffer[] = [];
     for await (const chunk of stream) {
       chunks.push(chunk);
     }
     const buffer = Buffer.concat(chunks);
 
     const host = request.get("host");
-    const { mime } = await fileTypeFromBuffer(buffer);
-    res.setHeader("Access-Control-Allow-Origin", host);
+    const fileType = await fileTypeFromBuffer(buffer);
+    if (host) res.setHeader("Access-Control-Allow-Origin", host);
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
 
-    return new StreamableFile(buffer, { type: mime });
+    return new StreamableFile(buffer, { type: fileType?.mime });
   }
 }

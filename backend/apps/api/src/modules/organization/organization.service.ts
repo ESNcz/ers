@@ -83,8 +83,8 @@ export class OrganizationService {
           personalAddress: true,
         },
       },
-      take: pagination?.all ? undefined : pagination?.perPage,
-      skip: pagination?.all ? undefined : (pagination?.page - 1) * pagination?.perPage,
+      take: pagination?.all ? undefined : (pagination?.perPage ?? 10),
+      skip: pagination?.all ? undefined : ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 10),
     });
     return await formatPaginatedResponse<OrganizationMember>(members, totalCount, pagination);
   }

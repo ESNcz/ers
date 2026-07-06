@@ -21,7 +21,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     if (!user.isVerified) throw new NotFoundException("Your account e-mail address was not verified.");
 
     // Do not expose password hash by mistake
-    user.password = undefined;
+    Reflect.deleteProperty(user, "password");
     return user;
   }
 }
