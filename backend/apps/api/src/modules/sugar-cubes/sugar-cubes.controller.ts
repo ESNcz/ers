@@ -34,7 +34,7 @@ export class SugarCubesController {
     const cubes = await this.sugarCubesService.getReceivedSugarCubes(eventId, currentUser);
     return cubes.map((cube) => {
       if (cube.isAnonymous) {
-        const { fromUser, ...rest } = cube;
+        const { fromUser: _, ...rest } = cube;
         return rest;
       }
       return cube;

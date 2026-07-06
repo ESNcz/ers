@@ -29,6 +29,7 @@ import {
   getSchemaPath,
 } from "@nestjs/swagger";
 import * as ExcelJS from "exceljs";
+import { Response } from "express";
 import { FormDataRequest, MemoryStoredFile } from "nestjs-form-data";
 
 import { CurrentUser } from "@api/decorators";
@@ -330,10 +331,7 @@ ${user?.personalAddress?.country}`
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-    res
-      // @ts-ignore
-      .type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-      .send(buffer);
+    res.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").send(buffer);
     return buffer;
   }
 }

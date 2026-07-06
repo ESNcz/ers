@@ -62,10 +62,10 @@ export const includeSwagger = (
   // Serve custom documentation page
   app.use(absolutePath, (_, res: Response) => res.send(template));
 
-  // biome-ignore lint/suspicious/noExplicitAny: NestJS does not expose direct httpServer access. This is for informative, can be deleted
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- NestJS does not expose direct httpServer access. This is for informative, can be deleted
   const httpServer = (app as any).httpServer as Express;
   httpServer.on("listening", () => {
-    // biome-ignore lint/suspicious/noExplicitAny: Express does not expose direct `address` method
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Express does not expose direct `address` method
     const test = httpServer as any;
     const { port } = test.address();
     Logger.log(`Listening docs on: http://localhost:${port}${absolutePath}`, "Swagger");

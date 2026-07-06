@@ -8,7 +8,7 @@ interface ParseDatePipeOptions {
 export class ParseDatePipe implements PipeTransform {
   constructor(private readonly options?: ParseDatePipeOptions) {}
 
-  transform(value: string, metadata: ArgumentMetadata) {
+  transform(value: string, _metadata: ArgumentMetadata) {
     if (!value && !this.options?.required) return undefined;
 
     if (isISO8601(value)) return new Date(value);

@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts unknown input to test
 export const isDateString = (value: any): boolean => {
   return typeof value === "string" && !Number.isNaN(Date.parse(value));
 };

@@ -11,7 +11,7 @@ import type { Request } from "express";
  * @param dataOrPipes
  * @returns User
  */
-// biome-ignore lint/suspicious/noExplicitAny: NestJS define this same
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- NestJS defines this the same way
 export const CurrentUser = (...dataOrPipes: any) =>
   createParamDecorator((_, ctx: ExecutionContext) => {
     if (ctx.getType() !== "http") throw new BadRequestException("Invalid context");

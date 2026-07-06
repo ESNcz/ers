@@ -31,6 +31,7 @@ import {
 } from "@nestjs/swagger";
 import dayjs from "dayjs";
 import * as ExcelJS from "exceljs";
+import { Response } from "express";
 
 import { CurrentUser } from "@api/decorators";
 import { EventApplicationSimpleWithApplicationsMapper } from "@api/mappers";
@@ -490,10 +491,7 @@ ${organization?.cin ? `IČO: ${organization.cin}` : ""}`,
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-    res
-      // @ts-ignore
-      .type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-      .send(buffer);
+    res.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").send(buffer);
     return buffer;
   }
 }

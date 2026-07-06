@@ -12,10 +12,7 @@ import { FileStorageService } from "./providers/services";
     ServeStaticModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        // const routerPrefix = configService.getOrThrow("STORAGE_ROUTER_PREFIX");
-        // if (!path.isAbsolute(routerPrefix)) throw new Error("STORAGE_ROUTER_PREFIX must be absolute");
-        // const storageRoot = configService.getOrThrow("STORAGE_ROOT");
+      useFactory: () => {
         return [
           {
             rootPath: path.join(process.cwd(), "storage"),

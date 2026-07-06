@@ -38,7 +38,7 @@ export class InitialiseService {
    * @returns
    */
   async initialiseSystem(init: InitialiseType) {
-    const { user, role, organization } = await this.entityManager.transaction(async (em) => {
+    const { user, role, organization } = await this.entityManager.transaction(async () => {
       const userCount = await this.UsersRepository.count();
       const organizationCount = await this.OrganisationRepository.count({
         where: { isDeleted: false },

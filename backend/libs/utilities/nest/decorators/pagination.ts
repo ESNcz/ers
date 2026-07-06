@@ -60,7 +60,7 @@ const PaginationTypeEnhancer =
  */
 export const Pagination = (
   defaultOptions?: Partial<PaginationOptions>,
-  // biome-ignore lint/suspicious/noExplicitAny: Nest handle dataOrPipes same way
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Nest handles dataOrPipes the same way
   ...dataOrPipes: any[]
 ) =>
   createParamDecorator(
