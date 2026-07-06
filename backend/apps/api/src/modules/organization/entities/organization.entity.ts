@@ -28,10 +28,10 @@ export class Organization {
   @Column()
   legalName: string;
 
-  @Column({ nullable: true, default: null })
+  @Column({ type: "varchar", nullable: true, default: null })
   cin: string | null;
 
-  @Column({ nullable: true, default: null })
+  @Column({ type: "varchar", nullable: true, default: null })
   vatin: string | null;
 
   @ManyToOne(() => Address, { nullable: false, cascade: true, eager: true })

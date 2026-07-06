@@ -72,7 +72,7 @@ export class EventApplication extends BaseEntity {
   @Column({ type: "enum", enum: InvoiceMethods, default: InvoiceMethods.personal, enumName: "InvoiceMethods" })
   invoiceMethod: InvoiceMethods;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", nullable: true })
   invoicedTo: string | null;
 
   @OneToOne(() => Address, { cascade: true })

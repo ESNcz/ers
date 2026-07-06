@@ -47,7 +47,7 @@ export class User extends BaseEntity {
   @ApiProperty()
   lastName: string;
 
-  @Column({ nullable: true })
+  @Column({ type: "timestamp", nullable: true })
   birthDate: Date | null;
 
   @Column({ nullable: true })
@@ -66,7 +66,7 @@ export class User extends BaseEntity {
   })
   gender: UserGender;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", nullable: true })
   pronouns: string | null;
 
   // Exclude property from generated docs

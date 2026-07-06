@@ -79,7 +79,7 @@ export class Event extends BaseEntity {
   @Column()
   registrationDeadline: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: "timestamp", nullable: true })
   priorityListDeadline: Date | null;
 
   /**
