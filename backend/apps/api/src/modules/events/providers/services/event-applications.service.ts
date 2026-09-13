@@ -116,10 +116,12 @@ export class EventApplicationsService {
         invoiceAddress: true,
         ...options?.relations,
       },
+      // Newest events first
       order: {
         event: {
-          since: "ASC",
+          since: "DESC",
         },
+        createdAt: "DESC",
       },
       take: pagination?.all ? undefined : (pagination?.perPage ?? 10),
       skip: pagination?.all ? undefined : ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 10),
