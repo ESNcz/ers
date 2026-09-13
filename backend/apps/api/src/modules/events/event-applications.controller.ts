@@ -29,39 +29,30 @@ import {
   ApiTags,
   getSchemaPath,
 } from "@nestjs/swagger";
-
-import { ajv } from "utilities/ajv";
-import { ParseDatePipe } from "utilities/nest/pipes";
-import { CookieGuard } from "../auth/providers/guards";
-import { FileStorageService } from "../file-storage";
-import { OrganizationService } from "../organization";
-import { User, UsersService } from "../users";
-import { EventApplication, EventCustomOrganization } from "./entities";
-import {
-  EventApplicationsService,
-  EventSpotsService,
-  EventsService,
-} from "./index";
+import dayjs from "dayjs";
+import * as ExcelJS from "exceljs";
+import { Response } from "express";
 
 import { CurrentUser } from "@api/decorators";
 import { EventApplicationSimpleWithApplicationsMapper } from "@api/mappers";
-import {
-  CreateEventApplication,
-  UpdateEventApplication,
-} from "@api/models/requests";
+import { CreateEventApplication, UpdateEventApplication } from "@api/models/requests";
 import { EventApplicationSimpleWithApplications } from "@api/models/responses";
 import { EventApplicationDetailedWithApplications } from "@api/models/responses/event-application-detailed-with-applications.dto";
-import {
-  PaginationDto,
-  PaginationResponseDto,
-} from "@api/models/responses/pagination-response.dto";
+import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagination-response.dto";
 import { Address } from "@api/modules/addresses/entities";
+import { CookieGuard } from "@api/modules/auth/providers/guards";
 import { UpdateApplicationSlotDto } from "@api/modules/events/dto/update-application-slot.dto";
 import { UpdateEventApplicationPrioritiesDto } from "@api/modules/events/dto/update-event-application-priorities.dto";
+import { FileStorageService } from "@api/modules/file-storage";
+import { OrganizationService } from "@api/modules/organization";
 import { Permission } from "@api/modules/roles";
-import dayjs from "dayjs";
-import * as ExcelJS from "exceljs";
+import { User, UsersService } from "@api/modules/users";
+import { ajv } from "utilities/ajv";
+import { ParseDatePipe } from "utilities/nest/pipes";
 import { dayMonthYear } from "utilities/time";
+
+import { EventApplication, EventCustomOrganization } from "./entities";
+import { EventApplicationsService, EventSpotsService, EventsService } from "./index";
 
 @ApiTags("Event applications")
 @Controller("events")
@@ -126,10 +117,9 @@ export class EventApplicationsController {
   @UseGuards(CookieGuard)
   @Get(":eventId/applications")
   async getEventApplications(@Param("eventId", ParseIntPipe) eventId: number) {
-    const application =
-      await this.eventApplicationsService.findByEventIdDetailed(eventId, {
-        relations: { event: { applications: true } },
-      });
+    const application = await this.eventApplicationsService.findByEventIdDetailed(eventId, {
+      relations: { event: { applications: true } },
+    });
     return this.eventApplicationSimpleWithApplicationsMapper.map(application);
   }
 
@@ -142,9 +132,7 @@ export class EventApplicationsController {
   @ApiOkResponse({ type: [EventApplicationDetailedWithApplications] })
   @UseGuards(CookieGuard)
   @Get("application/:applicationId")
-  async getApplication(
-    @Param("applicationId", ParseIntPipe) applicationId: number,
-  ) {
+  async getApplication(@Param("applicationId", ParseIntPipe) applicationId: number) {
     return await this.eventApplicationsService.findById(applicationId);
   }
 
@@ -162,18 +150,14 @@ export class EventApplicationsController {
     @Param("eventId", ParseIntPipe) eventId: number,
     @Body() body: CreateEventApplication,
   ): Promise<EventApplicationSimpleWithApplications> {
-    const exist = await this.eventApplicationsService.exist(
-      eventId,
-      currentUser.id,
-    );
+    const exist = await this.eventApplicationsService.exist(eventId, currentUser.id);
     if (exist) throw new ConflictException("Event application already exist");
 
     const user = await this.usersService.findById(currentUser.id, {
       relations: { personalAddress: true },
     });
 
-    if (!user?.personalAddress)
-      throw new ForbiddenException("User must have valid personal address");
+    if (!user?.personalAddress) throw new ForbiddenException("User must have valid personal address");
 
     let application = new EventApplication({
       user: currentUser,
@@ -190,13 +174,9 @@ export class EventApplicationsController {
     });
 
     if (body.organization.type === "organization") {
-      const member = await this.organizationService.findMemberByUserId(
-        body.organization.id,
-        currentUser.id,
-        {
-          relations: { organization: true },
-        },
-      );
+      const member = await this.organizationService.findMemberByUserId(body.organization.id, currentUser.id, {
+        relations: { organization: true },
+      });
 
       if (!member) throw new BadRequestException("Invalid organization given");
       application.organization = member.organization;
@@ -223,13 +203,9 @@ export class EventApplicationsController {
     }
 
     if (event.registrationForm) {
-      const isFormValid = await ajv.validate(
-        event.registrationForm,
-        body.additionalFormData,
-      );
+      const isFormValid = await ajv.validate(event.registrationForm, body.additionalFormData);
 
-      if (!isFormValid)
-        throw new BadRequestException("Registration form data are not valid");
+      if (!isFormValid) throw new BadRequestException("Registration form data are not valid");
 
       application.additionalData = body.additionalFormData;
     }
@@ -255,31 +231,22 @@ export class EventApplicationsController {
     @Param("id", ParseIntPipe) applicationId: number,
     @Body() body: UpdateEventApplication,
   ): Promise<EventApplicationSimpleWithApplications> {
-    let application = await this.eventApplicationsService.findById(
-      applicationId,
-      {
-        relations: {
-          personalAddress: true,
-          customOrganization: true,
-          event: {
-            applications: true,
-          },
+    let application = await this.eventApplicationsService.findById(applicationId, {
+      relations: {
+        personalAddress: true,
+        customOrganization: true,
+        event: {
+          applications: true,
         },
       },
-    );
-    if (!application)
-      throw new NotFoundException("Event application not found");
+    });
+    if (!application) throw new NotFoundException("Event application not found");
 
-    if (
-      !(
-        currentUser.role?.hasOneOfPermissions([
-          Permission.EventManageApplications,
-        ]) || currentUser.id === application.user.id
-      )
-    ) {
-      throw new UnauthorizedException(
-        "You don't have permission to perform this action",
-      );
+    if (!(
+      currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]) ||
+      currentUser.id === application.user.id
+    )) {
+      throw new UnauthorizedException("You don't have permission to perform this action");
     }
 
     if (body.spotTypeId) {
@@ -290,38 +257,28 @@ export class EventApplicationsController {
     }
     if (body.spotTypeId === null) application.spotType = null;
 
-    if (body.invoiceAddress)
-      application.personalAddress.update(body.invoiceAddress);
+    if (body.invoiceAddress) application.personalAddress.update(body.invoiceAddress);
 
     application.invoicedTo = body.invoicedTo ?? application.invoicedTo;
     application.validUntil = body.validUntil ?? application.validUntil;
     application.idNumber = body.idNumber ?? application.idNumber;
     application.allergies = body.allergies ?? application.allergies;
-    application.foodRestriction =
-      body.foodRestriction ?? application.foodRestriction;
-    application.healthLimitations =
-      body.healthLimitations ?? application.healthLimitations;
-    application.additionalInformation =
-      body.additionalInformation ?? application.additionalInformation;
+    application.foodRestriction = body.foodRestriction ?? application.foodRestriction;
+    application.healthLimitations = body.healthLimitations ?? application.healthLimitations;
+    application.additionalInformation = body.additionalInformation ?? application.additionalInformation;
 
     application.invoiceMethod = body.invoiceMethod ?? application.invoiceMethod;
 
     if (body.organization.type === "organization") {
       // If this application was previously linked to a custom org, delete that custom org.
       if (application.customOrganization) {
-        await this.eventApplicationsService.deleteCustomOrganizationInApplication(
-          application.customOrganization,
-        );
+        await this.eventApplicationsService.deleteCustomOrganizationInApplication(application.customOrganization);
         application.customOrganization = null;
       }
 
-      const member = await this.organizationService.findMemberByUserId(
-        body.organization.id,
-        currentUser.id,
-        {
-          relations: { organization: true },
-        },
-      );
+      const member = await this.organizationService.findMemberByUserId(body.organization.id, currentUser.id, {
+        relations: { organization: true },
+      });
 
       if (!member) throw new BadRequestException("Invalid organization given");
       application.organization = member.organization;
@@ -329,9 +286,7 @@ export class EventApplicationsController {
       application.organization = null;
 
       if (application.customOrganization) {
-        await this.eventApplicationsService.deleteCustomOrganizationInApplication(
-          application.customOrganization,
-        );
+        await this.eventApplicationsService.deleteCustomOrganizationInApplication(application.customOrganization);
       }
 
       application.customOrganization = new EventCustomOrganization({
@@ -348,13 +303,9 @@ export class EventApplicationsController {
       if (!event) throw new NotFoundException("Event not found");
 
       if (event.registrationForm) {
-        const isFormValid = await ajv.validate(
-          event.registrationForm,
-          body.additionalFormData,
-        );
+        const isFormValid = await ajv.validate(event.registrationForm, body.additionalFormData);
 
-        if (!isFormValid)
-          throw new BadRequestException("Registration form data are not valid");
+        if (!isFormValid) throw new BadRequestException("Registration form data are not valid");
 
         application.additionalData = body.additionalFormData;
       }
@@ -372,13 +323,9 @@ export class EventApplicationsController {
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Delete("application/:id")
-  async deleteEventApplication(
-    @Param("id", ParseIntPipe) applicationId: number,
-  ) {
-    const application =
-      await this.eventApplicationsService.findById(applicationId);
-    if (!application)
-      throw new NotFoundException("Event application not found");
+  async deleteEventApplication(@Param("id", ParseIntPipe) applicationId: number) {
+    const application = await this.eventApplicationsService.findById(applicationId);
+    if (!application) throw new NotFoundException("Event application not found");
 
     await this.eventApplicationsService.delete(application);
   }
@@ -386,40 +333,26 @@ export class EventApplicationsController {
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Patch("applications/priorities")
-  async updatePriorities(
-    @CurrentUser() currentUser: User,
-    @Body() body: UpdateEventApplicationPrioritiesDto,
-  ) {
+  async updatePriorities(@CurrentUser() currentUser: User, @Body() body: UpdateEventApplicationPrioritiesDto) {
     const applicationIds = body.priorities.map((p) => p.applicationId);
     if (applicationIds.length === 0) return;
 
-    const applications = await this.eventApplicationsService.findByIds(
-      applicationIds,
-      {
-        relations: { organization: { manager: true }, event: true },
-      },
-    );
+    const applications = await this.eventApplicationsService.findByIds(applicationIds, {
+      relations: { organization: { manager: true }, event: true },
+    });
 
-    const canEdit = currentUser.role?.hasOneOfPermissions([
-      Permission.EventManageApplications,
-    ]);
+    const canEdit = currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]);
     const now = dayjs();
 
     for (const application of applications) {
-      const isManager =
-        application.organization?.manager?.id === currentUser.id;
+      const isManager = application.organization?.manager?.id === currentUser.id;
       if (!canEdit && !isManager) {
-        throw new ForbiddenException(
-          `You don't have permission to update priority for application ${application.id}`,
-        );
+        throw new ForbiddenException(`You don't have permission to update priority for application ${application.id}`);
       }
 
-      const deadline =
-        application.event?.priorityListDeadline ?? application.event?.since;
+      const deadline = application.event?.priorityListDeadline ?? application.event?.since;
       if (deadline && now.isAfter(dayjs(deadline))) {
-        throw new ForbiddenException(
-          `The priority list deadline has passed for event ${application.event.id}`,
-        );
+        throw new ForbiddenException(`The priority list deadline has passed for event ${application.event.id}`);
       }
     }
 
@@ -439,15 +372,10 @@ export class EventApplicationsController {
     @Param("userId", ParseUUIDPipe) userId: string,
     @CurrentUser() user: User,
   ) {
-    if (user.id !== userId)
-      throw new NotImplementedException(
-        "User cannot get application for another user yet",
-      );
-    const application =
-      await this.eventApplicationsService.findByEventAndUserId(eventId, userId);
+    if (user.id !== userId) throw new NotImplementedException("User cannot get application for another user yet");
+    const application = await this.eventApplicationsService.findByEventAndUserId(eventId, userId);
 
-    if (!application)
-      throw new NotFoundException("Event application not found");
+    if (!application) throw new NotFoundException("Event application not found");
 
     return this.eventApplicationSimpleWithApplicationsMapper.map(application);
   }
@@ -465,44 +393,28 @@ export class EventApplicationsController {
     @Param("applicationId", ParseIntPipe) applicationId: number,
     @Body() body: UpdateApplicationSlotDto,
   ) {
-    const application =
-      await this.eventApplicationsService.findById(applicationId);
+    const application = await this.eventApplicationsService.findById(applicationId);
 
-    if (
-      !(
-        currentUser.id === application?.user.id ||
-        currentUser.role?.hasOneOfPermissions([
-          Permission.EventManageApplications,
-        ])
-      )
-    ) {
+    if (!(
+      currentUser.id === application?.user.id ||
+      currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])
+    )) {
       return;
     }
 
-    if (!application)
-      throw new NotFoundException("Event application not found");
+    if (!application) throw new NotFoundException("Event application not found");
 
-    application.spotType =
-      body.spotId === null
-        ? null
-        : await this.eventSpotsService.findById(body.spotId);
+    application.spotType = body.spotId === null ? null : await this.eventSpotsService.findById(body.spotId);
     await application.save();
 
     return application;
   }
 
   @ApiBearerAuth()
-  @Header(
-    "Content-disposition",
-    "attachment; filename=EventApplicationExport.xlsx",
-  )
+  @Header("Content-disposition", "attachment; filename=EventApplicationExport.xlsx")
   @Get("export/:eventId/applications")
-  async generateSheetEventApplication(
-    @Res() res: Response,
-    @Param("eventId", ParseIntPipe) eventId: number,
-  ) {
-    const applicationList =
-      await this.eventApplicationsService.findByEventId(eventId);
+  async generateSheetEventApplication(@Res() res: Response, @Param("eventId", ParseIntPipe) eventId: number) {
+    const applicationList = await this.eventApplicationsService.findByEventId(eventId);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Export");
@@ -544,10 +456,7 @@ export class EventApplicationsController {
             : `${user.firstName} ${user.lastName}`;
 
       worksheet.addRow({
-        organisation:
-          organization !== null
-            ? application.organization?.name
-            : application.customOrganization?.name,
+        organisation: organization !== null ? application.organization?.name : application.customOrganization?.name,
         spotName: spotType?.name,
         spotPrice: spotType?.price,
         spotPriceCurrency: spotType?.currency,
@@ -573,7 +482,7 @@ ${user?.personalAddress?.country}`
 ${application?.invoiceAddress?.street} ${application?.invoiceAddress?.houseNumber}
 ${application?.invoiceAddress?.zip} ${application?.invoiceAddress?.city}
 ${application?.invoiceAddress?.country}
-${organization?.cin  ? `IČO: ${organization.cin}` : ""}`,
+${organization?.cin ? `IČO: ${organization.cin}` : ""}`,
         allergies: application?.allergies,
         foodRestrictions: application?.foodRestriction,
         healthLimitations: application?.healthLimitations,
@@ -582,10 +491,7 @@ ${organization?.cin  ? `IČO: ${organization.cin}` : ""}`,
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
-    res
-      // @ts-ignore
-      .type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-      .send(buffer);
+    res.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").send(buffer);
     return buffer;
   }
 }

@@ -1,30 +1,31 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { Permission } from "../permissions";
+
+import { Permission } from "@api/modules/roles/permissions";
 
 @Entity()
 export class Role {
-	@PrimaryGeneratedColumn("increment")
-	id: number;
+  @PrimaryGeneratedColumn("increment")
+  id: number;
 
-	@Column()
-	name: string;
+  @Column()
+  name: string;
 
-	@Column({ enum: Permission, array: true, type: "enum" })
-	permissions: Permission[];
+  @Column({ enum: Permission, array: true, type: "enum" })
+  permissions: Permission[];
 
-	isAdmin() {
-		return this.id === 1 && this.name.toLowerCase() === "admin";
-	}
+  isAdmin() {
+    return this.id === 1 && this.name.toLowerCase() === "admin";
+  }
 
-	hasPermission(userPermission: Permission) {
-		return this.isAdmin() || this.permissions.includes(userPermission);
-	}
+  hasPermission(userPermission: Permission) {
+    return this.isAdmin() || this.permissions.includes(userPermission);
+  }
 
-	hasOneOfPermissions(userPermissions: Permission[]) {
-		return this.isAdmin() || userPermissions.some((permission) => this.permissions.includes(permission));
-	}
+  hasOneOfPermissions(userPermissions: Permission[]) {
+    return this.isAdmin() || userPermissions.some((permission) => this.permissions.includes(permission));
+  }
 
-	constructor(role?: Partial<Role>) {
-		Object.assign(this, role);
-	}
+  constructor(role?: Partial<Role>) {
+    Object.assign(this, role);
+  }
 }

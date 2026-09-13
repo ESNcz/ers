@@ -1,5 +1,6 @@
 import { Between, LessThan, MoreThanOrEqual } from "typeorm";
-import type { EventFilter } from "../models";
+
+import type { EventFilter } from "@api/modules/events/models";
 
 /**
  * Create new since filter
@@ -7,19 +8,19 @@ import type { EventFilter } from "../models";
  * @returns { since: ... }
  */
 export const filterSince = (filter?: EventFilter) => {
-	if (!filter) return {};
+  if (!filter) return {};
 
-	if (filter.since && filter.to) {
-		return { since: Between(filter.since, filter.to) };
-	}
+  if (filter.since && filter.to) {
+    return { since: Between(filter.since, filter.to) };
+  }
 
-	if (filter.since) {
-		return { since: MoreThanOrEqual(filter.since) };
-	}
+  if (filter.since) {
+    return { since: MoreThanOrEqual(filter.since) };
+  }
 
-	if (filter.to) {
-		return { since: LessThan(filter.to) };
-	}
+  if (filter.to) {
+    return { since: LessThan(filter.to) };
+  }
 
-	return {};
+  return {};
 };

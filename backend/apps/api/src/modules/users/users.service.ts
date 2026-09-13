@@ -1,11 +1,13 @@
-import { randomUUID } from "node:crypto";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import bcrypt from "bcryptjs";
 import { isEmail } from "class-validator";
+import { randomUUID } from "node:crypto";
 import { FindManyOptions, FindOptionsWhere, In, Repository } from "typeorm";
+
 import type { PaginationOptions } from "utilities/nest/decorators";
 import { formatPaginatedResponse } from "utilities/pagination.helper";
+
 import { User } from "./entities";
 
 type UserId = User["id"];
@@ -103,10 +105,8 @@ export class UsersService {
         ...options?.relations,
       },
       // TODO - fix apgination if "all" is undefined fetch all
-      take: pagination.all ? undefined : pagination.perPage,
-      skip: pagination.all
-        ? undefined
-        : (pagination.page - 1) * pagination.perPage,
+      take: pagination?.all ? undefined : (pagination?.perPage ?? 10),
+      skip: pagination?.all ? undefined : ((pagination?.page ?? 1) - 1) * (pagination?.perPage ?? 10),
     });
 
     return formatPaginatedResponse<User>(users, totalCount, pagination);
@@ -121,12 +121,9 @@ export class UsersService {
       .leftJoinAndSelect("user.personalAddress", "personalAddress")
       .leftJoinAndSelect("user.role", "role")
       .leftJoinAndSelect("user.memberships", "member")
-      .leftJoinAndSelect(
-        "member.organization",
-        "organization",
-        "organization.isDeleted = :isDeleted",
-        { isDeleted: false },
-      )
+      .leftJoinAndSelect("member.organization", "organization", "organization.isDeleted = :isDeleted", {
+        isDeleted: false,
+      })
       .where("user.isDeleted = :userIsDeleted", { userIsDeleted: false })
       .orderBy("user.createdAt", "ASC")
       .getMany();

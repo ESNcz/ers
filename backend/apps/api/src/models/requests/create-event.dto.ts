@@ -1,122 +1,123 @@
+import { ApiProperty, OmitType } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
 import { Allow, IsBoolean, IsInt, IsNumber, IsOptional, IsString, IsUrl, Min, MinLength } from "class-validator";
-import { DateTransform, IsValidDate, IsValidJsonSchema } from "utilities/nest/class-validator";
-import { ApiProperty, OmitType } from "@nestjs/swagger";
+
 import { EventLink } from "@api/modules/events/entities";
+import { DateTransform, IsValidDate, IsValidJsonSchema } from "utilities/nest/class-validator";
 
 export class CreateEventLinkPartial extends OmitType(EventLink, ["id", "event"]) {}
 
 export class CreateEvent {
-	@MinLength(6)
-	@IsString()
-	title: string;
+  @MinLength(6)
+  @IsString()
+  title: string;
 
-	/**
-	 * @example 2024-12-20T16:48:34.681Z
-	 */
-	@IsValidDate()
-	@Transform(DateTransform)
-	since: Date;
+  /**
+   * @example 2024-12-20T16:48:34.681Z
+   */
+  @IsValidDate()
+  @Transform(DateTransform)
+  since: Date;
 
-	/**
-	 * @example 2024-12-20T16:48:34.681Z
-	 */
-	@IsValidDate()
-	@Transform(DateTransform)
-	until: Date;
+  /**
+   * @example 2024-12-20T16:48:34.681Z
+   */
+  @IsValidDate()
+  @Transform(DateTransform)
+  until: Date;
 
-	/**
-	 * @example 2024-12-20T16:48:34.681Z
-	 */
-	@IsValidDate()
-	@Transform(DateTransform)
-	registrationDeadline: string;
+  /**
+   * @example 2024-12-20T16:48:34.681Z
+   */
+  @IsValidDate()
+  @Transform(DateTransform)
+  registrationDeadline: string;
 
-	/**
-	 * Deadline for managers to assign the priority list. Defaults to event start date if not provided.
-	 * @example 2024-12-20T16:48:34.681Z
-	 */
-	@IsOptional()
-	@IsValidDate()
-	@Transform(DateTransform)
-	priorityListDeadline?: string;
+  /**
+   * Deadline for managers to assign the priority list. Defaults to event start date if not provided.
+   * @example 2024-12-20T16:48:34.681Z
+   */
+  @IsOptional()
+  @IsValidDate()
+  @Transform(DateTransform)
+  priorityListDeadline?: string;
 
-	@IsOptional()
-	links?: CreateEventLinkPartial[] = [];
+  @IsOptional()
+  links?: CreateEventLinkPartial[] = [];
 
-	@ApiProperty({
-		description: "Short description in JSON format for RichText",
-		example: {
-			type: "doc",
-			content: [
-				{
-					type: "paragraph",
-					attrs: { textAlign: "left" },
-					content: [{ type: "text", text: "Short description" }],
-				},
-			],
-		},
-	})
-	@IsString()
-	longDescription: string;
+  @ApiProperty({
+    description: "Short description in JSON format for RichText",
+    example: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { textAlign: "left" },
+          content: [{ type: "text", text: "Short description" }],
+        },
+      ],
+    },
+  })
+  @IsString()
+  longDescription: string;
 
-	@ApiProperty({
-		description: "Short description in JSON format for RichText",
-		example: {
-			type: "doc",
-			content: [
-				{
-					type: "paragraph",
-					attrs: { textAlign: "left" },
-					content: [{ type: "text", text: "Short description" }],
-				},
-			],
-		},
-	})
-	@IsString()
-	shortDescription: string;
+  @ApiProperty({
+    description: "Short description in JSON format for RichText",
+    example: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: { textAlign: "left" },
+          content: [{ type: "text", text: "Short description" }],
+        },
+      ],
+    },
+  })
+  @IsString()
+  shortDescription: string;
 
-	@IsBoolean()
-	visible?: boolean = true;
+  @IsBoolean()
+  visible?: boolean = true;
 
-	/**
-	 * Additional registration properties
-	 * ! Must be valid JSON schema
-	 */
-	@IsOptional()
-	@IsValidJsonSchema()
-	registrationForm?: object;
+  /**
+   * Additional registration properties
+   * ! Must be valid JSON schema
+   */
+  @IsOptional()
+  @IsValidJsonSchema()
+  registrationForm?: object;
 
-	/**
-	 * Generate invoices after {@link registrationDeadline}
-	 */
-	@Allow()
-	@IsBoolean()
-	generateInvoices: boolean;
+  /**
+   * Generate invoices after {@link registrationDeadline}
+   */
+  @Allow()
+  @IsBoolean()
+  generateInvoices: boolean;
 
-	/**
-	 * Event capacity
-	 */
-	@Min(0)
-	@IsInt()
-	@IsNumber({ allowNaN: false, allowInfinity: false })
-	capacity: number;
+  /**
+   * Event capacity
+   */
+  @Min(0)
+  @IsInt()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  capacity: number;
 
-	/**
-	 * @example https://test.cz
-	 */
-	@IsUrl()
-	termsAndConditionsLink: string;
+  /**
+   * @example https://test.cz
+   */
+  @IsUrl()
+  termsAndConditionsLink: string;
 
-	/**
-	 * @example https://test.cz
-	 */
-	@IsUrl()
-	photoPolicyLink: string;
+  /**
+   * @example https://test.cz
+   */
+  @IsUrl()
+  photoPolicyLink: string;
 
-	/**
-	 * @example https://test.cz
-	 */
-	@IsUrl()
-	codeOfConductLink: string;
+  /**
+   * @example https://test.cz
+   */
+  @IsUrl()
+  codeOfConductLink: string;
 }

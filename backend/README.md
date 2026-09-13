@@ -24,6 +24,3 @@ Documentation is running at `/docs`. Usually `http://localhost:4000/docs`.
 - documents
 
 Run with `pnpm start:dev <app_name>`
-
-
-

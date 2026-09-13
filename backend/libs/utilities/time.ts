@@ -1,14 +1,14 @@
 import dayjs from "dayjs";
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts unknown input to test
 export const isDateString = (value: any): boolean => {
-	return typeof value === "string" && !Number.isNaN(Date.parse(value));
+  return typeof value === "string" && !Number.isNaN(Date.parse(value));
 };
 
 export const dayMonthYear = (time: Date | string | undefined | null) => {
-	return dayjs(time).format("DD.MM.YYYY");
+  return dayjs(time).format("DD.MM.YYYY");
 };
 
 export const dateWithTime = (time: Date | string | undefined | null) => {
-	return dayjs(time).format("DD.MM.YYYY HH:mm");
+  return dayjs(time).format("DD.MM.YYYY HH:mm");
 };

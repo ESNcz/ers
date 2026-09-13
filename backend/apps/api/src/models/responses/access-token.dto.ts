@@ -1,6 +1,6 @@
 export class AccessToken {
-	/**
-	 * User access token
-	 */
-	accessToken: string;
+  /**
+   * User access token
+   */
+  accessToken: string;
 }

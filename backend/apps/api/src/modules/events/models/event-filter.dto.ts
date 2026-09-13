@@ -1,4 +1,4 @@
 export class EventFilter {
-	since?: Date;
-	to?: Date;
+  since?: Date;
+  to?: Date;
 }
