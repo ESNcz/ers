@@ -3,30 +3,36 @@
 import { apiImageURL } from "@/utils/apiImageURL";
 import { Image as MantineImage, ImageProps as MantineImageProps } from "@mantine/core";
 
-interface ImagePlaceholderProps extends MantineImageProps {}
+interface ImagePlaceholderProps extends MantineImageProps {
+  alt?: string;
+}
 
 const ImagePlaceholder = ({ ...props }: ImagePlaceholderProps) => {
-  return <MantineImage src="/imagePlaceholder.svg" alt="Placeholder Image" {...props} />;
+  // Placeholder is decorative, hide it from screen readers
+  return <MantineImage src="/imagePlaceholder.svg" {...props} alt="" />;
 };
 
-interface ImageEPProps extends MantineImageProps {}
+interface ImageEPProps extends MantineImageProps {
+  alt?: string;
+}
 
-const ImageEP = ({ src, ...props }: ImageEPProps) => {
-  return <MantineImage src={apiImageURL(src)} alt="Image from API" {...props} />;
+const ImageEP = ({ src, alt = "", ...props }: ImageEPProps) => {
+  return <MantineImage src={apiImageURL(src)} alt={alt} {...props} />;
 };
 
 interface ApiImageProps extends MantineImageProps {
   src: string | undefined;
+  alt?: string;
 }
 
-const ApiImage = ({ src, ...props }: ApiImageProps) => {
+const ApiImage = ({ src, alt = "", ...props }: ApiImageProps) => {
   if (!src) return <ImagePlaceholder {...props} />;
 
   if (src?.startsWith("http") || src?.startsWith("https")) {
-    return <MantineImage src={src} alt="Image from API" {...props} />;
+    return <MantineImage src={src} alt={alt} {...props} />;
   }
 
-  return <ImageEP src={src} {...props} />;
+  return <ImageEP src={src} alt={alt} {...props} />;
 };
 
 export default ApiImage;

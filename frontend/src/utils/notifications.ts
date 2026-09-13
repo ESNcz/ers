@@ -4,8 +4,8 @@ import { notifications } from "@mantine/notifications";
 export const updateErrorNotification = () => {
   notifications.hide("loading");
   notifications.update({
-    title: "Something went wrong.",
-    message: "Please check all information first. Then try again.",
+    title: "Request failed",
+    message: "Check the entered information and try again.",
     color: "red",
     loading: false,
     autoClose: true,
@@ -38,9 +38,9 @@ export const showErrorNotification = (errorResponse: ErrorType | Error) => {
 export const showLoadingNotification = () => {
   notifications.show({
     id: "loading",
-    title: "Loading! Please wait...",
-    message: "Please wait, we are processing your requests.",
-    loading: false,
+    title: "Saving",
+    message: "Processing your request…",
+    loading: true,
     autoClose: true,
   });
 };
@@ -48,8 +48,8 @@ export const showLoadingNotification = () => {
 export const onSuccessNotification = () => {
   notifications.hide("loading");
   notifications.show({
-    title: "Success",
-    message: "Process finished successfully!",
+    title: "Done",
+    message: "Your changes were saved.",
     loading: false,
     autoClose: true,
     color: "green",

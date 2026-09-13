@@ -107,42 +107,57 @@ const EventDetail = ({ id }: EventDetailProps) => {
   };
 
   if (!eventApplications || !eventDetail || !currentUser) {
-    return null;
+    return (
+      <Grid aria-busy="true" aria-label="Loading event">
+        <Grid.Col span={{ base: 12, md: 9 }} order={{ base: 2, md: 1 }}>
+          <Skeleton radius="lg" style={{ aspectRatio: "16 / 9" }} />
+          <Skeleton height={36} width="55%" mt="lg" />
+          <Skeleton height={16} width="30%" mt="md" />
+          <Skeleton height={16} width="40%" mt="xs" />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 3 }} order={{ base: 1, md: 2 }}>
+          <Skeleton height={36} />
+          <Skeleton height={36} mt="md" />
+        </Grid.Col>
+      </Grid>
+    );
   }
 
   const isRegisteredOrAdmin = isUserRegistered || hasSomePermissions(currentUser.role, ["event.reviewSugarCubes"]);
 
-  return eventDetail ? (
+  return (
     <>
       <Grid>
         <Grid.Col span={{ base: 12, md: 9 }} order={{ base: 2, md: 1 }}>
           <Flex direction="column" w="100%" gap={16}>
             <Flex direction="column" w="100%" gap={8}>
-              <Paper radius="md" style={{ overflow: "hidden" }}>
-                {eventDetail.photo?.id ? <ApiImage src={eventDetail.photo.id} w="100%" h="100%" /> : null}
-              </Paper>
-              <Title order={1}>{eventDetail.title}</Title>
+              {eventDetail.photo?.id ? (
+                <Paper radius="lg" style={{ overflow: "hidden" }}>
+                  <ApiImage src={eventDetail.photo.id} w="100%" h="100%" alt={`Cover photo for ${eventDetail.title}`} />
+                </Paper>
+              ) : null}
+              <Title order={1} mt="sm">
+                {eventDetail.title}
+              </Title>
               <Flex justify="start" align="center" gap={8} wrap="wrap">
-                <IconUsersGroup />
-                <Text size="sm">
-                  <Text c="dimmed" span>
-                    {"applications" in eventDetail ? `${eventDetail.applications} / ${eventDetail.capacity}` : null}
-                  </Text>
+                <IconUsersGroup size={18} stroke={1.75} aria-hidden />
+                <Text size="sm" c="dimmed" className="tabular-nums">
+                  {"applications" in eventDetail ? `${eventDetail.applications} / ${eventDetail.capacity}` : null}
                 </Text>
               </Flex>
               <Text>
-                <Text span fw="bold">
-                  Registration Deadline:
+                <Text span fw={600}>
+                  Registration deadline:
                 </Text>{" "}
-                <Text span c="dark">
+                <Text span c="dimmed" className="tabular-nums">
                   {dateWithTime(eventDetail.registrationDeadline)}
                 </Text>
               </Text>
               <Text>
-                <Text span fw="bold">
+                <Text span fw={600}>
                   Date:
                 </Text>{" "}
-                <Text span c="dark">
+                <Text span c="dimmed" className="tabular-nums">
                   {dayMonthYear(eventDetail.since)} - {dayMonthYear(eventDetail.until)}
                 </Text>
               </Text>
@@ -172,7 +187,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
                 <Divider my={8} />
 
                 <Button component={Link} href={routes.EVENT_APPLICATIONS({ id })} color="darkBlue">
-                  Event Applications
+                  Event applications
                 </Button>
 
                 <Button onClick={openModalPriorityList} color="darkBlue" disabled={!isPriorityListOpen}>
@@ -183,7 +198,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
 
             {isRegisteredOrAdmin && (
               <Button component={Link} href={routes.SUGAR_CUBES({ id: Number(id) })} color="darkBlue">
-                Sugar Cubes
+                Sugar cubes
               </Button>
             )}
 
@@ -192,9 +207,12 @@ const EventDetail = ({ id }: EventDetailProps) => {
             <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 1, xl: 1 }}>
               <Flex direction="column" gap={16}>
                 {currentUser.personalAddress === null && (
-                  <Blockquote color="red" icon={<IconInfoCircle />} p={20} mt={16}>
-                    Fill your <Anchor href={routes.ACCOUNT}>personal address</Anchor> on your account profile before
-                    registration.
+                  <Blockquote color="orange" icon={<IconInfoCircle />} p={20} mt={16} radius="md">
+                    Add your{" "}
+                    <Anchor component={Link} href={routes.ACCOUNT}>
+                      personal address
+                    </Anchor>{" "}
+                    to your account before registering.
                   </Blockquote>
                 )}
                 {isUserRegistered ? (
@@ -204,7 +222,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
                     leftSection={<IconCancel />}
                     disabled={dayjs(eventDetail.registrationDeadline).diff(new Date()) <= 0}
                   >
-                    Unregister from Event
+                    Unregister from event
                   </Button>
                 ) : (
                   <Button
@@ -216,7 +234,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
                       dayjs(eventDetail.registrationDeadline).diff(new Date()) <= 0
                     }
                   >
-                    Register to Event
+                    Register for event
                   </Button>
                 )}
               </Flex>
@@ -242,12 +260,12 @@ const EventDetail = ({ id }: EventDetailProps) => {
               <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 1, xl: 1 }}>
                 {hasEveryPermissions(currentUser.role, ["event.update"]) && (
                   <Button onClick={openModalEdit} leftSection={<IconEdit />}>
-                    Edit Event
+                    Edit event
                   </Button>
                 )}
                 {hasEveryPermissions(currentUser.role, ["event.update"]) && (
                   <Button onClick={openModalUploadPhoto} leftSection={<IconPhoto />}>
-                    Upload Image
+                    Upload image
                   </Button>
                 )}
                 {hasEveryPermissions(currentUser.role, ["event.manageApplications"]) && (
@@ -256,7 +274,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
                     href={routes.EVENT_APPLICATIONS_MANAGE({ id: id })}
                     leftSection={<IconUsersGroup />}
                   >
-                    Manage Applications
+                    Manage applications
                   </Button>
                 )}
               </SimpleGrid>
@@ -271,7 +289,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
                       leftSection={<IconInvoice />}
                       disabled
                     >
-                      Show Invoice
+                      Show invoice
                     </Button>
                     <Button
                       component={Link}
@@ -279,7 +297,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
                       leftSection={<IconCash />}
                       disabled
                     >
-                      Upload Payment
+                      Upload payment
                     </Button>
                   </SimpleGrid>
                 </VisuallyHidden>
@@ -323,15 +341,6 @@ const EventDetail = ({ id }: EventDetailProps) => {
         onSuccess={handleRefetchDetail}
       />
     </>
-  ) : (
-    <Grid>
-      <Grid.Col span={{ base: 12, md: 9 }} order={{ base: 2, md: 1 }}>
-        <Skeleton height={500} radius="md" animate={true} />
-      </Grid.Col>
-      <Grid.Col span={{ base: 12, md: 3 }} order={{ base: 1, md: 2 }}>
-        <Skeleton height={500} radius="md" animate={true} />
-      </Grid.Col>
-    </Grid>
   );
 };
 

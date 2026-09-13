@@ -3,27 +3,36 @@
 import routes from "@/utils/routes";
 import Icon404 from "@components/icons/Icon404";
 import styles from "@components/layout/ErrorPage.module.css";
-import { Button, Center, Flex, Group, Text, Title } from "@mantine/core";
+import { Anchor, Button, Group, Text, Title } from "@mantine/core";
+import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const Error = () => {
-  return (
-    <Center>
-      <Icon404 className={styles.image} />
+  const router = useRouter();
 
-      <Flex direction="column" justify="center" align="center" className={styles.textBlock}>
-        <Title className={styles.title}>Nothing to see here</Title>
+  return (
+    <main className={styles.root}>
+      <Icon404 className={styles.image} aria-hidden />
+
+      <div className={styles.textBlock}>
+        <Text className={styles.eyebrow}>Error 404</Text>
+        <Title className={styles.title}>This page doesn’t exist</Title>
         <Text c="dimmed" size="lg" ta="center" className={styles.description}>
-          Page you are trying to open does not exist. You may have mistyped the address, or the page has been moved to
-          another URL. If you think this is an error contact support.
+          The address may be mistyped, or the page was moved. If you followed a link inside the app, let your section
+          coordinator know.
         </Text>
-        <Group justify="center">
+        <Group justify="center" gap="md">
           <Button component={Link} href={routes.DASHBOARD} size="md">
-            Take me back to home page
+            Go to events
           </Button>
+          <Anchor component="button" type="button" onClick={() => router.back()} size="sm" className={styles.back}>
+            <IconArrowLeft size={16} />
+            Previous page
+          </Anchor>
         </Group>
-      </Flex>
-    </Center>
+      </div>
+    </main>
   );
 };
 

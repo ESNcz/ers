@@ -1,6 +1,6 @@
+import styles from "@components/layout/Layout.module.css";
 import LayoutFooter from "@components/layout/LayoutFooter";
 import LayoutHeader from "@components/layout/LayoutHeader";
-import { Box } from "@mantine/core";
 import { ReactNode } from "react";
 
 interface LayoutProps {
@@ -9,12 +9,16 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <Box mih="100vh" h="100%">
+    <div className={styles.shell}>
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
       <LayoutHeader />
-      {/* Height calculated from full height (100% - Header - Footer) */}
-      <Box mih="calc(100vh - (84px + 50px + 56px))">{children}</Box>
+      <main id="main-content" className={styles.main} tabIndex={-1}>
+        {children}
+      </main>
       <LayoutFooter />
-    </Box>
+    </div>
   );
 };
 

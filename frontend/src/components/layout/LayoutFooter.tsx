@@ -10,24 +10,43 @@ import React from "react";
 const LayoutFooter = () => {
   const { data: settingsData } = useGetSettings();
 
-  if (!settingsData) return <Skeleton height={50} className={styles.footer} />;
+  if (!settingsData)
+    return (
+      <footer className={styles.footer}>
+        <Container size="xl">
+          <Skeleton height={16} width="40%" />
+        </Container>
+      </footer>
+    );
 
   return (
     <footer className={styles.footer}>
       <Container size="xl">
-        <Group>
-          <Flex justify="start" align="center" gap={32} flex={1}>
+        <Group justify="space-between" align="center" gap="md">
+          <Flex justify="start" align="center" gap={32} flex={1} miw={0}>
             <RichTextRenderer content={settingsData?.footerDescription} />
           </Flex>
-          <Flex justify="end" align="center" gap={32}>
+          <Flex justify="end" align="center" gap={24} wrap="wrap">
             {settingsData.termsAndConditions && (
-              <Anchor component={Link} href={settingsData.termsAndConditions} c="gray" size="sm" target="_blank">
-                Terms and Conditions
+              <Anchor
+                component={Link}
+                href={settingsData.termsAndConditions}
+                size="sm"
+                target="_blank"
+                className={styles.legalLink}
+              >
+                Terms and conditions
               </Anchor>
             )}
             {settingsData.privacyPolicy && (
-              <Anchor component={Link} href={settingsData.privacyPolicy} c="gray" size="sm" target="_blank">
-                Privacy Policy
+              <Anchor
+                component={Link}
+                href={settingsData.privacyPolicy}
+                size="sm"
+                target="_blank"
+                className={styles.legalLink}
+              >
+                Privacy policy
               </Anchor>
             )}
           </Flex>

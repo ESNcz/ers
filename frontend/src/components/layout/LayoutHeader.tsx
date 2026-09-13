@@ -53,8 +53,8 @@ export type MainLinksProps = (MainLink | GroupedLinks)[];
  * */
 const mainLinks: MainLinksProps = [
   { link: routes.DASHBOARD, label: "Home", permissions: null },
-  { link: routes.SENT_APPLICATIONS, label: "Sent Applications", permissions: null },
-  { link: routes.MY_ORGANISATION, label: "My Organisation", permissions: null },
+  { link: routes.SENT_APPLICATIONS, label: "Sent applications", permissions: null },
+  { link: routes.MY_ORGANISATION, label: "My organisation", permissions: null },
   {
     label: "Management",
     children: [manageEventLink, manageOrganisationLink, managePeopleLink, settingsLink],
@@ -80,13 +80,11 @@ const LayoutHeader = () => {
   return (
     <header className={styles.header}>
       <Container size="xl" className={styles.inner}>
-        <Anchor component={Link} href={routes.DASHBOARD}>
-          <Flex direction="row" justify="center" align="center" gap={8}>
-            <LogoERS height={64} width={64} color="primary" />
-            <Text size="xl" c="primary" fw="bold" display={{ base: "none", lg: "block" }}>
-              Event Registration System
-            </Text>
-          </Flex>
+        <Anchor component={Link} href={routes.DASHBOARD} className={styles.brand} aria-label="Home">
+          <LogoERS height={44} width={44} aria-hidden />
+          <Text component="span" className={styles.brandName} display={{ base: "none", lg: "block" }}>
+            Event Registration System
+          </Text>
         </Anchor>
 
         <Box className={styles.links} visibleFrom="sm">
@@ -99,17 +97,19 @@ const LayoutHeader = () => {
                 closeDrawer={closeDrawer}
               />
             ) : (
-              <Skeleton />
+              <Group gap="xs">
+                <Skeleton h={20} w={64} />
+                <Skeleton h={20} w={120} />
+                <Skeleton h={20} w={110} />
+              </Group>
             )}
             {currentUser && (
               <Menu width={260} position="bottom-start" withinPortal>
                 <Menu.Target>
                   <Button
-                    variant="subtle"
-                    p="7px 12px"
-                    lh="22px"
-                    fs="14px"
-                    fw={700}
+                    variant="default"
+                    ml="sm"
+                    fw={500}
                     rightSection={<IconChevronDown size={16} stroke={2} />}
                     loading={!currentUser?.email}
                   >
@@ -136,7 +136,13 @@ const LayoutHeader = () => {
           </Group>
         </Box>
 
-        <Burger opened={drawerOpened} onClick={toggleDrawer} size="sm" hiddenFrom="sm" />
+        <Burger
+          opened={drawerOpened}
+          onClick={toggleDrawer}
+          size="sm"
+          hiddenFrom="sm"
+          aria-label={drawerOpened ? "Close navigation" : "Open navigation"}
+        />
       </Container>
       <Drawer
         opened={drawerOpened}
@@ -145,7 +151,6 @@ const LayoutHeader = () => {
         padding="md"
         title={currentUser?.email}
         hiddenFrom="sm"
-        zIndex={1000000}
       >
         <Divider my="sm" />
 
@@ -164,6 +169,7 @@ const LayoutHeader = () => {
 
         <Group justify="center" grow pb="xl" px="md">
           <Button
+            variant="default"
             component={Link}
             href={routes.ACCOUNT}
             onClick={closeDrawer}
@@ -172,6 +178,8 @@ const LayoutHeader = () => {
             Account
           </Button>
           <Button
+            variant="light"
+            color="red"
             leftSection={<IconLogout size={16} stroke={1.5} />}
             onClick={() => {
               logoutMutation.mutate();
@@ -183,7 +191,9 @@ const LayoutHeader = () => {
         </Group>
 
         <Flex direction="row" justify="center" align="center">
-          <Text fw={700}>Event Registration System</Text>
+          <Text size="sm" c="dimmed">
+            Event Registration System
+          </Text>
         </Flex>
       </Drawer>
     </header>

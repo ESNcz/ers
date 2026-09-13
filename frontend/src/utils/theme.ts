@@ -10,18 +10,23 @@ import {
   mergeMantineTheme,
   rem,
 } from "@mantine/core";
-import { Roboto, Space_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Outfit } from "next/font/google";
 
-const roboto = Roboto({
-  weight: "400",
-  subsets: ["latin"],
-  fallback: ["system-ui, sans-serif"],
+// Body — variable font, all weights available (400/500/600/700)
+const geist = Geist({
+  subsets: ["latin", "latin-ext"],
+  fallback: ["system-ui", "sans-serif"],
 });
 
-const spaceMonoFont = Space_Mono({
-  weight: "400",
-  subsets: ["latin"],
-  fallback: ["system-ui, sans-serif"],
+// Headings — slightly rounder geometric sans with more character
+const outfit = Outfit({
+  subsets: ["latin", "latin-ext"],
+  fallback: ["system-ui", "sans-serif"],
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin", "latin-ext"],
+  fallback: ["ui-monospace", "monospace"],
 });
 
 type ExtendedCustomColors = DefaultMantineColor;
@@ -38,7 +43,12 @@ declare module "@mantine/core" {
 const themeOverride = createTheme({
   // General
   white: "#fff",
-  black: "#000",
+  black: "#12141c",
+  defaultRadius: "md",
+  focusRing: "auto",
+  cursorType: "pointer",
+  autoContrast: true,
+  luminanceThreshold: 0.35,
   breakpoints: {
     base: "0rem", // 0px
     xs: "36em", // 576px
@@ -50,32 +60,43 @@ const themeOverride = createTheme({
 
   // Fonts
   headings: {
-    fontFamily: roboto.style.fontFamily,
-    fontWeight: "700",
+    fontFamily: outfit.style.fontFamily,
+    fontWeight: "600",
+    textWrap: "balance",
+    sizes: {
+      h1: { fontSize: rem(36), lineHeight: "1.1" },
+      h2: { fontSize: rem(28), lineHeight: "1.15" },
+      h3: { fontSize: rem(22), lineHeight: "1.25" },
+      h4: { fontSize: rem(19), lineHeight: "1.3" },
+      h5: { fontSize: rem(17), lineHeight: "1.4" },
+      h6: { fontSize: rem(15), lineHeight: "1.4" },
+    },
   },
-  fontFamily: roboto.style.fontFamily,
-  fontFamilyMonospace: spaceMonoFont.style.fontFamily,
+  fontFamily: geist.style.fontFamily,
+  fontFamilyMonospace: geistMono.style.fontFamily,
   fontSizes: {
     xs: rem(12),
     sm: rem(14),
     md: rem(16),
     lg: rem(18),
     xl: rem(20),
+  },
 
-    // Headings sizes
-    h1: rem(36),
-    h2: rem(32),
-    h3: rem(24),
-    h4: rem(20),
-    h5: rem(18),
-    h6: rem(16),
+  // Shadows tinted with brand dark blue instead of neutral black
+  shadows: {
+    xs: "0 1px 2px rgba(30, 35, 115, 0.06)",
+    sm: "0 1px 3px rgba(30, 35, 115, 0.08), 0 1px 2px rgba(30, 35, 115, 0.04)",
+    md: "0 4px 12px -2px rgba(30, 35, 115, 0.10), 0 2px 4px -2px rgba(30, 35, 115, 0.06)",
+    lg: "0 12px 28px -6px rgba(30, 35, 115, 0.14), 0 4px 8px -4px rgba(30, 35, 115, 0.06)",
+    xl: "0 24px 48px -12px rgba(30, 35, 115, 0.20)",
   },
 
   // Colors
   primaryColor: "cyan",
+  // Shade 7 (#00aeef) is the brand cyan, but too light for white text on buttons.
   primaryShade: {
-    light: 7,
-    dark: 9,
+    light: 8,
+    dark: 8,
   },
   colors: {
     primaryCyan: colorsTuple("#00aeef"),
@@ -147,7 +168,39 @@ const themeOverride = createTheme({
   other: {},
 
   // Components
-  components: {},
+  components: {
+    Title: {
+      styles: {
+        root: { letterSpacing: "-0.015em" },
+      },
+    },
+    Button: {
+      defaultProps: { fw: 600 },
+      styles: {
+        root: {
+          transition: "background-color 200ms ease, transform 120ms ease, box-shadow 200ms ease",
+        },
+      },
+    },
+    Card: {
+      defaultProps: { radius: "lg" },
+    },
+    Paper: {
+      defaultProps: { radius: "lg" },
+    },
+    Modal: {
+      defaultProps: { radius: "lg", overlayProps: { backgroundOpacity: 0.45, blur: 3 } },
+    },
+    Menu: {
+      defaultProps: { radius: "md", shadow: "lg" },
+    },
+    Notification: {
+      defaultProps: { radius: "md" },
+    },
+    Skeleton: {
+      defaultProps: { radius: "md" },
+    },
+  },
 } as MantineThemeOverride);
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

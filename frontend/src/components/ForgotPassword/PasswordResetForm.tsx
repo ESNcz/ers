@@ -37,7 +37,12 @@ const ForgotPasswordForm = () => {
     },
   });
 
-  if (!token) return <Text c="red">Something went wrong! Please try again.</Text>;
+  if (!token)
+    return (
+      <Text c="red" size="sm" role="alert">
+        This reset link is invalid or incomplete. Request a new one from the log in page.
+      </Text>
+    );
 
   const sendRequest = async (values: ResetPasswordDto) => {
     resetPasswordMutation.mutate({ data: { token: token, password: values.password } });
@@ -52,10 +57,15 @@ const ForgotPasswordForm = () => {
         </Flex>
         <Flex direction="column" gap={16} mt={16}>
           <Button loading={resetPasswordMutation.isPending} type="submit">
-            Send Request
+            Reset password
           </Button>
           {/* Token or mutation ERROR */}
-          {!token || (resetPasswordMutation.isError && <Text c="red">Something went wrong! Please try again.</Text>)}
+          {!token ||
+            (resetPasswordMutation.isError && (
+              <Text c="red" size="sm" role="alert">
+                We couldn’t reset your password. The link may have expired.
+              </Text>
+            ))}
         </Flex>
       </Form>
     </Box>

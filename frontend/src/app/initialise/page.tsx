@@ -148,7 +148,7 @@ const InitialisePage = () => {
   };
 
   return (
-    <Container h="100vh">
+    <Container mih="100dvh" py="xl">
       <Flex direction="column" justify="center" align="center" h="100%" gap={8}>
         <Box maw="32rem" w="100%">
           <Form form={form} onSubmit={initialiseSystem}>
@@ -307,7 +307,11 @@ const InitialisePage = () => {
             <Flex direction="column" gap={16} mt={16}>
               {/* Register ERROR */}
               <Flex direction="row">
-                {initialiseMutation.isError && <Text c="red">Something went wrong! Please try again later.</Text>}
+                {initialiseMutation.isError && (
+                  <Text c="red" size="sm" role="alert">
+                    Initialisation failed. Please try again later.
+                  </Text>
+                )}
               </Flex>
             </Flex>
             <Flex mt={16} gap={8} justify="space-between">
