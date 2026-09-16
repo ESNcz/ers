@@ -13,7 +13,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { ApiNoContentResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 
 import { CurrentUser } from "@api/decorators";
@@ -22,7 +22,7 @@ import { ResetPasswordDto } from "@api/models/requests/reset-password.dto";
 import { User, UsersService } from "@api/modules/users";
 
 import { AuthService } from "./index";
-import { CookieGuard, LocalGuard } from "./providers/guards";
+import { LocalGuard } from "./providers/guards";
 import { clearAuthCookie, setAuthCookie } from "./utilities/auth-cookie";
 
 @ApiTags("Auth")
@@ -58,18 +58,6 @@ export class AuthController {
   @ApiOkResponse({ description: "User is no longer logged-in" })
   @Delete("logout")
   async logoutUser(@Res({ passthrough: true }) response: Response) {
-    clearAuthCookie(response);
-  }
-
-  /**
-   * Logout user on all devices by invalidating every issued token
-   */
-  @ApiOkResponse({ description: "All sessions of the user are invalidated" })
-  @ApiBearerAuth()
-  @UseGuards(CookieGuard)
-  @Delete("logout-all")
-  async logoutAllSessions(@CurrentUser() user: User, @Res({ passthrough: true }) response: Response) {
-    await this.usersService.incrementTokenVersion(user.id);
     clearAuthCookie(response);
   }
 
