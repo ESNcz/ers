@@ -2,7 +2,6 @@
 
 import SendSugarCubeModal from "@/app/(authorized)/event/[id]/sugar-cubes/SendSugarCubeModal";
 import {
-  useGetCurrentUser,
   useGetEvent,
   useGetReceivedSugarCubes,
   useGetReportedSugarCubes,
@@ -11,6 +10,7 @@ import {
 } from "@/utils/api";
 import type { SugarCube } from "@/utils/api.schemas";
 import { isUserAdmin } from "@/utils/checkPermissions";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   ActionIcon,
   Badge,
@@ -35,7 +35,7 @@ const SugarCubesPage = () => {
   const params = useParams();
   const eventId = Number(params.id);
 
-  const { data: currentUser } = useGetCurrentUser();
+  const { currentUser } = useCurrentUser();
   const { data: eventDetail } = useGetEvent(eventId);
   const { data: receivedCubes, refetch: refetchReceivedCubes } = useGetReceivedSugarCubes(eventId);
   const { data: sentCubes, refetch: refetchSentCubes } = useGetSentSugarCubes(eventId);

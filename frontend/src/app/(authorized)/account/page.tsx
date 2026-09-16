@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetCurrentUser, useUpdateCurrentUser, useUpdateCurrentUserPhoto } from "@/utils/api";
+import { useUpdateCurrentUser, useUpdateCurrentUserPhoto } from "@/utils/api";
 import { CreateAddress, CreateUserGender, UpdateUser } from "@/utils/api.schemas";
 import { apiImageURL } from "@/utils/apiImageURL";
 import { Dropzone } from "@components/Dropzone/Dropzone";
@@ -8,6 +8,7 @@ import ImageEditor from "@components/ImageEditor/ImageEditor";
 import getCroppedImg from "@components/ImageEditor/imageEdit";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   Accordion,
   Avatar,
@@ -64,7 +65,7 @@ const AccountPage = () => {
   const isPersonalAddress = (address: CreateAddress | undefined | null) => {
     return address ? Object.entries(address).some(([_key, value]) => (value as string)?.length > 0) : undefined;
   };
-  const { data: currentUser, refetch: fetchCurrentUser, isFetchedAfterMount } = useGetCurrentUser();
+  const { currentUser, refetch: fetchCurrentUser } = useCurrentUser();
 
   useEffect(() => {
     if (!currentUser) return;
@@ -91,7 +92,7 @@ const AccountPage = () => {
     form.setValues(userValues);
     form.reset();
     form.resetTouched();
-  }, [currentUser, fetchCurrentUser, isFetchedAfterMount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const form = useForm<UpdateUserProps>({
     mode: "uncontrolled",

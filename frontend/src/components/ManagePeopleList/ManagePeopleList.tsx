@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeleteUser, useGenerateSheetUsers, useGetAllUsers, useGetCurrentUser } from "@/utils/api";
+import { useDeleteUser, useGenerateSheetUsers, useGetAllUsers } from "@/utils/api";
 import { downloadFile } from "@/utils/downloadFile";
 import { DataTable } from "@components/data-table";
 import {
@@ -10,6 +10,7 @@ import {
 import ChangeRoleModal from "@components/modals/ChangeRoleModal/ChangeRoleModal";
 import CreateRoleModal from "@components/modals/CreateRoleModal/CreateRoleModal";
 import EditUserModal from "@components/modals/EditUserModal/EditUserModal";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import { Button, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconTableExport } from "@tabler/icons-react";
@@ -30,7 +31,7 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
       },
     },
   });
-  const { data: currentUser, refetch: refetchCurrentUser } = useGetCurrentUser();
+  const { currentUser, refetch: refetchCurrentUser } = useCurrentUser();
 
   const { data: allUsers, refetch: refetchUsers } = useGetAllUsers({
     all: true,

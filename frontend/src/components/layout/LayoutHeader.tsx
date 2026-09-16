@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetCurrentUser, useLogoutUser } from "@/utils/api";
+import { useLogoutUser } from "@/utils/api";
 import { RolePermissionsItem } from "@/utils/api.schemas";
 import { apiImageURL } from "@/utils/apiImageURL";
 import { manageEventLink, manageOrganisationLink, managePeopleLink, settingsLink } from "@/utils/headerLinks";
@@ -8,6 +8,7 @@ import routes from "@/utils/routes";
 import LogoERS from "@components/icons/LogoERS";
 import styles from "@components/layout/LayoutHeader.module.css";
 import NavigationItemList from "@components/layout/NavigationItemList";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   Anchor,
   Avatar,
@@ -76,7 +77,7 @@ const LayoutHeader = () => {
     },
   });
 
-  const { data: currentUser } = useGetCurrentUser();
+  const { currentUser } = useCurrentUser();
 
   const userFullName = currentUser
     ? `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.email

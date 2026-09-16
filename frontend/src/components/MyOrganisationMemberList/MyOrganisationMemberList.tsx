@@ -3,7 +3,6 @@
 import {
   useAddOrganizationMembers,
   useDeleteOrganizationMembers,
-  useGetCurrentUser,
   useGetOrganisationById,
   useOrganizationMembers,
   useTransferManager,
@@ -16,6 +15,7 @@ import {
   organizationMemberListColumns,
 } from "@components/data-table/organization-member-list-columns";
 import AddOrganisationMemberModal from "@components/modals/AddOrganisationMemberModal/AddOrganisationMemberModal";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import { Button, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconUserPlus } from "@tabler/icons-react";
@@ -26,7 +26,7 @@ interface MyOrganisationMemberListProps {
 }
 
 const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListProps) => {
-  const { data: currentUser } = useGetCurrentUser();
+  const { currentUser } = useCurrentUser();
   const { data: currentOrganisation, refetch: refetchCurrentOrganisation } = useGetOrganisationById(organizationId);
   const { data: organizationMembers, refetch: refetchOrganisationMembers } = useOrganizationMembers(organizationId, {
     all: true,

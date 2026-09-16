@@ -1,10 +1,11 @@
 "use client";
 
-import { useGetCurrentUser, useGetEvent, useGetEventApplications, useUserOrganizationMemberships } from "@/utils/api";
+import { useGetEvent, useGetEventApplications, useUserOrganizationMemberships } from "@/utils/api";
 import { isUserManager } from "@/utils/checkPermissions";
 import routes from "@/utils/routes";
 import { DataTable } from "@components/data-table";
 import { applicationManagementColumns } from "@components/data-table/application-management-columns";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import { Flex, Title } from "@mantine/core";
 import { redirect } from "next/navigation";
 import { useMemo } from "react";
@@ -15,7 +16,7 @@ interface ApplicationsTableProps {
 
 const ApplicationsTable = ({ eventId }: ApplicationsTableProps) => {
   const { data: eventDetail } = useGetEvent(eventId);
-  const { data: currentUser } = useGetCurrentUser();
+  const { currentUser } = useCurrentUser();
   const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentUser?.id ?? "", {
     query: {
       enabled: !!currentUser?.id,

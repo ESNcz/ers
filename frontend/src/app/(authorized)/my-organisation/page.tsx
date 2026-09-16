@@ -1,15 +1,16 @@
 "use client";
 
-import { useGetCurrentUser, useUserOrganizationMemberships } from "@/utils/api";
+import { useUserOrganizationMemberships } from "@/utils/api";
 import routes from "@/utils/routes";
 import AddressCodeBlock from "@components/AddressCodeBlock/AddressCodeBlock";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import { Badge, Button, Card, Container, Grid, Group, Stack, Text } from "@mantine/core";
 import Link from "next/link";
 
 interface UseFetchAllEventsProps {}
 
 const MyOrganisationsPage = ({}: UseFetchAllEventsProps) => {
-  const { data: currentUser } = useGetCurrentUser();
+  const { currentUser } = useCurrentUser();
   const { data: userMemberships } = useUserOrganizationMemberships(currentUser?.id ?? "");
 
   if (!currentUser && !userMemberships) return null;

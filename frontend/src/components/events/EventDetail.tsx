@@ -5,7 +5,6 @@ import {
   getGetEventApplicationsQueryKey,
   getGetEventQueryKey,
   useDeleteEventApplication,
-  useGetCurrentUser,
   useGetEvent,
   useGetEventApplications,
   useUserOrganizationMemberships,
@@ -19,6 +18,7 @@ import EventEditModal from "@components/events/modals/EventEditModal";
 import EventApplicationModal from "@components/modals/EventApplicationModal/EventApplicationModal";
 import PriorityListModal from "@components/modals/PriorityListModal/PriorityListModal";
 import UpdateEventPhotoModal from "@components/modals/UpdateEventPhotoModal/UpdateEventPhotoModal";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   Anchor,
   Blockquote,
@@ -68,7 +68,7 @@ const EventDetail = ({ id }: EventDetailProps) => {
 
   const { data: eventApplications, refetch: refetchEventApplications } = useGetEventApplications(id);
   const { data: eventDetail, refetch: refetchEvent } = useGetEvent(id);
-  const { data: currentUser, refetch: refetchCurrentUser } = useGetCurrentUser();
+  const { currentUser, refetch: refetchCurrentUser } = useCurrentUser();
   const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentUser?.id ?? "", {
     query: {
       enabled: !!currentUser?.id,
