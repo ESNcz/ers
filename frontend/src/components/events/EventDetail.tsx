@@ -2,11 +2,10 @@
 
 import {
   getGetCurrentUserQueryKey,
-  getGetEventApplicationsQueryKey,
   getGetEventQueryKey,
   useDeleteEventApplication,
   useGetEvent,
-  useGetEventApplications,
+  useGetUserApplicationForEvent,
   useUserOrganizationMemberships,
 } from "@/utils/api";
 import { hasEveryPermissions, hasSomePermissions, isUserManager } from "@/utils/checkPermissions";
@@ -49,7 +48,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import Link from "next/link";
-import React, { useMemo } from "react";
+import React from "react";
 
 interface EventDetailProps {
   id: number;
@@ -66,9 +65,14 @@ const EventDetail = ({ id }: EventDetailProps) => {
   const [isModalPriorityListOpen, { open: openModalPriorityList, close: closeModalPriorityList }] =
     useDisclosure(false);
 
-  const { data: eventApplications, refetch: refetchEventApplications } = useGetEventApplications(id);
   const { data: eventDetail, refetch: refetchEvent } = useGetEvent(id);
   const { currentUser, refetch: refetchCurrentUser } = useCurrentUser();
+  // Only the current user's application - the full list is loaded by the priority list modal when needed
+  const {
+    data: userApplication,
+    isPending: isUserApplicationPending,
+    refetch: refetchUserApplication,
+  } = useGetUserApplicationForEvent(id, currentUser.id);
   const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentUser?.id ?? "", {
     query: {
       enabled: !!currentUser?.id,
@@ -85,28 +89,25 @@ const EventDetail = ({ id }: EventDetailProps) => {
     },
   });
 
-  const isUserRegistered = useMemo(() => {
-    return eventApplications?.some((f) => f.user.id === currentUser?.id);
-  }, [eventApplications, id]); // eslint-disable-line react-hooks/exhaustive-deps
+  // API responds with an empty body when the user is not registered
+  const isUserRegistered = !!userApplication?.id;
 
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
-    const eventApplicationId = eventApplications?.find((f) => f.user.id === currentUser?.id)?.id;
-    if (eventApplicationId) {
-      deleteEventApplication.mutate({ id: eventApplicationId });
+    if (userApplication?.id) {
+      deleteEventApplication.mutate({ id: userApplication.id });
     }
   };
 
   const handleRefetchDetail = () => {
-    queryClient.invalidateQueries({ queryKey: [getGetEventApplicationsQueryKey(id)] });
     queryClient.invalidateQueries({ queryKey: [getGetEventQueryKey(id)] });
     queryClient.invalidateQueries({ queryKey: [getGetCurrentUserQueryKey()] });
-    refetchEventApplications();
+    refetchUserApplication();
     refetchEvent();
     refetchCurrentUser();
   };
 
-  if (!eventApplications || !eventDetail || !currentUser) {
+  if (isUserApplicationPending || !eventDetail || !currentUser) {
     return (
       <Grid aria-busy="true" aria-label="Loading event">
         <Grid.Col span={{ base: 12, md: 9 }} order={{ base: 2, md: 1 }}>
@@ -331,11 +332,8 @@ const EventDetail = ({ id }: EventDetailProps) => {
       ) : null}
       <PriorityListModal
         isOpened={isModalPriorityListOpen}
-        closeModal={() => {
-          refetchEventApplications();
-          closeModalPriorityList();
-        }}
-        eventApplications={eventApplications}
+        closeModal={closeModalPriorityList}
+        eventId={id}
         userOrganisationMemberships={userOrganisationMemberships ?? []}
         currentUser={currentUser}
         onSuccess={handleRefetchDetail}

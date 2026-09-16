@@ -11,6 +11,8 @@ import { formatPaginatedResponse } from "utilities/pagination.helper";
 interface FindEventOptions {
   filter?: EventFilter;
   relations?: FindOneOptions<EventApplication>["relations"];
+  /** Limit results to applications of this user and of organizations the user manages */
+  visibleToUserId?: string;
 }
 
 @Injectable()
@@ -166,8 +168,14 @@ export class EventApplicationsService {
    * @returns
    */
   findByEventIdDetailed(id: number, options?: FindEventOptions) {
+    const userId = options?.visibleToUserId;
     return this.eventApplicationRepository.find({
-      where: { event: { id } },
+      where: userId
+        ? [
+            { event: { id }, user: { id: userId } },
+            { event: { id }, organization: { manager: { id: userId } } },
+          ]
+        : { event: { id } },
       select: {
         id: true,
         additionalData: true,

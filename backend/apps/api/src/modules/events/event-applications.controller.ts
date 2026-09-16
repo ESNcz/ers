@@ -23,6 +23,7 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiExtraModels,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiQuery,
@@ -108,7 +109,9 @@ export class EventApplicationsController {
   }
 
   /**
-   * Get all event user applications
+   * Get event applications visible to the current user.
+   * Users with `event.manageApplications` get all applications, others only their own
+   * and applications of organisations they manage.
    * @param eventId
    * @returns
    */
@@ -116,9 +119,11 @@ export class EventApplicationsController {
   @ApiOkResponse({ type: [EventApplicationDetailedWithApplications] })
   @UseGuards(CookieGuard)
   @Get(":eventId/applications")
-  async getEventApplications(@Param("eventId", ParseIntPipe) eventId: number) {
+  async getEventApplications(@CurrentUser() currentUser: User, @Param("eventId", ParseIntPipe) eventId: number) {
+    const canSeeAll = currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]);
     const application = await this.eventApplicationsService.findByEventIdDetailed(eventId, {
       relations: { event: { applications: true } },
+      visibleToUserId: canSeeAll ? undefined : currentUser.id,
     });
     return this.eventApplicationSimpleWithApplicationsMapper.map(application);
   }
@@ -316,16 +321,31 @@ export class EventApplicationsController {
   }
 
   /**
-   * Delete event application by ID
+   * Delete event application by ID.
+   * Users with `event.manageApplications` can delete any application,
+   * applicants only their own before the registration deadline.
    */
   @ApiOkResponse({ description: "Event application deleted" })
   @ApiNotFoundResponse({ description: "Event application not found" })
+  @ApiForbiddenResponse({ description: "User is not allowed to delete this application" })
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Delete("application/:id")
-  async deleteEventApplication(@Param("id", ParseIntPipe) applicationId: number) {
-    const application = await this.eventApplicationsService.findById(applicationId);
+  async deleteEventApplication(@CurrentUser() currentUser: User, @Param("id", ParseIntPipe) applicationId: number) {
+    const application = await this.eventApplicationsService.findById(applicationId, {
+      relations: { event: true },
+    });
     if (!application) throw new NotFoundException("Event application not found");
+
+    const canManage = currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]);
+    if (!canManage) {
+      if (application.user.id !== currentUser.id) {
+        throw new ForbiddenException("You don't have permission to perform this action");
+      }
+      if (dayjs(application.event.registrationDeadline).isBefore(dayjs())) {
+        throw new ForbiddenException("Registration deadline has passed");
+      }
+    }
 
     await this.eventApplicationsService.delete(application);
   }
@@ -362,8 +382,10 @@ export class EventApplicationsController {
   /**
    * Get event application for user for event
    */
-  @ApiOkResponse({ type: EventApplicationSimpleWithApplications })
-  @ApiNotFoundResponse({ description: "Event application not found" })
+  @ApiOkResponse({
+    type: EventApplicationSimpleWithApplications,
+    description: "Application of the user, empty response when user is not registered",
+  })
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Get(":eventId/applications/user/:userId")
@@ -375,7 +397,8 @@ export class EventApplicationsController {
     if (user.id !== userId) throw new NotImplementedException("User cannot get application for another user yet");
     const application = await this.eventApplicationsService.findByEventAndUserId(eventId, userId);
 
-    if (!application) throw new NotFoundException("Event application not found");
+    // Not being registered is a regular state, not an error
+    if (!application) return null;
 
     return this.eventApplicationSimpleWithApplicationsMapper.map(application);
   }
