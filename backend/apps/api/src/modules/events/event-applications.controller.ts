@@ -410,10 +410,22 @@ export class EventApplicationsController {
     return application;
   }
 
+  /**
+   * Export event applications with personal data of applicants
+   */
   @ApiBearerAuth()
+  @UseGuards(CookieGuard)
   @Header("Content-disposition", "attachment; filename=EventApplicationExport.xlsx")
   @Get("export/:eventId/applications")
-  async generateSheetEventApplication(@Res() res: Response, @Param("eventId", ParseIntPipe) eventId: number) {
+  async generateSheetEventApplication(
+    @CurrentUser() currentUser: User,
+    @Res() res: Response,
+    @Param("eventId", ParseIntPipe) eventId: number,
+  ) {
+    if (!currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])) {
+      throw new ForbiddenException("You don't have permission to perform this action");
+    }
+
     const applicationList = await this.eventApplicationsService.findByEventId(eventId);
 
     const workbook = new ExcelJS.Workbook();

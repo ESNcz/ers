@@ -21,17 +21,18 @@ const NavigationDropdownItem = forwardRef<HTMLDivElement, NavigationDropdownItem
     }, [item]);
 
     return (
-      <Box {...props} ref={ref}>
+      <Box className={styles.dropdownItem} ref={ref}>
         {hasSomePermissions(userRole, dropdownPermission) && (
-          <Box visibleFrom="sm">
-            <Menu shadow="md" trigger="hover" position="bottom-start">
+          <Box className={styles.dropdownItem} visibleFrom="sm">
+            <Menu trigger="click-hover" position="bottom-end" offset={8}>
               <Menu.Target>
                 <Button
                   component={Anchor}
                   variant="subtle"
                   className={styles.mainLink}
                   data-active={item.children.some((f) => f.link === pathname) || undefined}
-                  rightSection={<IconChevronDown />}
+                  rightSection={<IconChevronDown size={14} stroke={2} />}
+                  {...props}
                 >
                   {item.label}
                 </Button>
@@ -64,7 +65,7 @@ const NavigationDropdownItem = forwardRef<HTMLDivElement, NavigationDropdownItem
               childrenOffset={12}
               className={styles.mainLink}
               data-active={item.children.some((f) => f.link === pathname) || undefined}
-              rightSection={<IconChevronRight />}
+              rightSection={<IconChevronRight size={16} stroke={2} />}
             >
               {item.children.map((subItem, jIndex) => {
                 return (

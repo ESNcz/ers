@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 
+import { JwtContent } from "@api/modules/auth/types";
 import { verifyPassword } from "@api/modules/auth/utilities/crypto";
 import { User, UsersService } from "@api/modules/users";
 
@@ -32,10 +33,22 @@ export class AuthService {
    * @param user User data
    * @returns Token
    */
-  createToken(user: User) {
-    return this.jwtService.signAsync({
+  async createToken(user: User) {
+    const tokenVersion = await this.usersService.getTokenVersion(user.id);
+    return this.jwtService.signAsync(<Omit<JwtContent, "iat">>{
       sub: user.id,
+      ver: tokenVersion ?? 0,
     });
+  }
+
+  /**
+   * Invalidate all existing tokens of user
+   * @param user User data
+   * @returns New token for the current session
+   */
+  async revokeAllTokens(user: User) {
+    await this.usersService.incrementTokenVersion(user.id);
+    return this.createToken(user);
   }
 
   // Create JWT reset password token

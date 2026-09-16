@@ -223,7 +223,6 @@ DB_PASS=password
 PORT_API=4000
 JWT_SECRET=secret
 
-BASE_URL=http://localhost:4000
 WEB_DOMAIN=localhost
 
 NODE_ENV=development
@@ -254,7 +253,9 @@ For this step its required to have running Postgres database and Redis.
 
 ```dotenv
 # .env - inside /frontend folder
-NEXT_PUBLIC_API_DOMAIN=http://localhost:4000
+# Browser calls the API through the Next.js `/api/*` rewrite, this is only the rewrite target
+# and address for server-side calls (defaults to http://localhost:4000)
+API_INTERNAL_URL=http://localhost:4000
 PORT_FE=3000
 ```
 
@@ -278,15 +279,12 @@ NODE_ENV=production
 PORT_FRONTEND=3000
 PORT_BACKEND=4000
 WEB_DOMAIN="http://localhost:${PORT_FRONTEND}"
-API_DOMAIN="http://localhost:${PORT_BACKEND}"
 
 ### APP 1
-BASE_URL="${API_DOMAIN}"
 PORT_API="${PORT_BACKEND}"
 JWT_SECRET=secret
 
 ### FRONTEND
-NEXT_PUBLIC_API_DOMAIN="${API_DOMAIN}"
 PORT_FE="${PORT_FRONTEND}"
 
 ### DATABASE
@@ -310,15 +308,14 @@ For production deployment the .env file can be shared used for both WITH or WITH
 ### General
 NODE_ENV=production
 WEB_DOMAIN=example.com
-API_DOMAIN=api.example.com
 
 ### APP 1
-BASE_URL="${API_DOMAIN}"
 PORT_API=4000
 JWT_SECRET=secret
 
 ### FRONTEND
-NEXT_PUBLIC_API_DOMAIN="${API_DOMAIN}"
+# API is served under WEB_DOMAIN/api (Next.js rewrite), no public API domain is needed.
+# API_INTERNAL_URL defaults to http://backend:4000 in compose.yml
 PORT_FE=3000
 
 ### DATABASE

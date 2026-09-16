@@ -1,71 +1,148 @@
 .header {
-  height: rem(84px);
-  margin-bottom: rem(24px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: rem(48px);
   background-color: var(--mantine-color-body);
-  border-bottom: rem(1px) solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  border-bottom: rem(1px) solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
 }
 
 .inner {
-  height: rem(84px);
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: rem(8px);
+  color: var(--mantine-color-darkBlue-7);
+  border-radius: var(--mantine-radius-md);
+  text-decoration: none;
+
+  @mixin dark {
+    color: var(--mantine-color-cyan-5);
+  }
+
+  @mixin hover {
+    text-decoration: none;
+  }
+}
+
+.brandName {
+  font-family: var(--mantine-font-family-headings);
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
 .links {
+  flex: 1;
   height: 100%;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: flex-end;
+  gap: var(--mantine-spacing-xs);
+}
+
+/* Desktop nav: links fill header height, label sits on the bottom edge */
+.navLinks {
+  height: 100%;
+  align-items: stretch;
+}
+
+.dropdownItem {
+  height: 100%;
+}
+
+.navLinks .mainLink {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 rem(10px) rem(10px);
+
+  & :global(.mantine-Button-inner) {
+    height: auto;
+  }
+}
+
+.userSection {
+  padding-left: var(--mantine-spacing-xs);
+  border-left: rem(1px) solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.user {
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+  padding: rem(2px) rem(6px) rem(2px) rem(2px);
+  border-radius: var(--mantine-radius-xl);
+  transition:
+    background-color 100ms ease,
+    color 100ms ease;
+
+  @mixin hover {
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+    background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  }
+
+  &[data-expanded] {
+    background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  }
+}
+
+.mainLink,
+.subLink {
+  font-size: rem(13px);
+  font-weight: 700;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-1));
+  height: auto;
+  padding: rem(8px) rem(10px);
+  line-height: var(--mantine-font-size-md);
+  border-radius: 0;
+  background-color: transparent !important;
+  transition:
+    border-color 100ms ease,
+    color 100ms ease;
+
+  @mixin hover {
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+    text-decoration: none;
+  }
 }
 
 .mainLink {
   text-transform: uppercase;
-  font-size: var(--mantine-font-size-sm);
-  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-1));
-  padding: rem(8px) var(--mantine-spacing-sm);
-  font-weight: 700;
-  border-radius: 0;
-  line-height: var(--mantine-font-size-md);
   border-bottom: rem(2px) solid transparent;
-  transition:
-    border-color 100ms ease,
-    color 100ms ease;
-  background-color: transparent !important;
-
-  @mixin hover {
-    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-    text-decoration: none;
-  }
 
   &[data-active] {
     color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-    border-bottom-color: var(--mantine-color-blue-6);
+    border-bottom-color: var(--mantine-primary-color-filled);
   }
 }
 
-.subLink {
-  margin: rem(8) 0;
-  text-transform: uppercase;
-  font-size: var(--mantine-font-size-sm);
-  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-1));
-  padding: rem(8px) var(--mantine-spacing-sm);
-  font-weight: 700;
-  border-radius: 0;
-  line-height: var(--mantine-font-size-md);
-  border-bottom: rem(2px) solid transparent;
-  transition:
-    border-color 100ms ease,
-    color 100ms ease;
-  background-color: transparent !important;
-
-  @mixin hover {
-    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-    text-decoration: none;
-  }
+/* Mobile drawer: no underline, tinted background for active */
+.drawerLinks .mainLink {
+  border-bottom: 0;
+  border-radius: var(--mantine-radius-sm);
 
   &[data-active] {
-    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-    border-bottom-color: var(--mantine-color-blue-6);
+    color: var(--mantine-color-anchor);
+    background-color: var(--mantine-primary-color-light) !important;
+  }
+}
+
+/* Dropdown items: tinted background for active */
+.subLink {
+  font-weight: 500;
+  font-size: var(--mantine-font-size-sm);
+  margin: rem(2px) 0;
+  border-radius: var(--mantine-radius-sm);
+
+  &[data-active] {
+    color: var(--mantine-color-anchor);
+    background-color: var(--mantine-primary-color-light) !important;
   }
 }

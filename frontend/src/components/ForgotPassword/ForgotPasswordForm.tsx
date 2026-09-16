@@ -37,10 +37,14 @@ const ForgotPasswordForm = () => {
         </Flex>
         <Flex direction="column" gap={16} mt={16}>
           <Button loading={forgotPasswordMutation.isPending} type="submit">
-            Send Request
+            Send reset link
           </Button>
           {/* LOGIN ERROR */}
-          {forgotPasswordMutation.isError && <Text c="red">Something went wrong! Please try again.</Text>}
+          {forgotPasswordMutation.isError && (
+            <Text c="red" size="sm" role="alert">
+              We couldn’t send the reset link. Please try again.
+            </Text>
+          )}
         </Flex>
       </Form>
     </Box>

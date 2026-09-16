@@ -1,4 +1,4 @@
-import { useGetCurrentUser, useUpdateEventApplication, useUserOrganizationMemberships } from "@/utils/api";
+import { useUpdateEventApplication, useUserOrganizationMemberships } from "@/utils/api";
 import {
   CreateEventApplicationInvoiceMethod,
   EventApplicationDetailedWithApplications,
@@ -9,6 +9,7 @@ import AddressCodeBlock from "@components/AddressCodeBlock/AddressCodeBlock";
 import Modal from "@components/Modal/Modal";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   allergenOptions,
   foodRestrictionOptions,
@@ -83,7 +84,7 @@ const UpdateEventApplicationModal = ({
     currentApplication.organization,
   );
 
-  const { data: currentUser } = useGetCurrentUser();
+  const { currentUser } = useCurrentUser();
 
   const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentApplication.user.id);
 

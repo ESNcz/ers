@@ -47,3 +47,4 @@ certificates
 
 .DS_Store
 dist
+*.tsbuildinfo

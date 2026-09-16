@@ -27,15 +27,15 @@ export class SugarCube extends BaseEntity {
   })
   isReported: boolean;
 
-  @ManyToOne(() => EventApplication, { nullable: false })
+  @ManyToOne(() => EventApplication, { nullable: false, onDelete: "CASCADE" })
   @ApiProperty({ type: () => EventApplication })
   fromUser: EventApplication;
 
-  @ManyToOne(() => EventApplication, { nullable: false })
+  @ManyToOne(() => EventApplication, { nullable: false, onDelete: "CASCADE" })
   @ApiProperty({ type: () => EventApplication })
   toUser: EventApplication;
 
-  @ManyToOne(() => Event, (event) => event, { nullable: false })
+  @ManyToOne(() => Event, (event) => event, { nullable: false, onDelete: "CASCADE" })
   @ApiProperty({ type: () => Event })
   event: Event;
 

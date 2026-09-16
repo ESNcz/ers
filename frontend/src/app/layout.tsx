@@ -9,6 +9,8 @@ import "@mantine/tiptap/styles.css";
 import { Metadata, Viewport } from "next";
 import React, { ReactNode, Suspense } from "react";
 
+import "./globals.css";
+
 export const metadata: Metadata = {
   applicationName: "Event Registration System",
   title: "Event Registration System",
@@ -57,9 +59,9 @@ const RootLayout = ({ children }: RootLayoutProps) => {
 
         <ColorSchemeScript />
       </head>
-      <body style={{ width: "100%", height: "100vh" }}>
+      <body>
         <MantineProvider theme={theme}>
-          <Suspense fallback="Loading...">
+          <Suspense fallback={null}>
             <Providers>{children}</Providers>
           </Suspense>
         </MantineProvider>

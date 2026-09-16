@@ -5,12 +5,11 @@ import { CreateUser, CreateUserGender } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
-import { Box, Button, Checkbox, Flex, Grid, PasswordInput, SimpleGrid, Text, TextInput } from "@mantine/core";
+import { Anchor, Box, Button, Checkbox, Flex, Grid, PasswordInput, SimpleGrid, Text, TextInput } from "@mantine/core";
 import { Form, hasLength, isEmail, isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import CountryList from "country-list-with-dial-code-and-flag";
 import dayjs from "dayjs";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -86,11 +85,11 @@ const RegistrationForm = () => {
     <Box maw="32rem" w="100%">
       <Form form={form} onSubmit={registerUser}>
         <Flex direction="column" gap={12}>
-          <SimpleGrid cols={2}>
-            <TextInput label="First Name" {...form.getInputProps("firstName")} required />
-            <TextInput label="Last Name" {...form.getInputProps("lastName")} required />
+          <SimpleGrid cols={{ base: 1, xs: 2 }}>
+            <TextInput label="First name" {...form.getInputProps("firstName")} required />
+            <TextInput label="Last name" {...form.getInputProps("lastName")} required />
           </SimpleGrid>
-          <SimpleGrid cols={2}>
+          <SimpleGrid cols={{ base: 1, xs: 2 }}>
             <DateInput
               label="Birthdate"
               defaultValue={null}
@@ -121,7 +120,7 @@ const RegistrationForm = () => {
               required
             />
           </SimpleGrid>
-          <TextInput label="Email" {...form.getInputProps("email")} required />
+          <TextInput label="E-mail" {...form.getInputProps("email")} required />
           <Grid>
             <Grid.Col span={4}>
               <Select
@@ -145,7 +144,7 @@ const RegistrationForm = () => {
               <TextInput label="Phone number" {...form.getInputProps("phoneNumber")} required />
             </Grid.Col>
           </Grid>
-          <SimpleGrid cols={2}>
+          <SimpleGrid cols={{ base: 1, xs: 2 }}>
             <TextInput label="Username" {...form.getInputProps("username")} required />
             <Select
               label="Gender"
@@ -160,10 +159,10 @@ const RegistrationForm = () => {
               required
             />
           </SimpleGrid>
-          <SimpleGrid cols={2}>
+          <SimpleGrid cols={{ base: 1, xs: 2 }}>
             <PasswordInput label="Password" type="password" {...form.getInputProps("password")} required />
             <PasswordInput
-              label="Confirm Password"
+              label="Confirm password"
               type="password"
               {...form.getInputProps("confirmPassword")}
               required
@@ -173,21 +172,25 @@ const RegistrationForm = () => {
         <Flex direction="column" gap={16} mt={16}>
           <Checkbox
             label={
-              <Text>
-                I agree with{" "}
-                <Link href="https://esncz.org/privacy-policy " target="_blank">
-                  Privacy Policy
-                </Link>
+              <Text size="sm">
+                I agree with the{" "}
+                <Anchor href="https://esncz.org/privacy-policy" target="_blank" rel="noreferrer" size="sm">
+                  privacy policy
+                </Anchor>
               </Text>
             }
             required
           />
           <Button loading={registerUserMutation.isPending} type="submit">
-            Register
+            Create account
           </Button>
           {/* Register ERROR */}
           <Flex direction="row">
-            {registerUserMutation.isError && <Text c="red">Something went wrong! Please try again.</Text>}
+            {registerUserMutation.isError && (
+              <Text c="red" size="sm" role="alert">
+                We couldn’t create your account. Check the form and try again.
+              </Text>
+            )}
           </Flex>
         </Flex>
       </Form>

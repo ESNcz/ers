@@ -3,13 +3,13 @@ import { MainLink } from "@components/layout/LayoutHeader";
 
 export const manageEventLink: MainLink = {
   link: routes.MANAGE_EVENTS,
-  label: "Manage Events",
+  label: "Manage events",
   permissions: ["event.create", "event.update", "event.duplicate"],
 };
 
 export const manageOrganisationLink: MainLink = {
   link: routes.MANAGE_ORGANISATIONS,
-  label: "Manage Organisations",
+  label: "Manage organisations",
   permissions: [
     "organisation.create",
     "organisation.update",
@@ -20,7 +20,7 @@ export const manageOrganisationLink: MainLink = {
 };
 
 // Empty permission --> only admin
-export const managePeopleLink: MainLink = { link: routes.MANAGE_PEOPLE, label: "Manage People", permissions: [] };
+export const managePeopleLink: MainLink = { link: routes.MANAGE_PEOPLE, label: "Manage people", permissions: [] };
 
 // Empty permission --> only admin
 export const settingsLink: MainLink = { link: routes.SETTINGS, label: "Settings", permissions: [] };

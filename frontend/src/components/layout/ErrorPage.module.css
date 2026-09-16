@@ -1,27 +1,43 @@
+.root {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
+  overflow: hidden;
+}
+
 .image {
   position: absolute;
-  width: 100%;
-  top: 50%;
-  left: 50%;
+  inset: 50% auto auto 50%;
+  width: min(100%, rem(960px));
   transform: translate(-50%, -50%);
-  padding: rem(2);
   color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  pointer-events: none;
 }
 
 .textBlock {
-  width: 100%;
-  z-index: 9999;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: rem(2);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.eyebrow {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  letter-spacing: 0.08em;
+  color: var(--mantine-color-anchor);
+  margin-bottom: var(--mantine-spacing-sm);
 }
 
 .title {
   text-align: center;
-  font-weight: 900;
-  font-size: rem(42);
+  font-weight: 600;
+  font-size: rem(44);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
 
   @media (max-width: $mantine-breakpoint-sm) {
     font-size: rem(32);
@@ -29,6 +45,12 @@
 }
 
 .description {
-  max-width: rem(540);
-  margin: var(--mantine-spacing-xl) 0 calc(var(--mantine-spacing-xl)) 0;
+  max-width: rem(520px);
+  margin: var(--mantine-spacing-lg) 0 var(--mantine-spacing-xl);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(6px);
 }

@@ -1,11 +1,45 @@
 "use client";
 
 import { useGetEvents, useGetOngoingEvents } from "@/utils/api";
+import { Event } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
-import EventCard from "@components/events/EventCard";
-import { Anchor, Center, Container, Loader, Stack, Text, Title } from "@mantine/core";
+import EventCard, { EventCardSkeleton } from "@components/events/EventCard";
+import styles from "@components/events/EventList.module.css";
+import { Anchor, Container, Group, Stack, Text, ThemeIcon, Title } from "@mantine/core";
+import { IconCalendarOff } from "@tabler/icons-react";
 import Link from "next/link";
 import React, { useMemo } from "react";
+
+interface EventSectionProps {
+  title: string;
+  events: Event[];
+  total?: number;
+}
+
+const EventSection = ({ title, events, total = events.length }: EventSectionProps) => (
+  <section className={styles.section}>
+    <Group justify="space-between" align="flex-end" gap="xs" className={styles.sectionHead}>
+      <Title order={2}>{title}</Title>
+      <Text size="sm" c="dimmed" className="tabular-nums">
+        {total} {total === 1 ? "event" : "events"}
+      </Text>
+    </Group>
+    <Stack gap="md">
+      {events.map((event, index) => (
+        <Anchor
+          component={Link}
+          key={`event-card-${index}-${event.id}`}
+          href={routes.EVENT_DETAIL({ id: event.id })}
+          underline="never"
+          className={styles.cardLink}
+          style={{ "--stagger": index } as React.CSSProperties}
+        >
+          <EventCard event={event} />
+        </Anchor>
+      ))}
+    </Stack>
+  </section>
+);
 
 const Home = () => {
   const newTime = useMemo(() => new Date().getTime(), []);
@@ -14,47 +48,50 @@ const Home = () => {
 
   if (!upcomingEvents?.data || !ongoingEvents?.data) {
     return (
-      <Center>
-        <Loader />
-      </Center>
+      <Container size="xl" aria-busy="true" aria-label="Loading events">
+        <Stack gap="md">
+          <Title order={2}>Upcoming events</Title>
+          <EventCardSkeleton />
+          <EventCardSkeleton />
+        </Stack>
+      </Container>
     );
   }
 
   return (
     <Container size="xl">
-      <Stack>
+      <Stack gap={48}>
         {ongoingEvents.data.length > 0 && (
-          <Stack>
-            <Title>Ongoing Events</Title>
-            {ongoingEvents.data.map((event, index) => (
-              <Anchor
-                component={Link}
-                key={`event-card-${index}-${event.id}`}
-                href={routes.EVENT_DETAIL({ id: event.id })}
-                underline="never"
-              >
-                <EventCard event={event} />
-              </Anchor>
-            ))}
-          </Stack>
+          <EventSection
+            title="Happening now"
+            events={ongoingEvents.data}
+            total={ongoingEvents.pagination?.totalCount}
+          />
         )}
-        <Title>Upcoming Events</Title>
-        <Stack>
-          {upcomingEvents.data.length > 0 ? (
-            upcomingEvents.data.map((event, index) => (
-              <Anchor
-                component={Link}
-                key={`event-card-${index}-${event.id}`}
-                href={routes.EVENT_DETAIL({ id: event.id })}
-                underline="never"
-              >
-                <EventCard event={event} />
+
+        {upcomingEvents.data.length > 0 ? (
+          <EventSection
+            title="Upcoming events"
+            events={upcomingEvents.data}
+            total={upcomingEvents.pagination?.totalCount}
+          />
+        ) : (
+          <section className={styles.empty}>
+            <ThemeIcon size={56} radius="lg" variant="light">
+              <IconCalendarOff size={28} stroke={1.5} />
+            </ThemeIcon>
+            <Title order={3} mt="md">
+              No upcoming events yet
+            </Title>
+            <Text c="dimmed" maw={420} ta="center" mt={6}>
+              When your section publishes a new event, it shows up here. Meanwhile, check your{" "}
+              <Anchor component={Link} href={routes.SENT_APPLICATIONS}>
+                sent applications
               </Anchor>
-            ))
-          ) : (
-            <Text>No upcoming events</Text>
-          )}
-        </Stack>
+              .
+            </Text>
+          </section>
+        )}
       </Stack>
     </Container>
   );

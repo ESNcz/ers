@@ -44,12 +44,13 @@ const LoginForm = () => {
         </Flex>
         <Flex direction="column" gap={16} mt={16}>
           <Button loading={loginUserMutation.isPending} type="submit">
-            Log In
+            Log in
           </Button>
           {/* LOGIN ERROR */}
           {loginUserMutation.isError && (
-            <Text c="red">
-              {loginUserMutation.error.response?.data.message ?? "Something went wrong! Please try again."}
+            <Text c="red" size="sm" role="alert">
+              {loginUserMutation.error.response?.data.message ??
+                "We couldn’t log you in. Check your details and try again."}
             </Text>
           )}
         </Flex>

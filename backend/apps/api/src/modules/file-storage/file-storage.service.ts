@@ -1,5 +1,4 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { ReadStream, createReadStream, existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -11,11 +10,9 @@ export class FileStorageService {
   private readonly logger = new Logger(FileStorageService.name);
   // Storage base path for docker volumes
   private readonly BasePath: string;
-  private readonly BaseUrl: string;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor() {
     this.BasePath = storagePath;
-    this.BaseUrl = `${this.configService.getOrThrow("API_DOMAIN")}/${storagePath}`;
 
     this.BasePath = path.isAbsolute(this.BasePath) ? this.BasePath : path.join(process.cwd(), this.BasePath);
     fs.mkdir(this.BasePath, { recursive: true });
@@ -87,9 +84,5 @@ export class FileStorageService {
    */
   async getFullPath(filePath: string) {
     return this.getFilePath(filePath);
-  }
-
-  getPublicUrl(filePath: string) {
-    return `${this.BaseUrl}/${filePath}`;
   }
 }

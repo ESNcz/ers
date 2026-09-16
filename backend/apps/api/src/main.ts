@@ -14,9 +14,9 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter());
 
+  // Browser calls go through the web domain (Next.js rewrites `/api/*`), so only the web origin is allowed
   app.enableCors({
-    // Allow all origins
-    origin: true,
+    origin: process.env.WEB_DOMAIN,
     credentials: true,
   });
 

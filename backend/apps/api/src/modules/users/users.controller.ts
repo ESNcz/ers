@@ -5,6 +5,7 @@ import {
   ConflictException,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   Header,
   InternalServerErrorException,
@@ -40,6 +41,7 @@ import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagi
 import { Address } from "@api/modules/addresses/entities";
 import { AuthService } from "@api/modules/auth";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
+import { setAuthCookie } from "@api/modules/auth/utilities/auth-cookie";
 import { OrganizationService } from "@api/modules/organization";
 import { PhotoService } from "@api/modules/photo";
 import { Permission } from "@api/modules/roles";
@@ -123,7 +125,11 @@ export class UsersController {
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @Patch()
-  async updateCurrentUser(@Body() body: UpdateUser, @CurrentUser() requestUser: User) {
+  async updateCurrentUser(
+    @Body() body: UpdateUser,
+    @CurrentUser() requestUser: User,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const lowerCaseUsername = body?.username?.toLowerCase();
     if (body.username && lowerCaseUsername !== requestUser.username) {
       const exists = await this.usersService.exist({
@@ -156,6 +162,12 @@ export class UsersController {
 
     const newUser = await this.usersService.save(user);
     Reflect.deleteProperty(newUser, "password");
+
+    if (body.password) {
+      // Password changed - sign out other devices, keep this session with a fresh token
+      setAuthCookie(response, await this.authService.revokeAllTokens(newUser));
+    }
+
     return newUser;
   }
 
@@ -258,7 +270,21 @@ export class UsersController {
     },
   })
   @Get("all")
-  getAllUsers(@Pagination() pagination?: PaginationOptions) {
+  async getAllUsers(@CurrentUser() currentUser: User, @Pagination() pagination?: PaginationOptions) {
+    // Manage people page (user permissions) and adding organisation members (managers, organisation permissions)
+    const canListUsers =
+      currentUser.role?.hasOneOfPermissions([
+        Permission.UserUpdate,
+        Permission.UserUpdateRole,
+        Permission.UserDelete,
+        Permission.OrganisationAddUser,
+        Permission.OrganisationDeleteUser,
+      ]) || (await this.organizationService.isManagerOfAny(currentUser.id));
+
+    if (!canListUsers) {
+      throw new ForbiddenException("You don't have permission to perform this action");
+    }
+
     return this.usersService.find(pagination, {
       relations: { personalAddress: true, role: true },
     });
@@ -282,9 +308,18 @@ export class UsersController {
     await this.usersService.deleteUser(userId);
   }
 
+  /**
+   * Export all users with personal data. Admin only - same as the Manage people page.
+   */
+  @ApiBearerAuth()
+  @UseGuards(CookieGuard)
   @Header("Content-disposition", "attachment; filename=EventApplicationExport.xlsx")
   @Get("export/users")
-  async generateSheetUsers(@Res() res: Response) {
+  async generateSheetUsers(@CurrentUser() currentUser: User, @Res() res: Response) {
+    if (!currentUser.role?.isAdmin()) {
+      throw new ForbiddenException("You don't have permission to perform this action");
+    }
+
     const userList = await this.usersService.findAllForExport();
 
     const workbook = new ExcelJS.Workbook();

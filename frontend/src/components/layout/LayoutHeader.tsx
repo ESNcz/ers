@@ -1,14 +1,16 @@
 "use client";
 
-import { useGetCurrentUser, useLogoutUser } from "@/utils/api";
 import { RolePermissionsItem } from "@/utils/api.schemas";
+import { apiImageURL } from "@/utils/apiImageURL";
 import { manageEventLink, manageOrganisationLink, managePeopleLink, settingsLink } from "@/utils/headerLinks";
 import routes from "@/utils/routes";
 import LogoERS from "@components/icons/LogoERS";
 import styles from "@components/layout/LayoutHeader.module.css";
 import NavigationItemList from "@components/layout/NavigationItemList";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   Anchor,
+  Avatar,
   Box,
   Burger,
   Button,
@@ -21,11 +23,12 @@ import {
   Skeleton,
   Stack,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconLogout, IconUser } from "@tabler/icons-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export type MainLink = {
   link: string;
@@ -53,8 +56,8 @@ export type MainLinksProps = (MainLink | GroupedLinks)[];
  * */
 const mainLinks: MainLinksProps = [
   { link: routes.DASHBOARD, label: "Home", permissions: null },
-  { link: routes.SENT_APPLICATIONS, label: "Sent Applications", permissions: null },
-  { link: routes.MY_ORGANISATION, label: "My Organisation", permissions: null },
+  { link: routes.SENT_APPLICATIONS, label: "Sent applications", permissions: null },
+  { link: routes.MY_ORGANISATION, label: "My organisation", permissions: null },
   {
     label: "Management",
     children: [manageEventLink, manageOrganisationLink, managePeopleLink, settingsLink],
@@ -62,35 +65,31 @@ const mainLinks: MainLinksProps = [
 ];
 
 const LayoutHeader = () => {
-  const router = useRouter();
   const pathname = usePathname();
 
-  const logoutMutation = useLogoutUser({
-    mutation: {
-      onSuccess: () => {
-        router.push(routes.LOGIN);
-      },
-    },
-  });
+  // Full navigation (not router.push) so the React Query cache of this user is dropped
+  const logout = () => window.location.assign(routes.LOGOUT);
 
-  const { data: currentUser } = useGetCurrentUser();
+  const { currentUser } = useCurrentUser();
+
+  const userFullName = currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.email
+    : "";
 
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
 
   return (
     <header className={styles.header}>
       <Container size="xl" className={styles.inner}>
-        <Anchor component={Link} href={routes.DASHBOARD}>
-          <Flex direction="row" justify="center" align="center" gap={8}>
-            <LogoERS height={64} width={64} color="primary" />
-            <Text size="xl" c="primary" fw="bold" display={{ base: "none", lg: "block" }}>
-              Event Registration System
-            </Text>
-          </Flex>
+        <Anchor component={Link} href={routes.DASHBOARD} className={styles.brand} aria-label="Home">
+          <LogoERS height={32} width={32} aria-hidden />
+          <Text component="span" className={styles.brandName} display={{ base: "none", lg: "block" }}>
+            Event Registration System
+          </Text>
         </Anchor>
 
         <Box className={styles.links} visibleFrom="sm">
-          <Group gap={0} justify="flex-end">
+          <Group gap={0} wrap="nowrap" justify="flex-end" className={styles.navLinks}>
             {currentUser ? (
               <NavigationItemList
                 userRole={currentUser?.role}
@@ -99,32 +98,50 @@ const LayoutHeader = () => {
                 closeDrawer={closeDrawer}
               />
             ) : (
-              <Skeleton />
+              <Group gap="xs">
+                <Skeleton h={16} w={64} />
+                <Skeleton h={16} w={120} />
+                <Skeleton h={16} w={110} />
+              </Group>
             )}
-            {currentUser && (
-              <Menu width={260} position="bottom-start" withinPortal>
+          </Group>
+          <Group gap="xs" className={styles.userSection}>
+            {currentUser ? (
+              <Menu width={260} position="bottom-end" withinPortal>
                 <Menu.Target>
-                  <Button
-                    variant="subtle"
-                    p="7px 12px"
-                    lh="22px"
-                    fs="14px"
-                    fw={700}
-                    rightSection={<IconChevronDown size={16} stroke={2} />}
-                    loading={!currentUser?.email}
-                  >
-                    {currentUser?.email}
-                  </Button>
+                  <UnstyledButton className={styles.user}>
+                    <Group gap={8} wrap="nowrap">
+                      <Avatar
+                        src={currentUser.photo ? apiImageURL(currentUser.photo) : null}
+                        name={userFullName}
+                        color="initials"
+                        alt={userFullName}
+                        radius="xl"
+                        size={24}
+                      />
+                      <Text fw={500} size="xs" lh={1}>
+                        {userFullName}
+                      </Text>
+                      <IconChevronDown size={12} stroke={1.5} />
+                    </Group>
+                  </UnstyledButton>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  <Anchor component={Link} href={routes.ACCOUNT} underline="never" onClick={closeDrawer}>
-                    <Menu.Item leftSection={<IconUser size={16} stroke={1.5} />}>Account</Menu.Item>
-                  </Anchor>
+                  <Menu.Label>{currentUser.email}</Menu.Label>
+                  <Menu.Item
+                    component={Link}
+                    href={routes.ACCOUNT}
+                    leftSection={<IconUser size={16} stroke={1.5} />}
+                    onClick={closeDrawer}
+                  >
+                    Account
+                  </Menu.Item>
                   <Menu.Divider />
                   <Menu.Item
+                    color="red"
                     leftSection={<IconLogout size={16} stroke={1.5} />}
                     onClick={() => {
-                      logoutMutation.mutate();
+                      logout();
                       closeDrawer();
                     }}
                   >
@@ -132,25 +149,55 @@ const LayoutHeader = () => {
                   </Menu.Item>
                 </Menu.Dropdown>
               </Menu>
+            ) : (
+              <Group gap={8}>
+                <Skeleton h={24} w={24} circle />
+                <Skeleton h={12} w={100} />
+              </Group>
             )}
           </Group>
         </Box>
 
-        <Burger opened={drawerOpened} onClick={toggleDrawer} size="sm" hiddenFrom="sm" />
+        <Burger
+          opened={drawerOpened}
+          onClick={toggleDrawer}
+          size="sm"
+          hiddenFrom="sm"
+          aria-label={drawerOpened ? "Close navigation" : "Open navigation"}
+        />
       </Container>
       <Drawer
         opened={drawerOpened}
         onClose={closeDrawer}
         size="100%"
         padding="md"
-        title={currentUser?.email}
+        title={
+          currentUser && (
+            <Group gap="sm" wrap="nowrap">
+              <Avatar
+                src={currentUser.photo ? apiImageURL(currentUser.photo) : null}
+                name={userFullName}
+                color="initials"
+                alt={userFullName}
+                radius="xl"
+              />
+              <Box>
+                <Text fw={600} size="sm">
+                  {userFullName}
+                </Text>
+                <Text c="dimmed" size="xs">
+                  {currentUser.email}
+                </Text>
+              </Box>
+            </Group>
+          )
+        }
         hiddenFrom="sm"
-        zIndex={1000000}
       >
         <Divider my="sm" />
 
         {currentUser && (
-          <Stack gap={4} justify="flex-end">
+          <Stack gap={4} justify="flex-end" className={styles.drawerLinks}>
             <NavigationItemList
               userRole={currentUser?.role}
               mainLinks={mainLinks}
@@ -164,6 +211,7 @@ const LayoutHeader = () => {
 
         <Group justify="center" grow pb="xl" px="md">
           <Button
+            variant="default"
             component={Link}
             href={routes.ACCOUNT}
             onClick={closeDrawer}
@@ -172,9 +220,11 @@ const LayoutHeader = () => {
             Account
           </Button>
           <Button
+            variant="light"
+            color="red"
             leftSection={<IconLogout size={16} stroke={1.5} />}
             onClick={() => {
-              logoutMutation.mutate();
+              logout();
               closeDrawer();
             }}
           >
@@ -183,7 +233,9 @@ const LayoutHeader = () => {
         </Group>
 
         <Flex direction="row" justify="center" align="center">
-          <Text fw={700}>Event Registration System</Text>
+          <Text size="sm" c="dimmed">
+            Event Registration System
+          </Text>
         </Flex>
       </Drawer>
     </header>
