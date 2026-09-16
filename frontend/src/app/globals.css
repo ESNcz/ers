@@ -1,3 +1,9 @@
+/* Brand shade 7 is too light for small text on white, links use the darker shade 9.
+   Doubled :root beats the equally specific rule Mantine injects at runtime. */
+:root:root[data-mantine-color-scheme="light"] {
+  --mantine-color-anchor: var(--mantine-color-cyan-9);
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -34,7 +40,7 @@ time,
   padding: rem(10px) rem(16px);
   border-radius: var(--mantine-radius-md);
   background: var(--mantine-primary-color-filled);
-  color: var(--mantine-color-white);
+  color: var(--mantine-primary-color-contrast);
   font-weight: 600;
   text-decoration: none;
   transform: translateY(-200%);

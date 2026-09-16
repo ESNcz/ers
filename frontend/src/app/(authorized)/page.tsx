@@ -10,26 +10,16 @@ import { IconCalendarOff } from "@tabler/icons-react";
 import Link from "next/link";
 import React, { useMemo } from "react";
 
-
-
-
-
 interface EventSectionProps {
   title: string;
-  description: string;
   events: Event[];
   total?: number;
 }
 
-const EventSection = ({ title, description, events, total = events.length }: EventSectionProps) => (
+const EventSection = ({ title, events, total = events.length }: EventSectionProps) => (
   <section className={styles.section}>
     <Group justify="space-between" align="flex-end" gap="xs" className={styles.sectionHead}>
-      <div>
-        <Title order={2}>{title}</Title>
-        <Text c="dimmed" size="sm" mt={4}>
-          {description}
-        </Text>
-      </div>
+      <Title order={2}>{title}</Title>
       <Text size="sm" c="dimmed" className="tabular-nums">
         {total} {total === 1 ? "event" : "events"}
       </Text>
@@ -74,7 +64,6 @@ const Home = () => {
         {ongoingEvents.data.length > 0 && (
           <EventSection
             title="Happening now"
-            description="Events that have already started."
             events={ongoingEvents.data}
             total={ongoingEvents.pagination?.totalCount}
           />
@@ -83,13 +72,12 @@ const Home = () => {
         {upcomingEvents.data.length > 0 ? (
           <EventSection
             title="Upcoming events"
-            description="Open an event to see details and register."
             events={upcomingEvents.data}
             total={upcomingEvents.pagination?.totalCount}
           />
         ) : (
           <section className={styles.empty}>
-            <ThemeIcon size={56} radius="lg" variant="light" color="darkBlue">
+            <ThemeIcon size={56} radius="lg" variant="light">
               <IconCalendarOff size={28} stroke={1.5} />
             </ThemeIcon>
             <Title order={3} mt="md">

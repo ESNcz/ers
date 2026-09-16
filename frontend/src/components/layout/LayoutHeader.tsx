@@ -2,6 +2,7 @@
 
 import { useGetCurrentUser, useLogoutUser } from "@/utils/api";
 import { RolePermissionsItem } from "@/utils/api.schemas";
+import { apiImageURL } from "@/utils/apiImageURL";
 import { manageEventLink, manageOrganisationLink, managePeopleLink, settingsLink } from "@/utils/headerLinks";
 import routes from "@/utils/routes";
 import LogoERS from "@components/icons/LogoERS";
@@ -9,6 +10,7 @@ import styles from "@components/layout/LayoutHeader.module.css";
 import NavigationItemList from "@components/layout/NavigationItemList";
 import {
   Anchor,
+  Avatar,
   Box,
   Burger,
   Button,
@@ -21,6 +23,7 @@ import {
   Skeleton,
   Stack,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconLogout, IconUser } from "@tabler/icons-react";
@@ -75,20 +78,24 @@ const LayoutHeader = () => {
 
   const { data: currentUser } = useGetCurrentUser();
 
+  const userFullName = currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.email
+    : "";
+
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
 
   return (
     <header className={styles.header}>
       <Container size="xl" className={styles.inner}>
         <Anchor component={Link} href={routes.DASHBOARD} className={styles.brand} aria-label="Home">
-          <LogoERS height={44} width={44} aria-hidden />
+          <LogoERS height={32} width={32} aria-hidden />
           <Text component="span" className={styles.brandName} display={{ base: "none", lg: "block" }}>
             Event Registration System
           </Text>
         </Anchor>
 
         <Box className={styles.links} visibleFrom="sm">
-          <Group gap={0} justify="flex-end">
+          <Group gap={0} wrap="nowrap" justify="flex-end" className={styles.navLinks}>
             {currentUser ? (
               <NavigationItemList
                 userRole={currentUser?.role}
@@ -98,30 +105,46 @@ const LayoutHeader = () => {
               />
             ) : (
               <Group gap="xs">
-                <Skeleton h={20} w={64} />
-                <Skeleton h={20} w={120} />
-                <Skeleton h={20} w={110} />
+                <Skeleton h={16} w={64} />
+                <Skeleton h={16} w={120} />
+                <Skeleton h={16} w={110} />
               </Group>
             )}
-            {currentUser && (
-              <Menu width={260} position="bottom-start" withinPortal>
+          </Group>
+          <Group gap="xs" className={styles.userSection}>
+            {currentUser ? (
+              <Menu width={260} position="bottom-end" withinPortal>
                 <Menu.Target>
-                  <Button
-                    variant="default"
-                    ml="sm"
-                    fw={500}
-                    rightSection={<IconChevronDown size={16} stroke={2} />}
-                    loading={!currentUser?.email}
-                  >
-                    {currentUser?.email}
-                  </Button>
+                  <UnstyledButton className={styles.user}>
+                    <Group gap={8} wrap="nowrap">
+                      <Avatar
+                        src={currentUser.photo ? apiImageURL(currentUser.photo) : null}
+                        name={userFullName}
+                        color="initials"
+                        alt={userFullName}
+                        radius="xl"
+                        size={24}
+                      />
+                      <Text fw={500} size="xs" lh={1}>
+                        {userFullName}
+                      </Text>
+                      <IconChevronDown size={12} stroke={1.5} />
+                    </Group>
+                  </UnstyledButton>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  <Anchor component={Link} href={routes.ACCOUNT} underline="never" onClick={closeDrawer}>
-                    <Menu.Item leftSection={<IconUser size={16} stroke={1.5} />}>Account</Menu.Item>
-                  </Anchor>
+                  <Menu.Label>{currentUser.email}</Menu.Label>
+                  <Menu.Item
+                    component={Link}
+                    href={routes.ACCOUNT}
+                    leftSection={<IconUser size={16} stroke={1.5} />}
+                    onClick={closeDrawer}
+                  >
+                    Account
+                  </Menu.Item>
                   <Menu.Divider />
                   <Menu.Item
+                    color="red"
                     leftSection={<IconLogout size={16} stroke={1.5} />}
                     onClick={() => {
                       logoutMutation.mutate();
@@ -132,6 +155,11 @@ const LayoutHeader = () => {
                   </Menu.Item>
                 </Menu.Dropdown>
               </Menu>
+            ) : (
+              <Group gap={8}>
+                <Skeleton h={24} w={24} circle />
+                <Skeleton h={12} w={100} />
+              </Group>
             )}
           </Group>
         </Box>
@@ -149,13 +177,33 @@ const LayoutHeader = () => {
         onClose={closeDrawer}
         size="100%"
         padding="md"
-        title={currentUser?.email}
+        title={
+          currentUser && (
+            <Group gap="sm" wrap="nowrap">
+              <Avatar
+                src={currentUser.photo ? apiImageURL(currentUser.photo) : null}
+                name={userFullName}
+                color="initials"
+                alt={userFullName}
+                radius="xl"
+              />
+              <Box>
+                <Text fw={600} size="sm">
+                  {userFullName}
+                </Text>
+                <Text c="dimmed" size="xs">
+                  {currentUser.email}
+                </Text>
+              </Box>
+            </Group>
+          )
+        }
         hiddenFrom="sm"
       >
         <Divider my="sm" />
 
         {currentUser && (
-          <Stack gap={4} justify="flex-end">
+          <Stack gap={4} justify="flex-end" className={styles.drawerLinks}>
             <NavigationItemList
               userRole={currentUser?.role}
               mainLinks={mainLinks}

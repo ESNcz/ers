@@ -21,10 +21,10 @@ const NavigationDropdownItem = forwardRef<HTMLDivElement, NavigationDropdownItem
     }, [item]);
 
     return (
-      <Box {...props} ref={ref}>
+      <Box className={styles.dropdownItem} ref={ref}>
         {hasSomePermissions(userRole, dropdownPermission) && (
-          <Box visibleFrom="sm">
-            <Menu trigger="click-hover" position="bottom-start" offset={8}>
+          <Box className={styles.dropdownItem} visibleFrom="sm">
+            <Menu trigger="click-hover" position="bottom-end" offset={8}>
               <Menu.Target>
                 <Button
                   component={Anchor}
@@ -32,6 +32,7 @@ const NavigationDropdownItem = forwardRef<HTMLDivElement, NavigationDropdownItem
                   className={styles.mainLink}
                   data-active={item.children.some((f) => f.link === pathname) || undefined}
                   rightSection={<IconChevronDown size={14} stroke={2} />}
+                  {...props}
                 >
                   {item.label}
                 </Button>

@@ -31,7 +31,7 @@
   border: rem(1px) dashed light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
   background: radial-gradient(
     120% 80% at 50% 0%,
-    light-dark(var(--mantine-color-darkBlue-0), var(--mantine-color-dark-6)) 0%,
+    light-dark(var(--mantine-color-cyan-0), var(--mantine-color-dark-6)) 0%,
     transparent 70%
   );
 }

@@ -12,13 +12,13 @@ import {
 } from "@mantine/core";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 
-// Body — variable font, all weights available (400/500/600/700)
+// Body: variable font, all weights available (400/500/600/700)
 const geist = Geist({
   subsets: ["latin", "latin-ext"],
   fallback: ["system-ui", "sans-serif"],
 });
 
-// Headings — slightly rounder geometric sans with more character
+// Headings: slightly rounder geometric sans with more character
 const outfit = Outfit({
   subsets: ["latin", "latin-ext"],
   fallback: ["system-ui", "sans-serif"],
@@ -28,6 +28,45 @@ const geistMono = Geist_Mono({
   subsets: ["latin", "latin-ext"],
   fallback: ["ui-monospace", "monospace"],
 });
+
+// ESN brand colours, single source of truth for all palettes below
+const brandColors = {
+  cyan: "#00aeef",
+  darkBlue: "#2e3192",
+  magenta: "#ec008c",
+  green: "#7ac143",
+  orange: "#f47b20",
+} as const;
+
+const mixHex = (from: string, to: string, amount: number) => {
+  const parse = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const [a, b] = [parse(from), parse(to)];
+  return `#${a
+    .map((channel, i) =>
+      Math.round(channel + (b[i] - channel) * amount)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+};
+
+/**
+ * Builds a 10-shade Mantine palette around a brand colour.
+ * Shades 0-6 are tints (mixed with white), 7 is the exact brand colour, 8-9 are darker (mixed with black).
+ * Shade 9 keeps at least 4.5:1 contrast with white for every brand colour, links use it (see globals.css).
+ */
+const brandShades = (base: string): MantineColorsTuple => [
+  mixHex(base, "#ffffff", 0.92),
+  mixHex(base, "#ffffff", 0.82),
+  mixHex(base, "#ffffff", 0.64),
+  mixHex(base, "#ffffff", 0.46),
+  mixHex(base, "#ffffff", 0.3),
+  mixHex(base, "#ffffff", 0.18),
+  mixHex(base, "#ffffff", 0.08),
+  base,
+  mixHex(base, "#000000", 0.18),
+  mixHex(base, "#000000", 0.34),
+];
 
 type ExtendedCustomColors = DefaultMantineColor;
 export type ExtendedCustomFontSized = MantineSize;
@@ -45,10 +84,17 @@ const themeOverride = createTheme({
   white: "#fff",
   black: "#12141c",
   defaultRadius: "md",
+  // Tighter than Mantine defaults (xs 2, sm 4, md 8, lg 16); xl kept for pills/avatars
+  radius: {
+    xs: "0.125rem", // 2px
+    sm: "0.1875rem", // 3px
+    md: "0.3125rem", // 5px
+    lg: "0.5rem", // 8px
+    xl: "2rem", // 32px
+  },
   focusRing: "auto",
   cursorType: "pointer",
   autoContrast: true,
-  luminanceThreshold: 0.35,
   breakpoints: {
     base: "0rem", // 0px
     xs: "36em", // 576px
@@ -93,77 +139,23 @@ const themeOverride = createTheme({
 
   // Colors
   primaryColor: "cyan",
-  // Shade 7 (#00aeef) is the brand cyan, but too light for white text on buttons.
+  // Brand colour sits at shade 7 of every palette. Text on filled components (white or black)
+  // is picked automatically by `autoContrast` based on the luminance of that shade.
   primaryShade: {
-    light: 8,
-    dark: 8,
+    light: 7,
+    dark: 7,
   },
   colors: {
-    primaryCyan: colorsTuple("#00aeef"),
-    primaryDarkBlue: colorsTuple("#2e3192"),
-    primaryMagenta: colorsTuple("#ec008c"),
-    primaryGreen: colorsTuple("#7ac143"),
-    primaryOrange: colorsTuple("#f47b20"),
-    cyan: [
-      "#e1fbff",
-      "#ccf3ff",
-      "#9ce4ff",
-      "#68d5fe",
-      "#41c8fd",
-      "#2cc0fd",
-      "#1abcfe",
-      "#00aeef", // Primary 7
-      "#0093cc",
-      "#007fb4",
-    ],
-    darkBlue: [
-      "#efefff",
-      "#dbdcf4",
-      "#b4b5e5",
-      "#8a8cd6",
-      "#6869ca",
-      "#5254c3",
-      "#4648c1",
-      "#2e3192", // Primary 7
-      "#262c88",
-      "#1e2373",
-    ],
-    magenta: [
-      "#ffe8fa",
-      "#ffcfed",
-      "#ff9cd7",
-      "#fe65c0",
-      "#fd39ad",
-      "#fd1fa1",
-      "#fe109b",
-      "#ec008c", // Primary 7
-      "#cb0078",
-      "#b20068",
-    ],
-    green: [
-      "#f1fce8",
-      "#e4f4d8",
-      "#cae7b3",
-      "#add98b",
-      "#94cd69",
-      "#85c653",
-      "#7fbc46",
-      "#7ac143", // Primary 7
-      "#5c982e",
-      "#4c8321",
-    ],
-    orange: [
-      "#fff2e1",
-      "#ffe3cd",
-      "#fcc69e",
-      "#f8a86b",
-      "#f68d41",
-      "#f58237",
-      "#d97f28",
-      "#f47b20", // Primary 7
-      "#dc6414",
-      "#c8550a",
-    ],
+    primaryCyan: colorsTuple(brandColors.cyan),
+    primaryDarkBlue: colorsTuple(brandColors.darkBlue),
+    primaryMagenta: colorsTuple(brandColors.magenta),
+    primaryGreen: colorsTuple(brandColors.green),
+    primaryOrange: colorsTuple(brandColors.orange),
+    cyan: brandShades(brandColors.cyan),
+    darkBlue: brandShades(brandColors.darkBlue),
+    magenta: brandShades(brandColors.magenta),
+    green: brandShades(brandColors.green),
+    orange: brandShades(brandColors.orange),
   },
   other: {},
 
