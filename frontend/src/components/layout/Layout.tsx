@@ -10,13 +10,8 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div className={styles.shell}>
-      <a href="#main-content" className="skip-link">
-        Skip to content
-      </a>
       <LayoutHeader />
-      <main id="main-content" className={styles.main} tabIndex={-1}>
-        {children}
-      </main>
+      <main className={styles.main}>{children}</main>
       <LayoutFooter />
     </div>
   );

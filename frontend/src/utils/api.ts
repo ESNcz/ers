@@ -358,47 +358,6 @@ export const useLogoutUser = <TError = ErrorType<unknown>, TContext = unknown>(
   return useMutation(mutationOptions, queryClient);
 };
 
-/**
- * Logout user on all devices by invalidating every issued token
- */
-export const logoutAllSessions = (options?: SecondParameter<typeof customInstance>) => {
-  return customInstance<void>({ url: `/auth/logout-all`, method: "DELETE" }, options);
-};
-
-export const getLogoutAllSessionsMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<Awaited<ReturnType<typeof logoutAllSessions>>, TError, void, TContext>;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<Awaited<ReturnType<typeof logoutAllSessions>>, TError, void, TContext> => {
-  const mutationKey = ["logoutAllSessions"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutAllSessions>>, void> = () => {
-    return logoutAllSessions(requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type LogoutAllSessionsMutationResult = NonNullable<Awaited<ReturnType<typeof logoutAllSessions>>>;
-
-export type LogoutAllSessionsMutationError = ErrorType<unknown>;
-
-export const useLogoutAllSessions = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<Awaited<ReturnType<typeof logoutAllSessions>>, TError, void, TContext>;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<Awaited<ReturnType<typeof logoutAllSessions>>, TError, void, TContext> => {
-  const mutationOptions = getLogoutAllSessionsMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
 export const removeCookie = (options?: SecondParameter<typeof customInstance>) => {
   return customInstance<void>({ url: `/auth/clear-auth`, method: "DELETE" }, options);
 };

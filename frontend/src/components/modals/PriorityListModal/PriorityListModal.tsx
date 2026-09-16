@@ -1,4 +1,4 @@
-import { useUpdatePriorities } from "@/utils/api";
+import { useGetEventApplications, useUpdatePriorities } from "@/utils/api";
 import { EventApplicationDetailedWithApplications, OrganizationMemberWithoutUser, User } from "@/utils/api.schemas";
 import { isUserAdmin } from "@/utils/checkPermissions";
 import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
@@ -12,7 +12,7 @@ import React, { useEffect, useMemo, useState } from "react";
 interface PriorityListModalProps {
   isOpened: boolean;
   closeModal: () => void;
-  eventApplications: EventApplicationDetailedWithApplications[];
+  eventId: number;
   userOrganisationMemberships: OrganizationMemberWithoutUser[];
   currentUser: User;
   onSuccess: () => void;
@@ -54,11 +54,17 @@ const SortableItem = ({ id, application }: SortableItemProps) => {
 const PriorityListModal = ({
   isOpened,
   closeModal,
-  eventApplications,
+  eventId,
   userOrganisationMemberships,
   currentUser,
   onSuccess,
 }: PriorityListModalProps) => {
+  // Loaded only while the modal is open; the API returns only applications the user may see
+  const { data: eventApplicationsData, refetch: refetchEventApplications } = useGetEventApplications(eventId, {
+    query: { enabled: isOpened },
+  });
+  const eventApplications = useMemo(() => eventApplicationsData ?? [], [eventApplicationsData]);
+
   const isAdmin = isUserAdmin(currentUser.role);
 
   /**
@@ -95,6 +101,7 @@ const PriorityListModal = ({
           message: "Priorities updated successfully",
           color: "green",
         });
+        refetchEventApplications();
         onSuccess();
         closeModal();
       },

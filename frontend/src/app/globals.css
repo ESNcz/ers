@@ -31,22 +31,3 @@ time,
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
-
-.skip-link {
-  position: absolute;
-  left: var(--mantine-spacing-md);
-  top: var(--mantine-spacing-md);
-  z-index: 1000;
-  padding: rem(10px) rem(16px);
-  border-radius: var(--mantine-radius-md);
-  background: var(--mantine-primary-color-filled);
-  color: var(--mantine-primary-color-contrast);
-  font-weight: 600;
-  text-decoration: none;
-  transform: translateY(-200%);
-  transition: transform 200ms ease;
-}
-
-.skip-link:focus-visible {
-  transform: translateY(0);
-}
