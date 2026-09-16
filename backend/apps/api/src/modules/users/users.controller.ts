@@ -171,6 +171,20 @@ export class UsersController {
     return newUser;
   }
 
+  // Must be registered before `@Patch(":id")`, otherwise "photo" is matched as user ID
+  @ApiConsumes("multipart/form-data")
+  @FormDataRequest({ storage: MemoryStoredFile })
+  @ApiBearerAuth()
+  @UseGuards(CookieGuard)
+  @Patch("photo")
+  async updateCurrentUserPhoto(@CurrentUser() user: User, @Body() body: UpdatePhoto) {
+    const photo = await this.photoService.save(body.file.buffer, "user_photo");
+    if (!photo) throw new InternalServerErrorException();
+
+    user.photo = photo;
+    return this.usersService.save(user);
+  }
+
   /**
    * Update user data by admin
    */
@@ -219,19 +233,6 @@ export class UsersController {
     return this.usersService.findById(user.id, {
       relations: { photo: true, personalAddress: true },
     });
-  }
-
-  @ApiConsumes("multipart/form-data")
-  @FormDataRequest({ storage: MemoryStoredFile })
-  @ApiBearerAuth()
-  @UseGuards(CookieGuard)
-  @Patch("photo")
-  async updateCurrentUserPhoto(@CurrentUser() user: User, @Body() body: UpdatePhoto) {
-    const photo = await this.photoService.save(body.file.buffer, "user_photo");
-    if (!photo) throw new InternalServerErrorException();
-
-    user.photo = photo;
-    return this.usersService.save(user);
   }
 
   @ApiOkResponse({
