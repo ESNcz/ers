@@ -5,6 +5,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   HttpStatus,
   Post,
   Query,
@@ -12,18 +13,17 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 
 import { CurrentUser } from "@api/decorators";
 import { LoginUser } from "@api/models/requests";
 import { ResetPasswordDto } from "@api/models/requests/reset-password.dto";
-import { AccessToken } from "@api/models/responses";
 import { User, UsersService } from "@api/modules/users";
-import { isProduction } from "utilities/env";
 
 import { AuthService } from "./index";
 import { CookieGuard, LocalGuard } from "./providers/guards";
+import { clearAuthCookie, setAuthCookie } from "./utilities/auth-cookie";
 
 @ApiTags("Auth")
 @Controller("auth")
@@ -36,68 +36,46 @@ export class AuthController {
   ) {}
 
   /**
-   * Try to login user with given email and password
+   * Try to login user with given email and password.
+   * Token is only set as httpOnly cookie, never exposed in the response body.
    */
-  @ApiCreatedResponse({ type: AccessToken, description: "User access token" })
+  @ApiNoContentResponse({ description: "User is logged-in, auth cookie is set" })
   @UseGuards(LocalGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Post("login")
   async loginUserWithEmailOrUsername(
-    @Body() data: LoginUser,
+    @Body() _data: LoginUser,
     @CurrentUser() user: User,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const tokenAge = 7 * 24 * 60 * 60 * 1_000; // 7 days in milliseconds
     const token = await this.authService.createToken(user);
-
-    response
-      .cookie("AuthCookie", token, {
-        domain: isProduction ? process.env.WEB_DOMAIN?.split("https://")[1] : "localhost",
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        partitioned: isProduction,
-        maxAge: tokenAge,
-        path: "/",
-      })
-      .status(HttpStatus.OK)
-      .send(<AccessToken>{ accessToken: token });
+    setAuthCookie(response, token);
   }
 
   /**
-   * Logout user
-   * @param response
+   * Logout user on this device
    */
   @ApiOkResponse({ description: "User is no longer logged-in" })
-  @ApiBearerAuth()
-  @UseGuards(CookieGuard)
   @Delete("logout")
   async logoutUser(@Res({ passthrough: true }) response: Response) {
-    response
-      .clearCookie("AuthCookie", {
-        domain: isProduction ? process.env.WEB_DOMAIN?.split("https://")[1] : "localhost",
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        partitioned: isProduction,
-        maxAge: 0,
-        path: "/",
-      })
-      .status(HttpStatus.OK);
+    clearAuthCookie(response);
+  }
+
+  /**
+   * Logout user on all devices by invalidating every issued token
+   */
+  @ApiOkResponse({ description: "All sessions of the user are invalidated" })
+  @ApiBearerAuth()
+  @UseGuards(CookieGuard)
+  @Delete("logout-all")
+  async logoutAllSessions(@CurrentUser() user: User, @Res({ passthrough: true }) response: Response) {
+    await this.usersService.incrementTokenVersion(user.id);
+    clearAuthCookie(response);
   }
 
   @Delete("clear-auth")
   async removeCookie(@Res({ passthrough: true }) response: Response) {
-    response
-      .clearCookie("AuthCookie", {
-        domain: isProduction ? process.env.WEB_DOMAIN?.split("https://")[1] : "localhost",
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        partitioned: isProduction,
-        maxAge: 0,
-        path: "/",
-      })
-      .status(HttpStatus.OK);
+    clearAuthCookie(response);
   }
 
   @Post("forgot-password")
@@ -145,6 +123,8 @@ export class AuthController {
 
     user.password = body.password;
     await this.usersService.save(user);
+    // Password changed - sign out everywhere
+    await this.usersService.incrementTokenVersion(user.id);
 
     return { message: "Password has been reset. You can now log in." };
   }

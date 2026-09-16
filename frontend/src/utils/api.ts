@@ -22,7 +22,6 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
-  AccessToken,
   AddOrganizationMembers,
   CreateEvent,
   CreateEventApplication,
@@ -241,14 +240,15 @@ export const useCreateInitialState = <TError = ErrorType<unknown>, TContext = un
 };
 
 /**
- * Try to login user with given email and password
+ * Try to login user with given email and password.
+Token is only set as httpOnly cookie, never exposed in the response body.
  */
 export const loginUserWithEmailOrUsername = (
   loginUser: LoginUser,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<AccessToken>(
+  return customInstance<void>(
     { url: `/auth/login`, method: "POST", headers: { "Content-Type": "application/json" }, data: loginUser, signal },
     options,
   );
@@ -318,7 +318,7 @@ export const useLoginUserWithEmailOrUsername = <TError = ErrorType<unknown>, TCo
 };
 
 /**
- * Logout user
+ * Logout user on this device
  */
 export const logoutUser = (options?: SecondParameter<typeof customInstance>) => {
   return customInstance<void>({ url: `/auth/logout`, method: "DELETE" }, options);
@@ -354,6 +354,47 @@ export const useLogoutUser = <TError = ErrorType<unknown>, TContext = unknown>(
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof logoutUser>>, TError, void, TContext> => {
   const mutationOptions = getLogoutUserMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Logout user on all devices by invalidating every issued token
+ */
+export const logoutAllSessions = (options?: SecondParameter<typeof customInstance>) => {
+  return customInstance<void>({ url: `/auth/logout-all`, method: "DELETE" }, options);
+};
+
+export const getLogoutAllSessionsMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof logoutAllSessions>>, TError, void, TContext>;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof logoutAllSessions>>, TError, void, TContext> => {
+  const mutationKey = ["logoutAllSessions"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutAllSessions>>, void> = () => {
+    return logoutAllSessions(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LogoutAllSessionsMutationResult = NonNullable<Awaited<ReturnType<typeof logoutAllSessions>>>;
+
+export type LogoutAllSessionsMutationError = ErrorType<unknown>;
+
+export const useLogoutAllSessions = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof logoutAllSessions>>, TError, void, TContext>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof logoutAllSessions>>, TError, void, TContext> => {
+  const mutationOptions = getLogoutAllSessionsMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

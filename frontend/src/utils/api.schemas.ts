@@ -84,11 +84,6 @@ export interface LoginUser {
   password: string;
 }
 
-export interface AccessToken {
-  /** User access token */
-  accessToken: string;
-}
-
 export interface ResetPasswordDto {
   /** User token */
   token: string;

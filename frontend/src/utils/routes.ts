@@ -10,7 +10,7 @@ export const routes = {
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/forgot-password/reset",
   VERIFY: "/verify",
-  LOGOUT: "/api/auth/logout",
+  LOGOUT: "/auth/logout",
 
   // --- Authorized ---
   DASHBOARD: "/",

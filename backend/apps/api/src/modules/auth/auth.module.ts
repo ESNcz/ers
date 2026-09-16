@@ -21,6 +21,8 @@ import { CookieStrategy, LocalStrategy } from "./providers/strategies";
         secret: configService.getOrThrow("JWT_SECRET"),
         signOptions: {
           issuer: configService.getOrThrow("WEB_DOMAIN"),
+          // Matches auth cookie max age
+          expiresIn: "7d",
         },
       }),
     }),

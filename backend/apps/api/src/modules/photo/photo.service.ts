@@ -37,10 +37,6 @@ export class PhotoService {
     return this.photoRepository.save(photo);
   }
 
-  getPublicUrl(photo: Photo) {
-    return this.fileStorageService.getPublicUrl(photo.filename);
-  }
-
   /**
    * Read photo data
    * @param photo

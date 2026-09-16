@@ -1,6 +1,5 @@
 "use client";
 
-import { useLogoutUser } from "@/utils/api";
 import { RolePermissionsItem } from "@/utils/api.schemas";
 import { apiImageURL } from "@/utils/apiImageURL";
 import { manageEventLink, manageOrganisationLink, managePeopleLink, settingsLink } from "@/utils/headerLinks";
@@ -29,7 +28,7 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconLogout, IconUser } from "@tabler/icons-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export type MainLink = {
   link: string;
@@ -66,16 +65,10 @@ const mainLinks: MainLinksProps = [
 ];
 
 const LayoutHeader = () => {
-  const router = useRouter();
   const pathname = usePathname();
 
-  const logoutMutation = useLogoutUser({
-    mutation: {
-      onSuccess: () => {
-        router.push(routes.LOGIN);
-      },
-    },
-  });
+  // Full navigation (not router.push) so the React Query cache of this user is dropped
+  const logout = () => window.location.assign(routes.LOGOUT);
 
   const { currentUser } = useCurrentUser();
 
@@ -148,7 +141,7 @@ const LayoutHeader = () => {
                     color="red"
                     leftSection={<IconLogout size={16} stroke={1.5} />}
                     onClick={() => {
-                      logoutMutation.mutate();
+                      logout();
                       closeDrawer();
                     }}
                   >
@@ -231,7 +224,7 @@ const LayoutHeader = () => {
             color="red"
             leftSection={<IconLogout size={16} stroke={1.5} />}
             onClick={() => {
-              logoutMutation.mutate();
+              logout();
               closeDrawer();
             }}
           >

@@ -20,6 +20,16 @@ export class OrganizationService {
   ) {}
 
   /**
+   * Check whether user manages at least one organization
+   * @param userId User ID
+   */
+  isManagerOfAny(userId: string) {
+    return this.organizationRepository.exists({
+      where: { manager: { id: userId }, isDeleted: false },
+    });
+  }
+
+  /**
    * Find organization by ID
    * @param id Organization ID
    * @returns

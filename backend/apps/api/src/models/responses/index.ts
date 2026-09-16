@@ -1,4 +1,3 @@
-export * from "./access-token.dto";
 export * from "./event-application-simple.dto";
 export * from "./event-detail.dto";
 export * from "./event-simple.dto";

@@ -42,6 +42,24 @@ export class UsersService {
   }
 
   /**
+   * Get current auth token version of user
+   * @param id ID
+   * @returns Token version or null when user does not exist
+   */
+  async getTokenVersion(id: UserId): Promise<number | null> {
+    const user = await this.UsersRepository.findOne({ where: { id }, select: { id: true, tokenVersion: true } });
+    return user ? user.tokenVersion : null;
+  }
+
+  /**
+   * Invalidate all auth tokens issued to user
+   * @param id ID
+   */
+  async incrementTokenVersion(id: UserId) {
+    await this.UsersRepository.increment({ id }, "tokenVersion", 1);
+  }
+
+  /**
    * Find many users by IDs
    * @param ids IDs
    * @param options Find options
@@ -179,6 +197,8 @@ export class UsersService {
     const randomPassword = randomUUID();
     user.password = await bcrypt.hash(randomPassword, 10);
 
-    return this.UsersRepository.save(user);
+    const deletedUser = await this.UsersRepository.save(user);
+    await this.incrementTokenVersion(deletedUser.id);
+    return deletedUser;
   }
 }

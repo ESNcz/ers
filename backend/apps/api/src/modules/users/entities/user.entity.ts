@@ -97,6 +97,12 @@ export class User extends BaseEntity {
   @Column({ default: false, select: false })
   isDeleted: boolean;
 
+  // Incremented to invalidate all issued auth tokens (password change, logout everywhere, deletion)
+  @ApiHideProperty()
+  @Exclude()
+  @Column({ default: 0, select: false })
+  tokenVersion: number;
+
   @BeforeUpdate()
   @BeforeInsert()
   async beforeSave() {

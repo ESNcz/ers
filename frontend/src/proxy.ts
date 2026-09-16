@@ -1,5 +1,6 @@
 import { getGetInitialisedQueryKey } from "@/utils/api";
-import { absoluteUrl, verifyJwtToken } from "@/utils/middleware-helper";
+import { SERVER_API_URL } from "@/utils/customInstance";
+import { absoluteUrl, isTokenUsable } from "@/utils/middleware-helper";
 import { routes } from "@/utils/routes";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,12 +13,16 @@ const notAuthorizedPaths = [
   routes.RESET_PASSWORD,
 ];
 
-const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN;
+const apiUrl = SERVER_API_URL;
 const initCookieName = "InitFlag";
 const authCookieName = "AuthCookie";
 
 export const proxy = async (request: NextRequest) => {
   const { pathname } = request.nextUrl;
+
+  // Logout must always be reachable, it clears the auth cookie
+  if (pathname === routes.LOGOUT) return NextResponse.next();
+
   const isNonProtectedPath = notAuthorizedPaths.includes(pathname);
 
   let isInitialised = request.cookies.get(initCookieName)?.value === "1";
@@ -43,15 +48,13 @@ export const proxy = async (request: NextRequest) => {
     return NextResponse.redirect(absoluteUrl(request, routes.LOGIN));
   }
 
-  // Step 2: Validate authentication token
+  // Step 2: Optimistic authentication check (malformed/expired token), the API does the real verification
   const token = request.cookies.get(authCookieName)?.value;
-  const verifiedToken = token ? await verifyJwtToken(token) : null;
+  const verifiedToken = isTokenUsable(token);
 
-  // If token exists but invalid -> clear & go to login
+  // If token exists but unusable -> clear (incl. legacy cookies) & go to login
   if (token && !verifiedToken) {
-    const resp = NextResponse.redirect(absoluteUrl(request, routes.LOGIN));
-    resp.cookies.delete(authCookieName);
-    return resp;
+    return NextResponse.redirect(absoluteUrl(request, routes.LOGOUT));
   }
 
   // If token valid & user is on public-only page -> go to dashboard

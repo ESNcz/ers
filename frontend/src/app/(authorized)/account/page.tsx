@@ -1,8 +1,9 @@
 "use client";
 
-import { useUpdateCurrentUser, useUpdateCurrentUserPhoto } from "@/utils/api";
+import { useLogoutAllSessions, useUpdateCurrentUser, useUpdateCurrentUserPhoto } from "@/utils/api";
 import { CreateAddress, CreateUserGender, UpdateUser } from "@/utils/api.schemas";
 import { apiImageURL } from "@/utils/apiImageURL";
+import routes from "@/utils/routes";
 import { Dropzone } from "@components/Dropzone/Dropzone";
 import ImageEditor from "@components/ImageEditor/ImageEditor";
 import getCroppedImg from "@components/ImageEditor/imageEdit";
@@ -159,6 +160,20 @@ const AccountPage = () => {
       },
     },
   });
+
+  const logoutAllSessionsMutation = useLogoutAllSessions({
+    mutation: {
+      onSuccess: () => {
+        // Full navigation also drops all cached queries of this user
+        window.location.assign(routes.LOGOUT);
+      },
+    },
+  });
+
+  const handleLogoutAllSessions = () => {
+    if (!confirm("Do you really want to log out on all devices, including this one?")) return;
+    logoutAllSessionsMutation.mutate();
+  };
 
   const handleUpdateUser = (values: UpdateUser) => {
     updateUserMutation.mutate({
@@ -412,6 +427,15 @@ const AccountPage = () => {
         <Group justify="center" mt="lg">
           <Button type="submit" disabled={!isTouchedDirty} loading={updateUserMutation.isPending}>
             Save changes
+          </Button>
+          <Button
+            type="button"
+            variant="subtle"
+            color="red"
+            onClick={handleLogoutAllSessions}
+            loading={logoutAllSessionsMutation.isPending}
+          >
+            Log out on all devices
           </Button>
         </Group>
       </Form>
