@@ -36,6 +36,7 @@ import type {
   EventApplicationDetailedWithApplications,
   EventApplicationSimpleWithApplications,
   EventDetail,
+  EventDetailView,
   EventSimple,
   EventSimpleWithApplications,
   EventSpotSimple,
@@ -3391,6 +3392,14 @@ export const useCreateEvent = <TError = ErrorType<void>, TContext = unknown>(
 /**
  * Find event by ID or slug
  */
+export const getEventDetailView = (
+  id: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<EventDetailView>({ url: `/events/${id}/detail`, method: "GET", signal }, options);
+};
+
 export const getEvent = (id: number, options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
   return customInstance<EventDetail>({ url: `/events/${id}`, method: "GET", signal }, options);
 };

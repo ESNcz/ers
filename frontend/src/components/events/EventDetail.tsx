@@ -1,21 +1,14 @@
 "use client";
 
-import {
-  getGetCurrentUserQueryKey,
-  getGetEventQueryKey,
-  useDeleteEventApplication,
-  useGetEvent,
-  useGetUserApplicationForEvent,
-  useUserOrganizationMemberships,
-} from "@/utils/api";
-import { hasEveryPermissions, hasSomePermissions, isUserManager } from "@/utils/checkPermissions";
+import { useDeleteEventApplication } from "@/utils/api";
+import { EventDetail as EventDetailType } from "@/utils/api.schemas";
+import { hasEveryPermissions, hasSomePermissions } from "@/utils/checkPermissions";
 import routes from "@/utils/routes";
 import { dateWithTime, dayMonthYear } from "@/utils/time";
 import ApiImage from "@components/ApiImage/ApiImage";
 import RichTextRenderer from "@components/Richtext/RichTextRenderer";
 import EventEditModal from "@components/events/modals/EventEditModal";
 import EventApplicationModal from "@components/modals/EventApplicationModal/EventApplicationModal";
-import PriorityListModal from "@components/modals/PriorityListModal/PriorityListModal";
 import UpdateEventPhotoModal from "@components/modals/UpdateEventPhotoModal/UpdateEventPhotoModal";
 import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
@@ -28,7 +21,6 @@ import {
   Grid,
   Paper,
   SimpleGrid,
-  Skeleton,
   Text,
   Title,
   VisuallyHidden,
@@ -45,41 +37,28 @@ import {
   IconUsersGroup,
   IconWritingSign,
 } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 interface EventDetailProps {
-  id: number;
+  eventDetail: EventDetailType;
+  // ID of the current user's application, null when not registered
+  userApplicationId: number | null;
+  isManager: boolean;
 }
 
-const EventDetail = ({ id }: EventDetailProps) => {
-  const queryClient = useQueryClient();
+const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailProps) => {
+  const router = useRouter();
+  const { currentUser } = useCurrentUser();
+  const id = eventDetail.id;
   const isPhone = useMediaQuery("(min-width: 62em)");
   const [opened, { toggle }] = useDisclosure(isPhone);
 
   const [isModalEditOpen, { open: openModalEdit, close: closeModalEdit }] = useDisclosure(false);
   const [isModalUploadPhotoOpen, { open: openModalUploadPhoto, close: closeModalUploadPhoto }] = useDisclosure(false);
   const [isModalJoinEventOpen, { open: openModalJoinEvent, close: closeModalJoinEvent }] = useDisclosure(false);
-  const [isModalPriorityListOpen, { open: openModalPriorityList, close: closeModalPriorityList }] =
-    useDisclosure(false);
-
-  const { data: eventDetail, refetch: refetchEvent } = useGetEvent(id);
-  const { currentUser, refetch: refetchCurrentUser } = useCurrentUser();
-  // Only the current user's application - the full list is loaded by the priority list modal when needed
-  const {
-    data: userApplication,
-    isPending: isUserApplicationPending,
-    refetch: refetchUserApplication,
-  } = useGetUserApplicationForEvent(id, currentUser.id);
-  const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentUser?.id ?? "", {
-    query: {
-      enabled: !!currentUser?.id,
-    },
-  });
-
-  const isPriorityListOpen = dayjs(eventDetail?.priorityListDeadline ?? eventDetail?.until).isAfter(dayjs());
 
   const deleteEventApplication = useDeleteEventApplication({
     mutation: {
@@ -89,40 +68,19 @@ const EventDetail = ({ id }: EventDetailProps) => {
     },
   });
 
-  // API responds with an empty body when the user is not registered
-  const isUserRegistered = !!userApplication?.id;
+  const isUserRegistered = userApplicationId !== null;
 
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
-    if (userApplication?.id) {
-      deleteEventApplication.mutate({ id: userApplication.id });
+    if (userApplicationId !== null) {
+      deleteEventApplication.mutate({ id: userApplicationId });
     }
   };
 
+  // Data comes from the server page - re-run it after mutations
   const handleRefetchDetail = () => {
-    queryClient.invalidateQueries({ queryKey: [getGetEventQueryKey(id)] });
-    queryClient.invalidateQueries({ queryKey: [getGetCurrentUserQueryKey()] });
-    refetchUserApplication();
-    refetchEvent();
-    refetchCurrentUser();
+    router.refresh();
   };
-
-  if (isUserApplicationPending || !eventDetail || !currentUser) {
-    return (
-      <Grid aria-busy="true" aria-label="Loading event">
-        <Grid.Col span={{ base: 12, md: 9 }} order={{ base: 2, md: 1 }}>
-          <Skeleton radius="lg" style={{ aspectRatio: "16 / 9" }} />
-          <Skeleton height={36} width="55%" mt="lg" />
-          <Skeleton height={16} width="30%" mt="md" />
-          <Skeleton height={16} width="40%" mt="xs" />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 3 }} order={{ base: 1, md: 2 }}>
-          <Skeleton height={36} />
-          <Skeleton height={36} mt="md" />
-        </Grid.Col>
-      </Grid>
-    );
-  }
 
   const isRegisteredOrAdmin = isUserRegistered || hasSomePermissions(currentUser.role, ["event.reviewSugarCubes"]);
 
@@ -183,22 +141,18 @@ const EventDetail = ({ id }: EventDetailProps) => {
                 ))}
               </SimpleGrid>
             )}
-            {isUserManager(currentUser, userOrganisationMemberships) && (
+            {isManager && (
               <>
                 <Divider my={8} />
 
                 <Button component={Link} href={routes.EVENT_APPLICATIONS({ id })} color="darkBlue">
                   Event applications
                 </Button>
-
-                <Button onClick={openModalPriorityList} color="darkBlue" disabled={!isPriorityListOpen}>
-                  Priority list
-                </Button>
               </>
             )}
 
             {isRegisteredOrAdmin && (
-              <Button component={Link} href={routes.SUGAR_CUBES({ id: Number(id) })} color="darkBlue">
+              <Button component={Link} href={routes.SUGAR_CUBES({ id })} color="darkBlue">
                 Sugar cubes
               </Button>
             )}
@@ -319,24 +273,12 @@ const EventDetail = ({ id }: EventDetailProps) => {
         isOpened={isModalEditOpen}
         close={closeModalEdit}
       />
-      {!!currentUser ? (
-        <EventApplicationModal
-          currentUser={currentUser}
-          eventDetail={eventDetail}
-          handleSuccess={handleRefetchDetail}
-          isOpened={isModalJoinEventOpen}
-          closeModal={() => {
-            closeModalJoinEvent();
-          }}
-        />
-      ) : null}
-      <PriorityListModal
-        isOpened={isModalPriorityListOpen}
-        closeModal={closeModalPriorityList}
-        eventId={id}
-        userOrganisationMemberships={userOrganisationMemberships ?? []}
+      <EventApplicationModal
         currentUser={currentUser}
-        onSuccess={handleRefetchDetail}
+        eventDetail={eventDetail}
+        handleSuccess={handleRefetchDetail}
+        isOpened={isModalJoinEventOpen}
+        closeModal={closeModalJoinEvent}
       />
     </>
   );

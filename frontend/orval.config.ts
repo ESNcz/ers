@@ -6,6 +6,8 @@ export default defineConfig({
       mode: "split",
       client: "react-query",
       target: "src/utils/api.ts",
+      // Mutator is parsed with the tsconfig target - ES2017 can't parse the dynamic `import()` in customInstance
+      tsconfig: { compilerOptions: { target: "esnext" } },
       override: {
         mutator: {
           path: "./src/utils/customInstance.ts",

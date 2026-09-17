@@ -32,9 +32,10 @@ import { FormDataRequest } from "nestjs-form-data";
 import { CurrentUser } from "@api/decorators";
 import { EventSimpleWithApplicationsMapper } from "@api/mappers";
 import { CreateEvent, UpdateEvent, UpdatePhoto } from "@api/models/requests";
-import { EventDetail, EventSimple } from "@api/models/responses";
+import { EventDetail, EventDetailView, EventSimple } from "@api/models/responses";
 import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagination-response.dto";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
+import { OrganizationService } from "@api/modules/organization";
 import { PhotoService } from "@api/modules/photo";
 import { Permission } from "@api/modules/roles";
 import type { User } from "@api/modules/users";
@@ -42,13 +43,15 @@ import { Pagination, PaginationOptions } from "utilities/nest/decorators";
 import { ParseDatePipe } from "utilities/nest/pipes";
 
 import { EventSpot } from "./entities";
-import { Event, EventsService } from "./index";
+import { Event, EventApplicationsService, EventsService } from "./index";
 
 @ApiTags("Events")
 @Controller("events")
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
+    private readonly eventApplicationsService: EventApplicationsService,
+    private readonly organizationService: OrganizationService,
     private readonly photoService: PhotoService,
     private readonly eventSimpleWithApplicationsMapper: EventSimpleWithApplicationsMapper,
   ) {}
@@ -149,6 +152,32 @@ export class EventsController {
     if (!event) throw new NotFoundException("Event not found");
 
     return this.eventSimpleWithApplicationsMapper.map(event);
+  }
+
+  /**
+   * Event detail for the signed-in user - event, the user's application ID and manager flag in one request
+   */
+  @ApiOkResponse({ type: EventDetailView, description: "Event detail for the signed-in user" })
+  @ApiNotFoundResponse({ description: "Event not found" })
+  @ApiBearerAuth()
+  @UseGuards(CookieGuard)
+  @Get(":id/detail")
+  async getEventDetailView(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() currentUser: User,
+  ): Promise<EventDetailView> {
+    const [event, userApplicationId, isManager] = await Promise.all([
+      this.eventsService.findByIdDetailed(id, { relations: { applications: true } }),
+      this.eventApplicationsService.findIdByEventAndUserId(id, currentUser.id),
+      currentUser.role?.isAdmin() || this.organizationService.isManagerOfAny(currentUser.id),
+    ]);
+    if (!event) throw new NotFoundException("Event not found");
+
+    return {
+      event: this.eventSimpleWithApplicationsMapper.map(event) as unknown as EventDetail,
+      userApplicationId,
+      isManager: !!isManager,
+    };
   }
 
   /**

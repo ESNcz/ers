@@ -132,6 +132,20 @@ export class EventApplicationsService {
   }
 
   /**
+   * Find only the ID of the user's application for event
+   * @param eventId Event ID
+   * @param userId User ID
+   * @returns Application ID or null when user is not registered
+   */
+  async findIdByEventAndUserId(eventId: number, userId: string) {
+    const application = await this.eventApplicationRepository.findOne({
+      where: { user: { id: userId }, event: { id: eventId } },
+      select: { id: true },
+    });
+    return application?.id ?? null;
+  }
+
+  /**
    * Find event application for user and event id
    * @param eventId
    * @param userId

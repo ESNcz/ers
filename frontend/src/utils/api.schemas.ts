@@ -686,6 +686,17 @@ export type EventDetailRegistrationForm = { [key: string]: unknown } | null;
  */
 export type EventDetailPhoto = Photo | null;
 
+export interface EventDetailView {
+  event: EventDetail;
+  /**
+   * ID of the signed-in user's application, `null` when not registered
+   * @nullable
+   */
+  userApplicationId: number | null;
+  /** Signed-in user is admin or manages at least one organization */
+  isManager: boolean;
+}
+
 export interface EventDetail {
   /** Short description in JSON format for RichText */
   shortDescription: string;
