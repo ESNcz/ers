@@ -8,7 +8,7 @@ import { DataTableColumnHeader } from "./DataTableColumnHeader";
 
 interface ApplicationManagementColumnsOptions {
   spots?: ComboboxData;
-  handleChangeApplicationSpot?: (applicationId: number, spotId: number | null) => void;
+  handleChangeApplicationSpot?: (application: EventApplicationDetailedWithApplications, spotId: number | null) => void;
   handleEditApplication?: (application: EventApplicationDetailedWithApplications) => void;
   handleDeleteApplication?: (application: EventApplicationDetailedWithApplications) => void;
 }
@@ -66,13 +66,13 @@ export const applicationManagementColumns = (
       enableGlobalFilter: false,
       cell: ({ row }) => (
         <Select
-          defaultValue={row.original.spotType?.id ? row.original.spotType.id.toString() : null}
+          value={row.original.spotType?.id ? row.original.spotType.id.toString() : null}
           data={spots}
           searchable
           nothingFoundMessage="Nothing found..."
           allowDeselect
           onChange={(value) => {
-            handleChangeApplicationSpot(row.original.id, value === null ? null : Number(value));
+            handleChangeApplicationSpot(row.original, value === null ? null : Number(value));
           }}
         />
       ),

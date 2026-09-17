@@ -35,7 +35,12 @@ import { Response } from "express";
 import { CurrentUser } from "@api/decorators";
 import { EventApplicationSimpleWithApplicationsMapper, EventSimpleWithApplicationsMapper } from "@api/mappers";
 import { CreateEventApplication, UpdateEventApplication } from "@api/models/requests";
-import { EventApplicationSimpleWithApplications, EventApplicationsOverview, EventDetail } from "@api/models/responses";
+import {
+  EventApplicationSimpleWithApplications,
+  EventApplicationsManagement,
+  EventApplicationsOverview,
+  EventDetail,
+} from "@api/models/responses";
 import { EventApplicationDetailedWithApplications } from "@api/models/responses/event-application-detailed-with-applications.dto";
 import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagination-response.dto";
 import { Address } from "@api/modules/addresses/entities";
@@ -162,6 +167,42 @@ export class EventApplicationsController {
         applications,
       ) as unknown as EventApplicationsOverview["applications"],
       userOrganisationMemberships,
+    };
+  }
+
+  /**
+   * Manage event applications page data - event spots and all applications in one request.
+   *
+   * Permissions required: `event.manageApplications`
+   */
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: EventApplicationsManagement })
+  @ApiForbiddenResponse({ description: "Missing `event.manageApplications` permission" })
+  @ApiNotFoundResponse({ description: "Event not found" })
+  @UseGuards(CookieGuard)
+  @Get(":eventId/applications/manage")
+  async getEventApplicationsManagement(
+    @CurrentUser() currentUser: User,
+    @Param("eventId", ParseIntPipe) eventId: number,
+  ): Promise<EventApplicationsManagement> {
+    if (!currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])) {
+      throw new ForbiddenException("You don't have permission to perform this action");
+    }
+
+    const [eventExists, spots, applications] = await Promise.all([
+      this.eventService.existsById(eventId),
+      this.eventSpotsService.findByEventId(eventId),
+      this.eventApplicationsService.findByEventIdDetailed(eventId, {
+        relations: { event: { applications: true } },
+      }),
+    ]);
+    if (!eventExists) throw new NotFoundException("Event not found");
+
+    return {
+      spots,
+      applications: this.eventApplicationSimpleWithApplicationsMapper.map(
+        applications,
+      ) as unknown as EventApplicationsManagement["applications"],
     };
   }
 
@@ -435,7 +476,7 @@ export class EventApplicationsController {
       currentUser.id === application?.user.id ||
       currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])
     )) {
-      return;
+      throw new ForbiddenException("You don't have permission to perform this action");
     }
 
     if (!application) throw new NotFoundException("Event application not found");

@@ -686,6 +686,11 @@ export type EventDetailRegistrationForm = { [key: string]: unknown } | null;
  */
 export type EventDetailPhoto = Photo | null;
 
+export interface EventApplicationsManagement {
+  spots: EventSpotSimple[];
+  applications: EventApplicationDetailedWithApplications[];
+}
+
 export interface EventApplicationsOverview {
   event: EventDetail;
   /** Applications visible to the signed-in user */
