@@ -8,10 +8,8 @@ import {
   Get,
   Header,
   NotFoundException,
-  NotImplementedException,
   Param,
   ParseIntPipe,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -35,9 +33,9 @@ import * as ExcelJS from "exceljs";
 import { Response } from "express";
 
 import { CurrentUser } from "@api/decorators";
-import { EventApplicationSimpleWithApplicationsMapper } from "@api/mappers";
+import { EventApplicationSimpleWithApplicationsMapper, EventSimpleWithApplicationsMapper } from "@api/mappers";
 import { CreateEventApplication, UpdateEventApplication } from "@api/models/requests";
-import { EventApplicationSimpleWithApplications } from "@api/models/responses";
+import { EventApplicationSimpleWithApplications, EventApplicationsOverview, EventDetail } from "@api/models/responses";
 import { EventApplicationDetailedWithApplications } from "@api/models/responses/event-application-detailed-with-applications.dto";
 import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagination-response.dto";
 import { Address } from "@api/modules/addresses/entities";
@@ -67,6 +65,7 @@ export class EventApplicationsController {
     private readonly fileStorageService: FileStorageService,
 
     private readonly eventApplicationSimpleWithApplicationsMapper: EventApplicationSimpleWithApplicationsMapper,
+    private readonly eventSimpleWithApplicationsMapper: EventSimpleWithApplicationsMapper,
   ) {}
 
   /**
@@ -126,6 +125,44 @@ export class EventApplicationsController {
       visibleToUserId: canSeeAll ? undefined : currentUser.id,
     });
     return this.eventApplicationSimpleWithApplicationsMapper.map(application);
+  }
+
+  /**
+   * Event applications page data - event, visible applications and the user's memberships in one request.
+   *
+   * Only admins and organization managers can access it.
+   */
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: EventApplicationsOverview })
+  @ApiForbiddenResponse({ description: "User is not admin or organization manager" })
+  @ApiNotFoundResponse({ description: "Event not found" })
+  @UseGuards(CookieGuard)
+  @Get(":eventId/applications/overview")
+  async getEventApplicationsOverview(
+    @CurrentUser() currentUser: User,
+    @Param("eventId", ParseIntPipe) eventId: number,
+  ): Promise<EventApplicationsOverview> {
+    const isManager = currentUser.role?.isAdmin() || (await this.organizationService.isManagerOfAny(currentUser.id));
+    if (!isManager) throw new ForbiddenException("You don't have permission to perform this action");
+
+    const canSeeAll = currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]);
+    const [event, applications, userOrganisationMemberships] = await Promise.all([
+      this.eventService.findByIdDetailed(eventId, { relations: { applications: true } }),
+      this.eventApplicationsService.findByEventIdDetailed(eventId, {
+        relations: { event: { applications: true } },
+        visibleToUserId: canSeeAll ? undefined : currentUser.id,
+      }),
+      this.organizationService.findUserMemberships(currentUser.id),
+    ]);
+    if (!event) throw new NotFoundException("Event not found");
+
+    return {
+      event: this.eventSimpleWithApplicationsMapper.map(event) as unknown as EventDetail,
+      applications: this.eventApplicationSimpleWithApplicationsMapper.map(
+        applications,
+      ) as unknown as EventApplicationsOverview["applications"],
+      userOrganisationMemberships,
+    };
   }
 
   /**
@@ -377,30 +414,6 @@ export class EventApplicationsController {
     }
 
     await this.eventApplicationsService.updatePriorities(body.priorities);
-  }
-
-  /**
-   * Get event application for user for event
-   */
-  @ApiOkResponse({
-    type: EventApplicationSimpleWithApplications,
-    description: "Application of the user, empty response when user is not registered",
-  })
-  @ApiBearerAuth()
-  @UseGuards(CookieGuard)
-  @Get(":eventId/applications/user/:userId")
-  async getUserApplicationForEvent(
-    @Param("eventId", ParseIntPipe) eventId: number,
-    @Param("userId", ParseUUIDPipe) userId: string,
-    @CurrentUser() user: User,
-  ) {
-    if (user.id !== userId) throw new NotImplementedException("User cannot get application for another user yet");
-    const application = await this.eventApplicationsService.findByEventAndUserId(eventId, userId);
-
-    // Not being registered is a regular state, not an error
-    if (!application) return null;
-
-    return this.eventApplicationSimpleWithApplicationsMapper.map(application);
   }
 
   /**
