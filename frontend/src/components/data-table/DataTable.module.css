@@ -14,10 +14,32 @@
   z-index: 2;
 }
 
-/* Long unbroken values (emails, URLs) must wrap instead of spilling out of the fixed-width cell. */
-.table th,
-.table td {
-  overflow-wrap: anywhere;
+/* Values longer than the column are clipped with an ellipsis instead of spilling out. */
+.table td :where(p, div, span, a) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.headerCell {
+  position: relative;
+}
+
+.resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  background-color: transparent;
+
+  &:hover,
+  &:active {
+    background-color: var(--mantine-primary-color-filled);
+  }
 }
 
 .row[data-odd]:not(:hover) {

@@ -59,6 +59,8 @@ export function useDataTable<TData>({
     state: { sorting, columnFilters, columnVisibility, globalFilter, pagination },
     getRowId,
     autoResetPageIndex: false,
+    enableColumnResizing: true,
+    columnResizeMode: "onChange",
     onSortingChange: withPageReset(setSorting),
     onColumnFiltersChange: withPageReset(setColumnFilters),
     onGlobalFilterChange: withPageReset(setGlobalFilter),

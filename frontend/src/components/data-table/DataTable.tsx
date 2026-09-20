@@ -90,6 +90,7 @@ export function DataTable<TData>({
                   <Table.Th
                     key={header.id}
                     colSpan={header.colSpan}
+                    className={classes.headerCell}
                     style={{ width: header.getSize() }}
                     aria-sort={
                       header.column.getIsSorted() === "asc"
@@ -100,6 +101,12 @@ export function DataTable<TData>({
                     }
                   >
                     <DataTableHeaderCell header={header} />
+                    <div
+                      className={classes.resizer}
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                      onDoubleClick={() => header.column.resetSize()}
+                    />
                   </Table.Th>
                 ))}
               </Table.Tr>
@@ -141,7 +148,9 @@ export function DataTable<TData>({
                       className={classes.row}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <Table.Td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</Table.Td>
+                        <Table.Td key={cell.id} title={String(cell.getValue() ?? "")}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </Table.Td>
                       ))}
                     </Table.Tr>
                   );
