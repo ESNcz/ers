@@ -1,24 +1,9 @@
 import { Organization, OrganizationMember } from "@/utils/api.schemas";
+import { genderOptions } from "@/utils/table-helpers";
 import ApiImage from "@components/ApiImage/ApiImage";
 import { ActionIcon, Box, Flex, Text, Tooltip } from "@mantine/core";
 import { IconCrown, IconUserPlus, IconUserX } from "@tabler/icons-react";
 import type { ColumnDef, FilterFn } from "@tanstack/react-table";
-
-import { DataTableColumnHeader } from "./DataTableColumnHeader";
-import type { DataTableFacetedFilterConfig } from "./types";
-
-export const organizationMemberFacetedFilters: DataTableFacetedFilterConfig[] = [
-  {
-    columnId: "gender",
-    title: "Gender",
-    options: [
-      { label: "Male", value: "male" },
-      { label: "Female", value: "female" },
-      { label: "Non-Binary", value: "non-binary" },
-      { label: "Prefer Not To Say", value: "prefer-not-to-say" },
-    ],
-  },
-];
 
 export const organizationMemberListColumns = (
   currentUserId: string,
@@ -32,7 +17,7 @@ export const organizationMemberListColumns = (
 ): ColumnDef<OrganizationMember>[] => [
   {
     id: "photo",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Photo" />,
+    header: "Photo",
     size: 64,
     enableSorting: false,
     enableHiding: false,
@@ -46,7 +31,7 @@ export const organizationMemberListColumns = (
   {
     id: "fullName",
     accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Full Name" />,
+    header: "Full Name",
     size: 148,
     enableHiding: false,
     enableGlobalFilter: true,
@@ -54,7 +39,7 @@ export const organizationMemberListColumns = (
   },
   {
     id: "address",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
+    header: "Address",
     size: 148,
     minSize: 148,
     enableSorting: false,
@@ -74,9 +59,12 @@ export const organizationMemberListColumns = (
   },
   {
     id: "gender",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Gender" />,
+    header: "Gender",
     accessorFn: (row) => row.user.gender,
-    filterFn: (row, id, value: string[]) => value.includes(String(row.getValue(id))),
+    meta: {
+      filterVariant: "select",
+      filterOptions: genderOptions,
+    },
     size: 148,
     minSize: 148,
     enableGlobalFilter: true,
@@ -84,17 +72,18 @@ export const organizationMemberListColumns = (
   },
   {
     id: "email",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="E-mail" />,
+    header: "E-mail",
     accessorFn: (row) => row.user.email,
-    size: 148,
-    minSize: 148,
+    size: 220,
+    minSize: 180,
     enableGlobalFilter: true,
     cell: ({ row }) => <Text>{row.original.user.email}</Text>,
   },
   {
     id: "role",
     accessorFn: (row) => row.user.role?.name ?? "N/A",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+    header: "Role",
+    meta: { filterVariant: "select" },
     size: 148,
     cell: ({ row }) => <Text>{row.original.user.role?.name ?? "N/A"}</Text>,
   },
@@ -102,7 +91,7 @@ export const organizationMemberListColumns = (
     ? ([
         {
           id: "operations",
-          header: ({ column }) => <DataTableColumnHeader column={column} title="Operations" />,
+          header: "Operations",
           size: 200,
           enableSorting: false,
           enableGlobalFilter: false,

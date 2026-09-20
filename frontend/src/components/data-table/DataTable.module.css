@@ -1,0 +1,47 @@
+.scroll {
+  overflow: auto;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  overscroll-behavior: contain;
+}
+
+.table {
+  width: 100%;
+  text-align: left;
+}
+
+.table thead {
+  z-index: 2;
+}
+
+/* Long unbroken values (emails, URLs) must wrap instead of spilling out of the fixed-width cell. */
+.table th,
+.table td {
+  overflow-wrap: anywhere;
+}
+
+.row[data-odd]:not(:hover) {
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}
+
+.headerLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: inherit;
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.activeIcon {
+  color: var(--mantine-primary-color-filled);
+  flex-shrink: 0;
+}
+
+.empty {
+  height: 96px;
+  text-align: center;
+}

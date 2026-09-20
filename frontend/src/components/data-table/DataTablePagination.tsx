@@ -1,88 +1,62 @@
-import { ActionIcon, Group, Select, Text } from "@mantine/core";
-import { IconChevronLeft, IconChevronRight, IconChevronsLeft, IconChevronsRight } from "@tabler/icons-react";
+"use client";
+
+import { Group, Pagination, Select, Text } from "@mantine/core";
 import type { Table } from "@tanstack/react-table";
+
+import { ALL_ROWS } from "./types";
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
-  pageSizeOptions?: number[];
-  showRowSelection?: boolean;
-  totalRows?: number;
+  pageSizeOptions: number[];
 }
 
-export function DataTablePagination<TData>({
-  table,
-  pageSizeOptions = [10, 20, 30, 50, 100],
-  showRowSelection = true,
-  totalRows,
-}: DataTablePaginationProps<TData>) {
+export function DataTablePagination<TData>({ table, pageSizeOptions }: DataTablePaginationProps<TData>) {
+  const { pageIndex, pageSize } = table.getState().pagination;
+  const filteredCount = table.getFilteredRowModel().rows.length;
+  const totalCount = table.getCoreRowModel().rows.length;
+  const pageCount = table.getPageCount();
+
+  const from = filteredCount === 0 ? 0 : pageIndex * pageSize + 1;
+  const to = Math.min(filteredCount, (pageIndex + 1) * pageSize);
+
   return (
-    <Group justify="space-between" align="center" wrap="wrap" gap="sm" pt="md">
-      <Text size="sm" c="dimmed">
-        {showRowSelection && table.getFilteredSelectedRowModel().rows.length > 0
-          ? `${table.getFilteredSelectedRowModel().rows.length} of ${totalRows ?? table.getFilteredRowModel().rows.length} row(s) selected`
-          : `${table.getFilteredRowModel().rows.length} row(s) total`}
+    <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+      <Text size="sm" c="dimmed" className="tabular-nums" aria-live="polite">
+        {filteredCount === 0 ? "No rows" : `${from}–${to} of ${filteredCount}`}
+        {filteredCount !== totalCount && ` (filtered from ${totalCount})`}
       </Text>
 
-      <Group gap="md" align="center">
-        <Group gap="xs" align="center">
+      <Group gap="md" wrap="wrap">
+        <Group gap="xs">
           <Text size="sm" c="dimmed">
-            Rows
+            Rows per page
           </Text>
           <Select
+            size="xs"
+            w={80}
+            aria-label="Rows per page"
+            allowDeselect={false}
             data={pageSizeOptions.map((size) => ({
               value: String(size),
-              label: String(size),
+              label: size === ALL_ROWS ? "All" : String(size),
             }))}
-            value={String(table.getState().pagination.pageSize)}
-            onChange={(value) => value && table.setPageSize(Number(value))}
-            size="xs"
-            w={70}
-            allowDeselect={false}
+            value={String(pageSize)}
+            onChange={(value) => {
+              if (!value) return;
+              table.setPagination({ pageIndex: 0, pageSize: Number(value) });
+            }}
           />
         </Group>
-
-        <Text size="sm" fw={500}>
-          {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
-        </Text>
-
-        <Group gap={4}>
-          <ActionIcon
-            variant="default"
+        {pageCount > 1 && (
+          <Pagination
             size="sm"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            title="First page"
-          >
-            <IconChevronsLeft size={16} />
-          </ActionIcon>
-          <ActionIcon
-            variant="default"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            title="Previous page"
-          >
-            <IconChevronLeft size={16} />
-          </ActionIcon>
-          <ActionIcon
-            variant="default"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            title="Next page"
-          >
-            <IconChevronRight size={16} />
-          </ActionIcon>
-          <ActionIcon
-            variant="default"
-            size="sm"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            title="Last page"
-          >
-            <IconChevronsRight size={16} />
-          </ActionIcon>
-        </Group>
+            total={pageCount}
+            value={pageIndex + 1}
+            onChange={(page) => table.setPageIndex(page - 1)}
+            withEdges
+            siblings={1}
+          />
+        )}
       </Group>
     </Group>
   );

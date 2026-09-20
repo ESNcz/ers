@@ -6,7 +6,7 @@ import { DataTable } from "@components/data-table";
 import { organisationManagementColumns } from "@components/data-table/organisation-management-columns";
 import CreateOrganizationModal from "@components/modals/CreateOrganizationModal/CreateOrganizationModal";
 import UpdateOrganisationModal from "@components/modals/UpdateOrganizationModal/UpdateOrganisationModal";
-import { Button, Container, Flex, ScrollArea, Stack, Title } from "@mantine/core";
+import { Button, Container, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
@@ -70,9 +70,7 @@ const ManageOrganisationsPage = () => {
               Add Organization
             </Button>
           </Flex>
-          <ScrollArea w="100%">
-            <DataTable columns={columns} data={[]} emptyMessage="No Organizations..." />
-          </ScrollArea>
+          <DataTable columns={columns} data={[]} loading />
         </Stack>
       </Container>
     );
@@ -93,9 +91,7 @@ const ManageOrganisationsPage = () => {
             Add Organization
           </Button>
         </Flex>
-        <ScrollArea w="100%">
-          <DataTable columns={columns} data={organisations} emptyMessage="No Organizations..." />
-        </ScrollArea>
+        <DataTable columns={columns} data={organisations} emptyMessage="No Organizations..." />
       </Stack>
       <CreateOrganizationModal
         handleSuccess={handleRefetch}

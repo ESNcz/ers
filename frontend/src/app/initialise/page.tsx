@@ -2,6 +2,7 @@
 
 import { useCreateInitialState } from "@/utils/api";
 import { CreateUserGender, InitialiseType } from "@/utils/api.schemas";
+import { genderOptions } from "@/utils/table-helpers";
 import routes from "@/utils/routes";
 import useStepper from "@/utils/useStepper";
 import DateInput from "@components/primitives/DateInput";
@@ -220,12 +221,7 @@ const InitialisePage = () => {
                       label="Gender"
                       defaultValue={CreateUserGender["prefer-not-to-say"]}
                       value={form.values.user.gender}
-                      data={Object.entries(CreateUserGender).map(([key, gender]) => {
-                        return {
-                          label: gender, // (String(gender).charAt(0).toUpperCase() + String(gender).slice(1)).replaceAll("-", " "),
-                          value: key,
-                        };
-                      })}
+                      data={genderOptions}
                       onChange={(value) => {
                         value && form.setFieldValue("user.gender", value as CreateUserGender);
                       }}

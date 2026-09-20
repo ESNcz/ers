@@ -7,27 +7,13 @@ import { IconCheck, IconCopy, IconEye, IconTrash, IconX } from "@tabler/icons-re
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
-import { DataTableColumnHeader } from "./DataTableColumnHeader";
-import type { DataTableFacetedFilterConfig } from "./types";
-
-export const facetedFilters: DataTableFacetedFilterConfig[] = [
-  {
-    columnId: "visible",
-    title: "Status",
-    options: [
-      { label: "Published", value: "true", icon: IconCheck },
-      { label: "Unpublished", value: "false", icon: IconX },
-    ],
-  },
-];
-
 export const eventManagementColumns = (
   handleDuplicateEvent: (event: EventSimple) => void,
   handleDeleteEvent: (event: EventSimple) => void,
 ): ColumnDef<EventSimple>[] => [
   {
     id: "photo",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Photo" />,
+    header: "Photo",
     size: 64,
     enableSorting: false,
     enableHiding: false,
@@ -36,21 +22,28 @@ export const eventManagementColumns = (
   },
   {
     accessorKey: "title",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Event Name" />,
+    header: "Event Name",
     size: 148,
     minSize: 148,
   },
   {
     id: "shortDescription",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Short Description" />,
+    header: "Short Description",
     enableSorting: false,
     enableGlobalFilter: false,
     cell: ({ row }) => <RichTextRenderer content={row.original.shortDescription} textOnly size="sm" lineClamp={2} />,
   },
   {
     accessorKey: "visible",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Published?" />,
-    size: 56,
+    header: "Published?",
+    size: 120,
+    meta: {
+      filterVariant: "select",
+      filterOptions: [
+        { value: "true", label: "Published" },
+        { value: "false", label: "Unpublished" },
+      ],
+    },
     cell: ({ row }) =>
       row.original.visible ? (
         <Flex justify="center">
@@ -65,11 +58,10 @@ export const eventManagementColumns = (
           </Tooltip>
         </Flex>
       ),
-    filterFn: (row, id, value: string[]) => value.includes(String(row.getValue(id))),
   },
   {
     id: "actions",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Operations" />,
+    header: "Operations",
     size: 200,
     enableSorting: false,
     enableHiding: false,

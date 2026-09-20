@@ -5,8 +5,6 @@ import { IconEdit, IconTrash, IconUsersGroup } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
-import { DataTableColumnHeader } from "./DataTableColumnHeader";
-
 export const organisationManagementColumns = (
   handleDeleteOrganization: (organization: Organization) => void,
   setActiveOrganisation: (organization: Organization) => void,
@@ -15,7 +13,7 @@ export const organisationManagementColumns = (
 ): ColumnDef<Organization>[] => [
   {
     accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+    header: "Name",
 
     enableHiding: false,
     cell: ({ row }) => (
@@ -27,7 +25,7 @@ export const organisationManagementColumns = (
   {
     id: "legalName",
     accessorKey: "legalName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Legal Name" />,
+    header: "Legal Name",
     enableHiding: false,
     cell: ({ row }) => (
       <Text size="sm" lineClamp={2}>
@@ -38,7 +36,7 @@ export const organisationManagementColumns = (
   {
     id: "cin",
     accessorKey: "cin",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="CIN" />,
+    header: "CIN",
     cell: ({ row }) => (
       <Text size="sm" lineClamp={2}>
         {row.original.cin}
@@ -48,7 +46,7 @@ export const organisationManagementColumns = (
   {
     id: "vatin",
     accessorKey: "vatin",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="VATIN" />,
+    header: "VATIN",
     cell: ({ row }) => (
       <Flex justify="center">
         <Text size="sm" lineClamp={2}>
@@ -59,7 +57,7 @@ export const organisationManagementColumns = (
   },
   {
     id: "address",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
+    header: "Address",
     enableSorting: false,
     enableHiding: false,
     enableGlobalFilter: false,
@@ -74,7 +72,7 @@ export const organisationManagementColumns = (
   {
     id: "managerName",
     accessorFn: (row) => (row.manager ? `${row.manager.firstName} ${row.manager.lastName}` : "N/A"),
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Manager's Name" />,
+    header: "Manager's Name",
     enableHiding: false,
     cell: ({ row }) =>
       row.original.manager ? (
@@ -86,12 +84,12 @@ export const organisationManagementColumns = (
   {
     id: "managerUsername",
     accessorFn: (row) => (row.manager ? row.manager.username : "N/A"),
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Manager's Username" />,
+    header: "Manager's Username",
     cell: ({ row }) => <Text>{row.original.manager ? row.original.manager.username : "N/A"}</Text>,
   },
   {
     id: "operations",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Operations" />,
+    header: "Operations",
     enableSorting: false,
     enableGlobalFilter: false,
     cell: ({ row }) => (

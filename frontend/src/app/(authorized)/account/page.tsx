@@ -1,7 +1,8 @@
 "use client";
 
 import { useUpdateCurrentUser, useUpdateCurrentUserPhoto } from "@/utils/api";
-import { CreateAddress, CreateUserGender, UpdateUser } from "@/utils/api.schemas";
+import { CreateAddress, UpdateUser } from "@/utils/api.schemas";
+import { genderOptions } from "@/utils/table-helpers";
 import { apiImageURL } from "@/utils/apiImageURL";
 import { Dropzone } from "@components/Dropzone/Dropzone";
 import ImageEditor from "@components/ImageEditor/ImageEditor";
@@ -283,12 +284,7 @@ const AccountPage = () => {
             <Select
               label="Gender"
               key={form.key("gender")}
-              data={Object.entries(CreateUserGender).map(([key, gender]) => {
-                return {
-                  label: gender, // (String(gender).charAt(0).toUpperCase() + String(gender).slice(1)).replaceAll("-", " "),
-                  value: key,
-                };
-              })}
+              data={genderOptions}
               {...form.getInputProps("gender")}
             />
             <TextInput label="Pronouns" {...form.getInputProps("pronouns")} />

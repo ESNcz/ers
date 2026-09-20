@@ -3,10 +3,7 @@
 import { useDeleteUser, useGenerateSheetUsers, useGetAllUsers } from "@/utils/api";
 import { downloadFile } from "@/utils/downloadFile";
 import { DataTable } from "@components/data-table";
-import {
-  peopleManagementColumns,
-  peopleManagementFacetedFilters,
-} from "@components/data-table/people-management-columns";
+import { peopleManagementColumns } from "@components/data-table/people-management-columns";
 import ChangeRoleModal from "@components/modals/ChangeRoleModal/ChangeRoleModal";
 import CreateRoleModal from "@components/modals/CreateRoleModal/CreateRoleModal";
 import EditUserModal from "@components/modals/EditUserModal/EditUserModal";
@@ -97,7 +94,7 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
             </Button>
           </Flex>
         </Flex>
-        <DataTable columns={columns} data={[]} emptyMessage="Loading..." />
+        <DataTable columns={columns} data={[]} loading />
       </Stack>
     );
   }
@@ -121,7 +118,7 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
           </Button>
         </Flex>
       </Flex>
-      <DataTable columns={columns} data={users} facetedFilters={peopleManagementFacetedFilters} />
+      <DataTable columns={columns} data={users} />
       {selectedUserId && (
         <ChangeRoleModal
           currentUser={currentUser}

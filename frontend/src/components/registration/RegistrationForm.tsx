@@ -2,6 +2,7 @@
 
 import { useCreateUser } from "@/utils/api";
 import { CreateUser, CreateUserGender } from "@/utils/api.schemas";
+import { genderOptions } from "@/utils/table-helpers";
 import routes from "@/utils/routes";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
@@ -149,12 +150,7 @@ const RegistrationForm = () => {
             <Select
               label="Gender"
               defaultValue={CreateUserGender["prefer-not-to-say"]}
-              data={Object.entries(CreateUserGender).map(([key, gender]) => {
-                return {
-                  label: gender, // (String(gender).charAt(0).toUpperCase() + String(gender).slice(1)).replaceAll("-", " "),
-                  value: key,
-                };
-              })}
+              data={genderOptions}
               {...form.getInputProps("gender")}
               required
             />

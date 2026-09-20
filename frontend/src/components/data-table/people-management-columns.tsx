@@ -5,20 +5,6 @@ import { IconCheck, IconEdit, IconSwitchHorizontal, IconTrash, IconX } from "@ta
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 
-import { DataTableColumnHeader } from "./DataTableColumnHeader";
-import type { DataTableFacetedFilterConfig } from "./types";
-
-export const peopleManagementFacetedFilters: DataTableFacetedFilterConfig[] = [
-  {
-    columnId: "isVerified",
-    title: "Status",
-    options: [
-      { label: "Verified", value: "true", icon: IconCheck },
-      { label: "Not Verified", value: "false", icon: IconX },
-    ],
-  },
-];
-
 const hasPermission = (role: UserRole, permission: RolePermissionsItem) => hasSomePermissions(role, [permission]);
 
 export const peopleManagementColumns = (
@@ -32,7 +18,7 @@ export const peopleManagementColumns = (
   {
     id: "firstName",
     accessorKey: "firstName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="First Name" />,
+    header: "First Name",
     enableHiding: false,
     cell: ({ row }) => (
       <Text size="sm" lineClamp={1}>
@@ -43,7 +29,7 @@ export const peopleManagementColumns = (
   {
     id: "lastName",
     accessorKey: "lastName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Last Name" />,
+    header: "Last Name",
     enableHiding: false,
     cell: ({ row }) => (
       <Text size="sm" lineClamp={1}>
@@ -54,7 +40,7 @@ export const peopleManagementColumns = (
   {
     id: "username",
     accessorKey: "username",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Username" />,
+    header: "Username",
     cell: ({ row }) => (
       <Text size="sm" lineClamp={1}>
         {row.original.username}
@@ -64,7 +50,7 @@ export const peopleManagementColumns = (
   {
     id: "email",
     accessorKey: "email",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+    header: "Email",
     cell: ({ row }) => (
       <Text size="sm" lineClamp={1}>
         {row.original.email}
@@ -73,8 +59,10 @@ export const peopleManagementColumns = (
   },
   {
     id: "birthDate",
-    accessorFn: (row) => row.birthDate ?? "N/A",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Birth Date" />,
+    accessorFn: (row) => row.birthDate ?? undefined,
+    header: "Birth Date",
+    sortUndefined: "last",
+    meta: { filterVariant: "date" },
     cell: ({ row }) => (
       <Text size="sm">{row.original.birthDate ? dayjs(row.original.birthDate).format("DD/MM/YYYY") : "N/A"}</Text>
     ),
@@ -82,7 +70,8 @@ export const peopleManagementColumns = (
   {
     id: "nationality",
     accessorKey: "nationality",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Nationality" />,
+    header: "Nationality",
+    meta: { filterVariant: "select" },
     cell: ({ row }) => (
       <Flex justify="center">
         <Text size="sm">{row.original.nationality}</Text>
@@ -92,8 +81,14 @@ export const peopleManagementColumns = (
   {
     id: "isVerified",
     accessorFn: (row) => String(row.isVerified),
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Verified" />,
-    filterFn: (row, id, value: string[]) => value.includes(String(row.getValue(id))),
+    header: "Verified",
+    meta: {
+      filterVariant: "select",
+      filterOptions: [
+        { value: "true", label: "Verified" },
+        { value: "false", label: "Not verified" },
+      ],
+    },
     cell: ({ row }) =>
       row.original.isVerified ? (
         <Flex justify="center">
@@ -108,7 +103,8 @@ export const peopleManagementColumns = (
   {
     id: "roleName",
     accessorFn: (row) => row.role?.name ?? "N/A",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
+    header: "Role",
+    meta: { filterVariant: "select" },
     cell: ({ row }) => (
       <Flex justify="start">
         <Text size="sm">{row.original.role?.name ?? "N/A"}</Text>
@@ -121,7 +117,7 @@ export const peopleManagementColumns = (
     ? ([
         {
           id: "operations",
-          header: ({ column }) => <DataTableColumnHeader column={column} title="Operations" />,
+          header: "Operations",
           enableSorting: false,
           enableGlobalFilter: false,
           cell: ({ row }) => (

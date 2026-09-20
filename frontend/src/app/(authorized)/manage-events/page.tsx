@@ -3,9 +3,9 @@
 import { useDeleteEvent, useDuplicateEvent, useGetManagementEvents } from "@/utils/api";
 import { EventSimple } from "@/utils/api.schemas";
 import { DataTable } from "@components/data-table";
-import { eventManagementColumns, facetedFilters } from "@components/data-table/event-management-columns";
+import { eventManagementColumns } from "@components/data-table/event-management-columns";
 import CreateEventModal from "@components/modals/CreateEventModal/CreateEventModal";
-import { Button, Container, Flex, ScrollArea, Stack, Title } from "@mantine/core";
+import { Button, Container, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -62,7 +62,7 @@ const ManageEventsPage = () => {
               Add Event
             </Button>
           </Flex>
-          <DataTable columns={columns} data={[]} emptyMessage="Loading..." />
+          <DataTable columns={columns} data={[]} loading />
         </Stack>
       </Container>
     );
@@ -83,9 +83,7 @@ const ManageEventsPage = () => {
             Add Event
           </Button>
         </Flex>
-        <ScrollArea w="100%">
-          <DataTable columns={columns} data={events} emptyMessage="No Events..." facetedFilters={facetedFilters} />
-        </ScrollArea>
+        <DataTable columns={columns} data={events} emptyMessage="No Events..." />
       </Stack>
       <CreateEventModal onCreateSuccess={refetchManagementEvents} isOpened={isModalOpen} closeModal={closeModal} />
     </Container>

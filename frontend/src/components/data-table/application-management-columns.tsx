@@ -4,8 +4,6 @@ import { ActionIcon, ComboboxData, Flex, Select, Tooltip } from "@mantine/core";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { DataTableColumnHeader } from "./DataTableColumnHeader";
-
 interface ApplicationManagementColumnsOptions {
   spots?: ComboboxData;
   handleChangeApplicationSpot?: (application: EventApplicationDetailedWithApplications, spotId: number | null) => void;
@@ -21,46 +19,51 @@ export const applicationManagementColumns = (
   const columns: ColumnDef<EventApplicationDetailedWithApplications>[] = [
     {
       accessorKey: "priority",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Priority" />,
-      size: 50,
+      header: "Priority",
+      size: 110,
+      meta: { filterVariant: "number" },
     },
     {
       accessorKey: "createdAt",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Registered at" />,
-      size: 148,
+      header: "Registered at",
+      size: 170,
+      meta: { filterVariant: "date" },
       cell: ({ row }) => dateWithTime(row.original.createdAt),
     },
     {
       id: "name",
       accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
-      header: ({ column }) => <DataTableColumnHeader column={column} title="First and Last Name" />,
+      header: "First and Last Name",
       size: 148,
     },
     {
       id: "section",
       accessorFn: (row) => row.organization?.name ?? row.customOrganization?.name ?? "",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Section" />,
-      size: 148,
+      header: "Section",
+      size: 160,
+      meta: { filterVariant: "select" },
     },
     {
       id: "country",
       accessorFn: (row) => row.organization?.address?.country ?? row.customOrganization?.country ?? "",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Country" />,
+      header: "Country",
       size: 148,
+      meta: { filterVariant: "select" },
     },
     {
       id: "currentSpot",
       accessorFn: (row) =>
         row.spotType ? `${row.spotType.name} - ${row.spotType.price} ${row.spotType.currency}` : "N/A",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Current Spot" />,
+      header: "Current Spot",
       size: 224,
+      meta: { filterVariant: "select" },
     },
   ];
 
   if (handleChangeApplicationSpot) {
     columns.push({
       id: "changeSpot",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Change Spot" />,
+      header: "Change Spot",
       size: 224,
       enableSorting: false,
       enableGlobalFilter: false,
@@ -82,7 +85,7 @@ export const applicationManagementColumns = (
   if (handleEditApplication || handleDeleteApplication) {
     columns.push({
       id: "actions",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Operations" />,
+      header: "Operations",
       size: 148,
       enableSorting: false,
       enableHiding: false,
