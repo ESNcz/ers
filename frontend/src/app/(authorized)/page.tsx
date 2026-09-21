@@ -1,100 +1,47 @@
-"use client";
+import { getEvents, getOngoingEvents } from "@/utils/api";
+import { EventCardSkeleton } from "@components/events/EventCard";
+import EventSection from "@components/events/EventSection";
+import NoUpcomingEvents from "@components/events/NoUpcomingEvents";
+import { Container, Stack, Title } from "@mantine/core";
+import { Suspense } from "react";
 
-import { useGetEvents, useGetOngoingEvents } from "@/utils/api";
-import { Event } from "@/utils/api.schemas";
-import routes from "@/utils/routes";
-import EventCard, { EventCardSkeleton } from "@components/events/EventCard";
-import styles from "@components/events/EventList.module.css";
-import { Anchor, Container, Group, Stack, Text, ThemeIcon, Title } from "@mantine/core";
-import { IconCalendarOff } from "@tabler/icons-react";
-import Link from "next/link";
-import React, { useMemo } from "react";
-
-interface EventSectionProps {
-  title: string;
-  events: Event[];
-  total?: number;
-}
-
-const EventSection = ({ title, events, total = events.length }: EventSectionProps) => (
-  <section className={styles.section}>
-    <Group justify="space-between" align="flex-end" gap="xs" className={styles.sectionHead}>
-      <Title order={2}>{title}</Title>
-      <Text size="sm" c="dimmed" className="tabular-nums">
-        {total} {total === 1 ? "event" : "events"}
-      </Text>
-    </Group>
-    <Stack gap="md">
-      {events.map((event, index) => (
-        <Anchor
-          component={Link}
-          key={`event-card-${index}-${event.id}`}
-          href={routes.EVENT_DETAIL({ id: event.id })}
-          underline="never"
-          className={styles.cardLink}
-          style={{ "--stagger": index } as React.CSSProperties}
-        >
-          <EventCard event={event} />
-        </Anchor>
-      ))}
-    </Stack>
-  </section>
-);
-
-const Home = () => {
-  const newTime = useMemo(() => new Date().getTime(), []);
-  const { data: ongoingEvents } = useGetOngoingEvents();
-  const { data: upcomingEvents } = useGetEvents({ sinceSince: newTime });
-
-  if (!upcomingEvents?.data || !ongoingEvents?.data) {
-    return (
-      <Container size="xl" aria-busy="true" aria-label="Loading events">
-        <Stack gap="md">
-          <Title order={2}>Upcoming events</Title>
-          <EventCardSkeleton />
-          <EventCardSkeleton />
-        </Stack>
-      </Container>
-    );
-  }
+const HomeEvents = async () => {
+  const [ongoingEvents, upcomingEvents] = await Promise.all([
+    getOngoingEvents(),
+    getEvents({ sinceSince: Date.now() }),
+  ]);
+  const ongoing = ongoingEvents.data ?? [];
+  const upcoming = upcomingEvents.data ?? [];
 
   return (
-    <Container size="xl">
-      <Stack gap={48}>
-        {ongoingEvents.data.length > 0 && (
-          <EventSection
-            title="Happening now"
-            events={ongoingEvents.data}
-            total={ongoingEvents.pagination?.totalCount}
-          />
-        )}
+    <Stack gap={48}>
+      {ongoing.length > 0 && (
+        <EventSection title="Happening now" events={ongoing} total={ongoingEvents.pagination?.totalCount} />
+      )}
 
-        {upcomingEvents.data.length > 0 ? (
-          <EventSection
-            title="Upcoming events"
-            events={upcomingEvents.data}
-            total={upcomingEvents.pagination?.totalCount}
-          />
-        ) : (
-          <section className={styles.empty}>
-            <ThemeIcon size={56} radius="lg" variant="light">
-              <IconCalendarOff size={28} stroke={1.5} />
-            </ThemeIcon>
-            <Title order={3} mt="md">
-              No upcoming events yet
-            </Title>
-            <Text c="dimmed" maw={420} ta="center" mt={6}>
-              When your section publishes a new event, it shows up here. Meanwhile, check your{" "}
-              <Anchor component={Link} href={routes.SENT_APPLICATIONS}>
-                sent applications
-              </Anchor>
-              .
-            </Text>
-          </section>
-        )}
-      </Stack>
-    </Container>
+      {upcoming.length > 0 ? (
+        <EventSection title="Upcoming events" events={upcoming} total={upcomingEvents.pagination?.totalCount} />
+      ) : (
+        <NoUpcomingEvents />
+      )}
+    </Stack>
   );
 };
+
+const HomeEventsSkeleton = () => (
+  <Stack gap="md" aria-busy="true" aria-label="Loading events">
+    <Title order={2}>Upcoming events</Title>
+    <EventCardSkeleton />
+    <EventCardSkeleton />
+  </Stack>
+);
+
+const Home = () => (
+  <Container size="xl">
+    <Suspense fallback={<HomeEventsSkeleton />}>
+      <HomeEvents />
+    </Suspense>
+  </Container>
+);
 
 export default Home;

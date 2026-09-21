@@ -45,6 +45,14 @@ export class EventsService {
     });
   }
 
+  /**
+   * Check whether event exists
+   * @param id Event ID
+   */
+  existsById(id: number) {
+    return this.eventsRepository.exists({ where: { id } });
+  }
+
   findByIdDetailed(id: number, options?: EventFindOptions) {
     return this.findById(id, {
       select: {

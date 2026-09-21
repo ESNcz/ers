@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   NotFoundException,
   Param,
   ParseIntPipe,
@@ -40,19 +39,6 @@ export class EventSpotsController {
     private readonly eventSpotsService: EventSpotsService,
     private readonly eventsService: EventsService,
   ) {}
-
-  /**
-   * Find event spots for event
-   */
-  @ApiOkResponse({
-    type: [EventSpotSimple],
-    description: "Available event spots",
-  })
-  @ApiEventIdParam()
-  @Get("events/:id/spots")
-  getEventSpots(@Param("id", ParseIntPipe) eventId: number) {
-    return this.eventSpotsService.findByEventId(eventId);
-  }
 
   /**
    * Create new event spot

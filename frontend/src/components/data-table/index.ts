@@ -1,9 +1,4 @@
 export { DataTable } from "./DataTable";
-export { DataTableColumnHeader } from "./DataTableColumnHeader";
-export { DataTableFacetedFilter } from "./DataTableFacetedFilter";
-export { DataTablePagination } from "./DataTablePagination";
-export { DataTableToolbar } from "./DataTableToolbar";
-export { DataTableViewOptions } from "./DataTableViewOptions";
+export { ALL_ROWS } from "./types";
 
-export type { DataTableProps, DataTableFilterOption, DataTableFacetedFilterConfig } from "./types";
-export { eventManagementColumns, facetedFilters } from "./event-management-columns";
+export type { DataTableProps, DataTableFilterOption, DataTableFilterVariant } from "./types";

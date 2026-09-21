@@ -10,10 +10,7 @@ import {
 import { OrganizationMember, UserRole } from "@/utils/api.schemas";
 import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTable } from "@components/data-table";
-import {
-  organizationMemberFacetedFilters,
-  organizationMemberListColumns,
-} from "@components/data-table/organization-member-list-columns";
+import { organizationMemberListColumns } from "@components/data-table/organization-member-list-columns";
 import AddOrganisationMemberModal from "@components/modals/AddOrganisationMemberModal/AddOrganisationMemberModal";
 import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import { Button, Flex, Stack, Title } from "@mantine/core";
@@ -140,7 +137,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
           <Title order={2}>{currentOrganisation?.name}</Title>
         </Flex>
 
-        <DataTable columns={[]} data={[]} emptyMessage="Loading..." />
+        <DataTable columns={[]} data={[]} loading />
       </Stack>
     );
   }
@@ -164,12 +161,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
           )}
         </Flex>
       </Flex>
-      <DataTable
-        columns={columns}
-        data={tableData}
-        facetedFilters={organizationMemberFacetedFilters}
-        emptyMessage="No members found."
-      />
+      <DataTable columns={columns} data={tableData} emptyMessage="No members found." />
       {isUserManager && (
         <AddOrganisationMemberModal
           isOpened={isAddModalOpened}

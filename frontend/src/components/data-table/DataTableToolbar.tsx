@@ -1,87 +1,68 @@
-import { Button, Group, TextInput } from "@mantine/core";
-import { IconSearch, IconX } from "@tabler/icons-react";
-import type { Table } from "@tanstack/react-table";
-import { useEffect, useState } from "react";
+"use client";
 
-import { DataTableFacetedFilter } from "./DataTableFacetedFilter";
-import { DataTableViewOptions } from "./DataTableViewOptions";
-import type { DataTableFacetedFilterConfig } from "./types";
+import { Button, CloseButton, Group, TextInput } from "@mantine/core";
+import { useDebouncedCallback } from "@mantine/hooks";
+import { IconFilterOff, IconSearch } from "@tabler/icons-react";
+import type { Table } from "@tanstack/react-table";
+import { type ReactNode, useState } from "react";
+
+import { DataTableColumnsMenu } from "./DataTableColumnsMenu";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
   globalFilter: string;
-  onGlobalFilterChange: (value: string) => void;
-  searchPlaceholder?: string;
-  facetedFilters?: DataTableFacetedFilterConfig[];
-  onResetFilters?: () => void;
-  extraActions?: React.ReactNode;
+  onResetFilters: () => void;
+  searchPlaceholder: string;
+  actions?: ReactNode;
 }
 
 export function DataTableToolbar<TData>({
   table,
   globalFilter,
-  onGlobalFilterChange,
-  searchPlaceholder = "Search...",
-  facetedFilters = [],
   onResetFilters,
-  extraActions,
+  searchPlaceholder,
+  actions,
 }: DataTableToolbarProps<TData>) {
-  const [localSearch, setLocalSearch] = useState(globalFilter);
-  const isFiltered = table.getState().columnFilters.length > 0 || globalFilter.length > 0;
+  const [search, setSearch] = useState(globalFilter);
+  const applySearch = useDebouncedCallback((value: string) => table.setGlobalFilter(value), 250);
 
-  const debouncedUpdate = (value: string) => {
-    const id = setTimeout(() => onGlobalFilterChange(value), 300);
-    return () => clearTimeout(id);
+  const activeFilterCount = table.getState().columnFilters.length + (globalFilter ? 1 : 0);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    applySearch(value);
   };
 
-  useEffect(() => {
-    const cleanup = debouncedUpdate(localSearch);
-    return cleanup;
-  }, [localSearch, debouncedUpdate]);
-
-  useEffect(() => {
-    setLocalSearch(globalFilter);
-  }, [globalFilter]);
+  const handleReset = () => {
+    applySearch.cancel();
+    setSearch("");
+    onResetFilters();
+  };
 
   return (
     <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-      <Group gap="sm" wrap="wrap" style={{ flex: 1 }}>
+      <Group gap="sm" wrap="wrap" flex={1}>
         <TextInput
-          placeholder={searchPlaceholder}
-          value={localSearch}
-          onChange={(e) => setLocalSearch(e.currentTarget.value)}
-          leftSection={<IconSearch size={16} />}
           size="sm"
-          style={{ minWidth: 500, maxWidth: 700 }}
+          w={{ base: "100%", sm: 320 }}
+          aria-label="Quick search"
+          placeholder={searchPlaceholder}
+          leftSection={<IconSearch size={16} />}
+          rightSection={
+            search ? <CloseButton size="sm" aria-label="Clear search" onClick={() => handleSearchChange("")} /> : null
+          }
+          value={search}
+          onChange={(event) => handleSearchChange(event.currentTarget.value)}
         />
-
-        {facetedFilters.map((filter) => (
-          <DataTableFacetedFilter
-            key={filter.columnId}
-            column={table.getColumn(filter.columnId)}
-            title={filter.title}
-            options={filter.options}
-          />
-        ))}
-
-        {isFiltered && (
-          <Button
-            variant="subtle"
-            size="sm"
-            onClick={() => {
-              onResetFilters?.();
-              setLocalSearch("");
-            }}
-            rightSection={<IconX size={14} />}
-          >
-            Reset
+        {activeFilterCount > 0 && (
+          <Button size="sm" variant="subtle" leftSection={<IconFilterOff size={16} />} onClick={handleReset}>
+            Clear filters ({activeFilterCount})
           </Button>
         )}
       </Group>
-
       <Group gap="sm">
-        {extraActions}
-        <DataTableViewOptions table={table} />
+        {actions}
+        <DataTableColumnsMenu table={table} />
       </Group>
     </Group>
   );

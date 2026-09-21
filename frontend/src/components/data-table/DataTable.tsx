@@ -1,66 +1,88 @@
-import { useDataTable } from "@/utils/useDataTable";
-import { Stack, Table, Text } from "@mantine/core";
-import { flexRender } from "@tanstack/react-table";
+"use client";
 
+import { Box, Skeleton, Stack, Table, Text } from "@mantine/core";
+import { flexRender } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useEffect, useRef } from "react";
+
+import classes from "./DataTable.module.css";
+import { DataTableHeaderCell } from "./DataTableHeaderCell";
 import { DataTablePagination } from "./DataTablePagination";
 import { DataTableToolbar } from "./DataTableToolbar";
-import type { DataTableProps } from "./types";
+import { ALL_ROWS, type DataTableProps } from "./types";
+import { useDataTable } from "./useDataTable";
+
+const DEFAULT_PAGE_SIZE_OPTIONS = [25, 50, 100, 250, ALL_ROWS];
+const SKELETON_ROWS = 6;
 
 export function DataTable<TData>({
   columns,
   data,
-  globalFilterFn,
-  facetedFilters,
-  enableRowSelection = false,
-  enablePagination = true,
-  enableVirtualization = false,
-  pageSize = 10,
-  pageSizeOptions,
-  manualPagination,
-  pageCount,
-  totalRows,
-  paginationState,
-  onPaginationChange,
-  toolbar: customToolbar,
+  loading = false,
   emptyMessage = "No results found.",
-  className,
+  searchPlaceholder = "Search...",
+  toolbarActions,
+  pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
+  defaultPageSize = 50,
+  height = 640,
+  estimateRowHeight = 52,
   initialSorting,
-  initialColumnFilters,
   initialColumnVisibility,
+  getRowId,
 }: DataTableProps<TData>) {
-  const { table, globalFilter, setGlobalFilter, resetFilters } = useDataTable({
-    data,
+  const { table, globalFilter, resetFilters } = useDataTable({
     columns,
-    globalFilterFn,
-    enableRowSelection,
-    enablePagination: enablePagination,
-    pageSize,
-    manualPagination,
-    pageCount,
-    paginationState,
-    onPaginationChange,
+    data,
+    defaultPageSize,
     initialSorting,
-    initialColumnFilters,
     initialColumnVisibility,
+    getRowId,
   });
 
-  return (
-    <Stack gap="md" className={className}>
-      {/*Toolbar */}
-      {customToolbar ? (
-        customToolbar(table)
-      ) : (
-        <DataTableToolbar
-          table={table}
-          globalFilter={globalFilter}
-          onGlobalFilterChange={setGlobalFilter}
-          facetedFilters={facetedFilters}
-          onResetFilters={resetFilters}
-        />
-      )}
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const rows = table.getRowModel().rows;
+  const visibleColumnCount = table.getVisibleLeafColumns().length;
 
-      <Table.ScrollContainer minWidth={600}>
-        <Table withTableBorder withColumnBorders withRowBorders striped highlightOnHover style={{ textAlign: "left" }}>
+  // Only rows inside the scroll viewport are rendered, so large pages stay fast.
+  // Rows are measured after render because cells can wrap or hold buttons.
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => estimateRowHeight,
+    getItemKey: (index) => rows[index].id,
+    overscan: 8,
+  });
+
+  const { pagination, sorting, columnFilters } = table.getState();
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [pagination.pageIndex, pagination.pageSize, sorting, columnFilters, globalFilter]);
+
+  const virtualRows = virtualizer.getVirtualItems();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+  const paddingBottom =
+    virtualRows.length > 0 ? virtualizer.getTotalSize() - virtualRows[virtualRows.length - 1].end : 0;
+
+  return (
+    <Stack gap="sm">
+      <DataTableToolbar
+        table={table}
+        globalFilter={globalFilter}
+        onResetFilters={resetFilters}
+        searchPlaceholder={searchPlaceholder}
+        actions={toolbarActions}
+      />
+
+      <Box ref={scrollRef} className={classes.scroll} mah={height}>
+        <Table
+          stickyHeader
+          highlightOnHover
+          withColumnBorders
+          layout="fixed"
+          className={classes.table}
+          style={{ minWidth: table.getTotalSize() }}
+          aria-busy={loading}
+        >
           <Table.Thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.Tr key={headerGroup.id}>
@@ -68,45 +90,83 @@ export function DataTable<TData>({
                   <Table.Th
                     key={header.id}
                     colSpan={header.colSpan}
-                    style={{
-                      width: header.getSize() !== 150 ? header.getSize() : undefined,
-                    }}
+                    className={classes.headerCell}
+                    style={{ width: header.getSize() }}
+                    aria-sort={
+                      header.column.getIsSorted() === "asc"
+                        ? "ascending"
+                        : header.column.getIsSorted() === "desc"
+                          ? "descending"
+                          : undefined
+                    }
                   >
-                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    <DataTableHeaderCell header={header} />
+                    <div
+                      className={classes.resizer}
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                      onDoubleClick={() => header.column.resetSize()}
+                    />
                   </Table.Th>
                 ))}
               </Table.Tr>
             ))}
           </Table.Thead>
+
           <Table.Tbody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <Table.Tr key={row.id} bg={row.getIsSelected() ? "var(--mantine-primary-color-light)" : undefined}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Table.Td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</Table.Td>
+            {loading ? (
+              Array.from({ length: SKELETON_ROWS }, (_, index) => (
+                <Table.Tr key={`skeleton-${index}`}>
+                  {table.getVisibleLeafColumns().map((column) => (
+                    <Table.Td key={column.id}>
+                      <Skeleton height={16} radius="sm" />
+                    </Table.Td>
                   ))}
                 </Table.Tr>
               ))
-            ) : (
+            ) : rows.length === 0 ? (
               <Table.Tr>
-                <Table.Td colSpan={columns.length} style={{ textAlign: "center", height: 96 }}>
+                <Table.Td colSpan={visibleColumnCount} className={classes.empty}>
                   <Text c="dimmed">{emptyMessage}</Text>
                 </Table.Td>
               </Table.Tr>
+            ) : (
+              <>
+                {paddingTop > 0 && (
+                  <tr aria-hidden>
+                    <td colSpan={visibleColumnCount} style={{ height: paddingTop, padding: 0 }} />
+                  </tr>
+                )}
+                {virtualRows.map((virtualRow) => {
+                  const row = rows[virtualRow.index];
+                  return (
+                    <Table.Tr
+                      key={row.id}
+                      ref={virtualizer.measureElement}
+                      data-index={virtualRow.index}
+                      data-odd={virtualRow.index % 2 === 1 || undefined}
+                      className={classes.row}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <Table.Td key={cell.id} title={String(cell.getValue() ?? "")}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </Table.Td>
+                      ))}
+                    </Table.Tr>
+                  );
+                })}
+                {paddingBottom > 0 && (
+                  <tr aria-hidden>
+                    <td colSpan={visibleColumnCount} style={{ height: paddingBottom, padding: 0 }} />
+                  </tr>
+                )}
+              </>
             )}
           </Table.Tbody>
         </Table>
-      </Table.ScrollContainer>
+      </Box>
 
-      {/* Pagination */}
-      {enablePagination && (
-        <DataTablePagination
-          table={table}
-          pageSizeOptions={pageSizeOptions}
-          showRowSelection={enableRowSelection}
-          totalRows={totalRows}
-        />
-      )}
+      {!loading && <DataTablePagination table={table} pageSizeOptions={pageSizeOptions} />}
     </Stack>
   );
 }

@@ -1,8 +1,12 @@
 import { UserGender } from "./api.schemas";
 
-export const genderOptions = [
-  { label: "Male", value: UserGender.male },
-  { label: "Female", value: UserGender.female },
-  { label: "Non-binary", value: UserGender["non-binary"] },
-  { label: "Prefer not to say", value: UserGender["prefer-not-to-say"] },
-];
+export const genderLabel = (gender: UserGender) =>
+  gender
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+export const genderOptions = Object.values(UserGender).map((gender) => ({
+  value: gender,
+  label: genderLabel(gender),
+}));

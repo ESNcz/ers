@@ -1,43 +1,39 @@
-"use client";
-
-import { useGetEvent, useGetEventApplications, useUserOrganizationMemberships } from "@/utils/api";
-import { isUserManager } from "@/utils/checkPermissions";
+import { getEventApplicationsOverview } from "@/utils/api";
+import { getServerCurrentUser } from "@/utils/getServerCurrentUser";
 import routes from "@/utils/routes";
-import { DataTable } from "@components/data-table";
-import { applicationManagementColumns } from "@components/data-table/application-management-columns";
-import { useCurrentUser } from "@components/providers/CurrentUserProvider";
-import { Flex, Title } from "@mantine/core";
-import { redirect } from "next/navigation";
-import { useMemo } from "react";
+import ApplicationsTableView from "@components/ApplicationsTable/ApplicationsTableView";
+import { isAxiosError } from "axios";
+import { notFound, redirect } from "next/navigation";
 
 interface ApplicationsTableProps {
   eventId: number;
 }
 
-const ApplicationsTable = ({ eventId }: ApplicationsTableProps) => {
-  const { data: eventDetail } = useGetEvent(eventId);
-  const { currentUser } = useCurrentUser();
-  const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentUser?.id ?? "", {
-    query: {
-      enabled: !!currentUser?.id,
-    },
-  });
+const getOverview = async (eventId: number) => {
+  try {
+    return await getEventApplicationsOverview(eventId);
+  } catch (error) {
+    // API allows only admins and organisation managers
+    if (isAxiosError(error) && error.response?.status === 403) redirect(routes.DASHBOARD);
+    if (isAxiosError(error) && error.response?.status === 404) notFound();
+    throw error;
+  }
+};
 
-  const { data: applicationsList } = useGetEventApplications(eventId);
-
-  const applications = useMemo(() => applicationsList ?? [], [applicationsList]);
-  const columns = useMemo(() => applicationManagementColumns(), []);
-
-  if (!currentUser || !userOrganisationMemberships) return;
-  if (!isUserManager(currentUser, userOrganisationMemberships)) redirect(routes.DASHBOARD);
+const ApplicationsTable = async ({ eventId }: ApplicationsTableProps) => {
+  // Deduplicated with the authorized layout
+  const [currentUser, { event, applications, userOrganisationMemberships }] = await Promise.all([
+    getServerCurrentUser(),
+    getOverview(eventId),
+  ]);
 
   return (
-    <>
-      <Flex justify="space-between" align="center" w="100%" wrap="wrap" gap={16}>
-        <Title order={1}>Event Applications for {eventDetail?.title}</Title>
-      </Flex>
-      <DataTable columns={columns} data={applications} emptyMessage="No applications found." />
-    </>
+    <ApplicationsTableView
+      eventDetail={event}
+      applications={applications}
+      userOrganisationMemberships={userOrganisationMemberships}
+      currentUser={currentUser}
+    />
   );
 };
 

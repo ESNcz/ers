@@ -132,33 +132,17 @@ export class EventApplicationsService {
   }
 
   /**
-   * Find event application for user and event id
-   * @param eventId
-   * @param userId
-   * @param options options
-   * @returns
+   * Find only the ID of the user's application for event
+   * @param eventId Event ID
+   * @param userId User ID
+   * @returns Application ID or null when user is not registered
    */
-  findByEventAndUserId(eventId: number, userId: string, options?: FindEventOptions) {
-    return this.eventApplicationRepository.findOne({
-      where: {
-        user: { id: userId },
-        event: { id: eventId },
-      },
-      select: {
-        id: true,
-        additionalData: true as never,
-        createdAt: true,
-        idNumber: true,
-      },
-      relations: {
-        customOrganization: true,
-        organization: true,
-        user: true,
-        spotType: true,
-        event: true,
-        ...options?.relations,
-      },
+  async findIdByEventAndUserId(eventId: number, userId: string) {
+    const application = await this.eventApplicationRepository.findOne({
+      where: { user: { id: userId }, event: { id: eventId } },
+      select: { id: true },
     });
+    return application?.id ?? null;
   }
 
   /**
