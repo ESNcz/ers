@@ -2,8 +2,8 @@
 
 import { useUpdateCurrentUser, useUpdateCurrentUserPhoto } from "@/utils/api";
 import { CreateAddress, UpdateUser } from "@/utils/api.schemas";
-import { genderOptions } from "@/utils/table-helpers";
 import { apiImageURL } from "@/utils/apiImageURL";
+import { genderOptions } from "@/utils/table-helpers";
 import { Dropzone } from "@components/Dropzone/Dropzone";
 import ImageEditor from "@components/ImageEditor/ImageEditor";
 import getCroppedImg from "@components/ImageEditor/imageEdit";
@@ -281,12 +281,7 @@ const AccountPage = () => {
           </SimpleGrid>
           <SimpleGrid cols={3}>
             <TextInput label="Username" {...form.getInputProps("username")} />
-            <Select
-              label="Gender"
-              key={form.key("gender")}
-              data={genderOptions}
-              {...form.getInputProps("gender")}
-            />
+            <Select label="Gender" key={form.key("gender")} data={genderOptions} {...form.getInputProps("gender")} />
             <TextInput label="Pronouns" {...form.getInputProps("pronouns")} />
           </SimpleGrid>
           <DateInput

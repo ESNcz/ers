@@ -18,7 +18,10 @@ if (typeof window === "undefined") {
       const { cookies } = await import("next/headers");
       const token = (await cookies()).get("AuthCookie")?.value;
       if (token) config.headers.set("Authorization", `Bearer ${token}`);
-    } catch {
+    } catch (error) {
+      // Next signals "this render must be dynamic" by throwing from cookies() - rethrow it, or the
+      // route stays static and the API gets called at build time.
+      if (error && typeof error === "object" && "digest" in error) throw error;
       // No request scope - send unauthenticated
     }
     return config;

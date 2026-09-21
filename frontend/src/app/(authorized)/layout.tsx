@@ -5,6 +5,10 @@ import { getServerCurrentUser } from "@/utils/getServerCurrentUser";
 import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
 import React, { ReactNode } from "react";
 
+// Every authorised route depends on the request's auth cookie - never prerender them at build time,
+// where the API isn't reachable.
+export const dynamic = "force-dynamic";
+
 interface AuthorizedLayoutProps {
   children: ReactNode;
 }

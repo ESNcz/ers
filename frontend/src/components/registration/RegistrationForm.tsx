@@ -2,8 +2,8 @@
 
 import { useCreateUser } from "@/utils/api";
 import { CreateUser, CreateUserGender } from "@/utils/api.schemas";
-import { genderOptions } from "@/utils/table-helpers";
 import routes from "@/utils/routes";
+import { genderOptions } from "@/utils/table-helpers";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
 import { Anchor, Box, Button, Checkbox, Flex, Grid, PasswordInput, SimpleGrid, Text, TextInput } from "@mantine/core";

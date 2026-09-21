@@ -2,8 +2,8 @@
 
 import { useCreateInitialState } from "@/utils/api";
 import { CreateUserGender, InitialiseType } from "@/utils/api.schemas";
-import { genderOptions } from "@/utils/table-helpers";
 import routes from "@/utils/routes";
+import { genderOptions } from "@/utils/table-helpers";
 import useStepper from "@/utils/useStepper";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
