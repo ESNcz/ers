@@ -1,29 +1,21 @@
 import Layout from "@/components/layout/Layout";
-import CurrentUserProvider from "@/components/providers/CurrentUserProvider";
-import { getGetCurrentUserQueryKey } from "@/utils/api";
-import { getServerCurrentUser } from "@/utils/getServerCurrentUser";
-import { HydrationBoundary, QueryClient, dehydrate } from "@tanstack/react-query";
+import CurrentUserProvider, { CurrentUserGate } from "@/components/providers/CurrentUserProvider";
 import React, { ReactNode } from "react";
-
-// Every authorised route depends on the request's auth cookie - never prerender them at build time,
-// where the API isn't reachable.
-export const dynamic = "force-dynamic";
 
 interface AuthorizedLayoutProps {
   children: ReactNode;
 }
-const RootLayout = async ({ children }: AuthorizedLayoutProps) => {
-  const currentUser = await getServerCurrentUser();
 
-  const queryClient = new QueryClient();
-  queryClient.setQueryData(getGetCurrentUserQueryKey(), currentUser);
-
+// No cookie access here, so this shell stays static and child routes pick their own rendering strategy.
+// The auth gate lives in the proxy (see `proxy.ts`), which redirects to login before any of this renders.
+const RootLayout = ({ children }: AuthorizedLayoutProps) => {
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <CurrentUserProvider initialUser={currentUser}>
-        <Layout>{children}</Layout>
-      </CurrentUserProvider>
-    </HydrationBoundary>
+    <CurrentUserProvider>
+      <Layout>
+        {/* Header renders outside the gate so the chrome paints while the user is still loading */}
+        <CurrentUserGate>{children}</CurrentUserGate>
+      </Layout>
+    </CurrentUserProvider>
   );
 };
 

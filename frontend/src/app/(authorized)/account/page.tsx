@@ -69,7 +69,6 @@ const AccountPage = () => {
   const { currentUser, refetch: fetchCurrentUser } = useCurrentUser();
 
   useEffect(() => {
-    if (!currentUser) return;
     const userValues = {
       ...form.values,
       firstName: currentUser.firstName,
@@ -208,7 +207,7 @@ const AccountPage = () => {
           Account Page
         </Text>
         <Box pos="relative" w={100} h={100} ref={hoverRef}>
-          <Avatar src={apiImageURL(currentUser?.photo)} alt="Avatar" radius="50%" size={100} />
+          <Avatar src={apiImageURL(currentUser.photo)} alt="Avatar" radius="50%" size={100} />
           {hovered && (
             <Overlay radius="50%">
               <Button
@@ -345,7 +344,7 @@ const AccountPage = () => {
                 <Flex direction="row" gap={8}>
                   <Text>
                     Personal Address{" "}
-                    {currentUser && !currentUser?.personalAddress && (
+                    {!currentUser.personalAddress && (
                       <Text c="red" span>
                         (Missing information)
                       </Text>

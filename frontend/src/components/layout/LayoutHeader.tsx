@@ -7,7 +7,7 @@ import routes from "@/utils/routes";
 import LogoERS from "@components/icons/LogoERS";
 import styles from "@components/layout/LayoutHeader.module.css";
 import NavigationItemList from "@components/layout/NavigationItemList";
-import { useCurrentUser } from "@components/providers/CurrentUserProvider";
+import { useOptionalCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   Anchor,
   Avatar,
@@ -70,7 +70,7 @@ const LayoutHeader = () => {
   // Full navigation (not router.push) so the React Query cache of this user is dropped
   const logout = () => window.location.assign(routes.LOGOUT);
 
-  const { currentUser } = useCurrentUser();
+  const { currentUser } = useOptionalCurrentUser();
 
   const userFullName = currentUser
     ? `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.email

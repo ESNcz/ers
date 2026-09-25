@@ -11,9 +11,9 @@ interface UseFetchAllEventsProps {}
 
 const MyOrganisationsPage = ({}: UseFetchAllEventsProps) => {
   const { currentUser } = useCurrentUser();
-  const { data: userMemberships } = useUserOrganizationMemberships(currentUser?.id ?? "");
+  const { data: userMemberships } = useUserOrganizationMemberships(currentUser.id);
 
-  if (!currentUser && !userMemberships) return null;
+  if (!userMemberships) return null;
 
   return (
     <Container size="xl">

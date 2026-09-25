@@ -63,18 +63,18 @@ const ManagePeopleList = ({}: ManagePeopleListProps) => {
   const columns = useMemo(
     () =>
       peopleManagementColumns(
-        currentUser?.id ?? "",
-        currentUser?.role ?? null,
+        currentUser.id,
+        currentUser.role,
         handleDeleteUser,
         setSelectedUserId,
         openChangeRoleModal,
         openEditUserModal,
       ),
     // when currentUser or their role changes, we need to recalculate permissions for each row, so we need to update columns
-    [currentUser?.role],
+    [currentUser.role],
   );
 
-  if (!currentUser || !allUsers?.data) {
+  if (!allUsers?.data) {
     return (
       <Stack>
         <Flex

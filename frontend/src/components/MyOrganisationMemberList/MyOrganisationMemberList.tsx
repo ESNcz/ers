@@ -33,8 +33,8 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
 
   const isUserManager = useMemo(() => {
     return (
-      currentOrganisation?.manager?.id === currentUser?.id ||
-      hasSomePermissions(currentUser?.role as UserRole, ["organisation.deleteUser"])
+      currentOrganisation?.manager?.id === currentUser.id ||
+      hasSomePermissions(currentUser.role, ["organisation.deleteUser"])
     );
   }, [currentOrganisation, currentUser]);
 
@@ -114,16 +114,16 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
 
   const columns = useMemo(() => {
     return organizationMemberListColumns(
-      currentUser?.id ?? "",
+      currentUser.id,
       currentOrganisation ?? null,
       handleTransferSectionManager,
       handleDeleteOrganizationMembers,
       deleteOrganizationMemberMutation.isPending,
       isUserManager,
     );
-  }, [currentUser?.role, currentOrganisation]);
+  }, [currentUser.role, currentOrganisation]);
 
-  if (!currentUser || !organizationMembers?.data) {
+  if (!organizationMembers?.data) {
     return (
       <Stack>
         <Flex

@@ -41,7 +41,7 @@ const SugarCubesPage = () => {
   const { data: sentCubes, refetch: refetchSentCubes } = useGetSentSugarCubes(eventId);
   const { data: reportedCubes, refetch: refetchReportedCubes } = useGetReportedSugarCubes(eventId, {
     query: {
-      enabled: isUserAdmin(currentUser?.role),
+      enabled: isUserAdmin(currentUser.role),
     },
   });
 
@@ -66,7 +66,7 @@ const SugarCubesPage = () => {
     },
   });
 
-  if (!eventDetail || !currentUser) return null;
+  if (!eventDetail) return null;
 
   // Check if sugar cubes can be sent: start of the event until 3 days after event until
   const eventStart = dayjs(eventDetail.since);

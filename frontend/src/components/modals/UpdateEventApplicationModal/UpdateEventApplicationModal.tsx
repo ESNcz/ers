@@ -156,7 +156,7 @@ const UpdateEventApplicationModal = ({
     closeModal();
   };
 
-  if (!userOrganisationMemberships || !currentUser) {
+  if (!userOrganisationMemberships) {
     return null;
   }
 
