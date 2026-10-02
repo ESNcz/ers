@@ -9,13 +9,7 @@ import "@mantine/tiptap/styles.css";
 import { Metadata, Viewport } from "next";
 import React, { ReactNode, Suspense } from "react";
 
-
-
 import "./globals.css";
-
-
-
-
 
 export const metadata: Metadata = {
   applicationName: "Event Registration System",
@@ -23,17 +17,14 @@ export const metadata: Metadata = {
   description:
     "ERS (Event Registration System) allows people to register for events, where admins can manage their applications and assign spots.",
   keywords: ["ERS", "events", "registration"],
-  manifest: "manifest.webmanifest",
-  icons: [
-    {
-      url: "/icons/favicon.ico",
-      rel: "icon",
-    },
-    {
-      url: "/icons/favicon.ico",
-      rel: "apple-touch-icon",
-    },
-  ],
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icons/favicon.ico", sizes: "48x48" },
+      { url: "/icons/mrkvanek.svg", type: "image/svg+xml" },
+    ],
+    apple: { url: "/icons/apple-icon.png", sizes: "180x180" },
+  },
   authors: [
     {
       name: "Šimon Slabý",
@@ -59,10 +50,6 @@ const RootLayout = ({ children }: RootLayoutProps) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" type="image/svg+xml" href="/icons/favicon.ico" />
-        <link rel="shortcut icon" href="/icons/favicon.ico" />
-        <link rel="manifest" href="/manifest.webmanifest" />
-
         <ColorSchemeScript />
       </head>
       <body>
