@@ -9,7 +9,13 @@ import "@mantine/tiptap/styles.css";
 import { Metadata, Viewport } from "next";
 import React, { ReactNode, Suspense } from "react";
 
+
+
 import "./globals.css";
+
+
+
+
 
 export const metadata: Metadata = {
   applicationName: "Event Registration System",
@@ -20,11 +26,11 @@ export const metadata: Metadata = {
   manifest: "manifest.webmanifest",
   icons: [
     {
-      url: "/icons/favicon.svg",
+      url: "/icons/favicon.ico",
       rel: "icon",
     },
     {
-      url: "/icons/favicon.svg",
+      url: "/icons/favicon.ico",
       rel: "apple-touch-icon",
     },
   ],
@@ -53,8 +59,8 @@ const RootLayout = ({ children }: RootLayoutProps) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
-        <link rel="shortcut icon" href="/icons/favicon.svg" />
+        <link rel="icon" type="image/svg+xml" href="/icons/favicon.ico" />
+        <link rel="shortcut icon" href="/icons/favicon.ico" />
         <link rel="manifest" href="/manifest.webmanifest" />
 
         <ColorSchemeScript />

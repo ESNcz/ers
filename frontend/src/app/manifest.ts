@@ -14,44 +14,29 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     icons: [
       {
-        src: "/icons/favicon-72x72.png",
+        src: "/icons/mrkvanek_512.png",
         type: "image/png",
-        sizes: "72x72",
+        sizes: "512x512",
       },
       {
-        src: "/icons/favicon-96x96.png",
+        src: "/icons/mrkvanek.svg",
+        type: "image/png",
+        sizes: "256x256",
+      },
+      {
+        src: "/icons/mrkvanek-96x96.png",
         type: "image/png",
         sizes: "96x96",
       },
       {
-        src: "/icons/favicon-128x128.png",
+        src: "/icons/apple-icon.png",
         type: "image/png",
-        sizes: "128x128",
+        sizes: "180x180",
       },
       {
-        src: "/icons/favicon-144x144.png",
+        src: "/icons/favicon.ico",
         type: "image/png",
-        sizes: "144x144",
-      },
-      {
-        src: "/icons/favicon-152x152.png",
-        type: "image/png",
-        sizes: "152x152",
-      },
-      {
-        src: "/icons/favicon-192x192.png",
-        type: "image/png",
-        sizes: "192x192",
-      },
-      {
-        src: "/icons/favicon-384x384.png",
-        type: "image/png",
-        sizes: "384x384",
-      },
-      {
-        src: "/icons/favicon-512x512.png",
-        type: "image/png",
-        sizes: "512x512",
+        sizes: "48x48",
       },
     ],
     screenshots: [
