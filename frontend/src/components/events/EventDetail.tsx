@@ -211,7 +211,7 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
                 Show management options
               </Button>
             )}
-            <Collapse in={isPhone ? !opened : opened}>
+            <Collapse expanded={isPhone ? !opened : opened}>
               <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 1, xl: 1 }}>
                 {hasEveryPermissions(currentUser.role, ["event.update"]) && (
                   <Button onClick={openModalEdit} leftSection={<IconEdit />}>

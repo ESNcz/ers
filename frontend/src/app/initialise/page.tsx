@@ -20,7 +20,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Form, useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import CountryList from "country-list-with-dial-code-and-flag";
 import dayjs from "dayjs";
 import Link from "next/link";
@@ -152,7 +152,7 @@ const InitialisePage = () => {
     <Container mih="100dvh" py="xl">
       <Flex direction="column" justify="center" align="center" h="100%" gap={8}>
         <Box maw="32rem" w="100%">
-          <Form form={form} onSubmit={initialiseSystem}>
+          <form onSubmit={form.onSubmit(initialiseSystem)} onReset={form.onReset}>
             <Stepper iconSize={32} active={activeStep} onStepClick={onClickStep}>
               <Stepper.Step label="Step 1:" description="User Information">
                 <Flex direction="column" gap={12}>
@@ -318,7 +318,7 @@ const InitialisePage = () => {
                 Next step
               </Button>
             </Flex>
-          </Form>
+          </form>
         </Box>
       </Flex>
     </Container>

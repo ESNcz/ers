@@ -4,6 +4,7 @@ import {
   useDeleteEventApplication,
   useDeleteEventSpot,
   useGenerateSheetEventApplication,
+  useUpdateApplicationsSpot,
   useUpdateUserApplicationSpot,
 } from "@/utils/api";
 import { type EventApplicationDetailedWithApplications, type EventSpotSimple } from "@/utils/api.schemas";
@@ -22,12 +23,13 @@ import {
   Flex,
   List,
   ListItem,
+  Menu,
   Text,
   Title,
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconEdit, IconPlus, IconTableExport, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconTableExport, IconTicket, IconTicketOff, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -97,6 +99,32 @@ const ManageApplicationsTableView = ({ eventId, eventSpotsList, applications }: 
     updateApplicationSpotMutation.mutate(
       { applicationId: application.id, data: { spotId } },
       { onError: () => setApplicationSpot(application.id, previousSpot) },
+    );
+  };
+
+  const updateApplicationsSpotMutation = useUpdateApplicationsSpot();
+
+  // Optimistic like the single row change - revert the rows to their previous spots when the request fails
+  const handleChangeApplicationsSpot = (
+    selectedApplications: EventApplicationDetailedWithApplications[],
+    spotId: number | null,
+    clearSelection: () => void,
+  ) => {
+    const spot = eventSpotsList.find((eventSpot) => eventSpot.id === spotId) ?? null;
+    const previousSpots = new Map(selectedApplications.map((application) => [application.id, application.spotType]));
+    const setSpots = (getSpot: (applicationId: number) => EventApplicationDetailedWithApplications["spotType"]) =>
+      setRows((current) =>
+        current.map((application) =>
+          previousSpots.has(application.id) ? { ...application, spotType: getSpot(application.id) } : application,
+        ),
+      );
+
+    setSpots(() => spot);
+    clearSelection();
+
+    updateApplicationsSpotMutation.mutate(
+      { eventId, data: { applicationIds: [...previousSpots.keys()], spotId } },
+      { onError: () => setSpots((applicationId) => previousSpots.get(applicationId) ?? null) },
     );
   };
 
@@ -200,7 +228,40 @@ const ManageApplicationsTableView = ({ eventId, eventSpotsList, applications }: 
         <Text>No spots created.</Text>
       )}
 
-      <DataTable columns={columns} data={rows} emptyMessage="No applications found." />
+      <DataTable
+        columns={columns}
+        data={rows}
+        emptyMessage="No applications found."
+        getRowId={(application) => application.id.toString()}
+        selectionActions={(selectedApplications, clearSelection) => (
+          <Menu position="top" shadow="md" width={260}>
+            <Menu.Target>
+              <Button variant="subtle" leftSection={<IconTicket size={18} />} disabled={eventSpotsList.length === 0}>
+                Assign spot
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown mah={320} style={{ overflowY: "auto" }}>
+              <Menu.Label>Assign spot to {selectedApplications.length} applications</Menu.Label>
+              {eventSpotsList.map((spot) => (
+                <Menu.Item
+                  key={spot.id}
+                  onClick={() => handleChangeApplicationsSpot(selectedApplications, spot.id, clearSelection)}
+                >
+                  {spot.name} - {spot.price} {spot.currency}
+                </Menu.Item>
+              ))}
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconTicketOff size={16} />}
+                onClick={() => handleChangeApplicationsSpot(selectedApplications, null, clearSelection)}
+              >
+                Remove spot
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        )}
+      />
 
       {currentApplication ? (
         <UpdateEventApplicationModal

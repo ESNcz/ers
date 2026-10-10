@@ -668,6 +668,13 @@ export interface UpdateApplicationSlotDto {
   spotId: number | null;
 }
 
+export interface UpdateApplicationsSpotDto {
+  /** @minItems 1 */
+  applicationIds: number[];
+  /** @nullable */
+  spotId: number | null;
+}
+
 export interface EventDetailLink {
   id: number;
   name: string;

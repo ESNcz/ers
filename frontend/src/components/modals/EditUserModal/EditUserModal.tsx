@@ -6,7 +6,7 @@ import Modal from "@components/Modal/Modal";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
 import { Button, Flex, Grid, Group, SimpleGrid, TextInput } from "@mantine/core";
-import { Form, useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import CountryList from "country-list-with-dial-code-and-flag";
 import dayjs from "dayjs";
 import { useEffect } from "react";
@@ -100,7 +100,7 @@ const EditUserModal = ({ user, isOpened, closeModal, handleOnSuccess }: EditUser
 
   return (
     <Modal size="xl" opened={isOpened} onClose={handleClose} title={`Edit User - ${user.firstName} ${user.lastName}`}>
-      <Form form={form} onSubmit={handleSubmit}>
+      <form onSubmit={form.onSubmit(handleSubmit)} onReset={form.onReset}>
         <Flex direction="column" gap={12}>
           <SimpleGrid cols={{ base: 1, md: 2 }}>
             <TextInput label="First Name" {...form.getInputProps("firstName")} required />
@@ -198,7 +198,7 @@ const EditUserModal = ({ user, isOpened, closeModal, handleOnSuccess }: EditUser
             Save Changes
           </Button>
         </Group>
-      </Form>
+      </form>
     </Modal>
   );
 };

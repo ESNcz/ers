@@ -73,6 +73,7 @@ import type {
   SugarCubeRecipientOptionDto,
   TransferManager201,
   UpdateApplicationSlotDto,
+  UpdateApplicationsSpotDto,
   UpdateEvent,
   UpdateEventApplication,
   UpdateEventApplicationPrioritiesDto,
@@ -2906,6 +2907,86 @@ export const useUpdateUserApplicationSpot = <TError = ErrorType<void>, TContext 
   TContext
 > => {
   const mutationOptions = getUpdateUserApplicationSpotMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Set the same spot for multiple applications of an event, `spotId: null` removes the spot.
+
+Permissions required: `event.manageApplications`
+ */
+export const updateApplicationsSpot = (
+  eventId: number,
+  updateApplicationsSpotDto: UpdateApplicationsSpotDto,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<void>(
+    {
+      url: `/events/${eventId}/applications/spot`,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      data: updateApplicationsSpotDto,
+    },
+    options,
+  );
+};
+
+export const getUpdateApplicationsSpotMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateApplicationsSpot>>,
+    TError,
+    { eventId: number; data: UpdateApplicationsSpotDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateApplicationsSpot>>,
+  TError,
+  { eventId: number; data: UpdateApplicationsSpotDto },
+  TContext
+> => {
+  const mutationKey = ["updateApplicationsSpot"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateApplicationsSpot>>,
+    { eventId: number; data: UpdateApplicationsSpotDto }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return updateApplicationsSpot(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateApplicationsSpotMutationResult = NonNullable<Awaited<ReturnType<typeof updateApplicationsSpot>>>;
+export type UpdateApplicationsSpotMutationBody = UpdateApplicationsSpotDto;
+export type UpdateApplicationsSpotMutationError = ErrorType<void>;
+
+export const useUpdateApplicationsSpot = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateApplicationsSpot>>,
+      TError,
+      { eventId: number; data: UpdateApplicationsSpotDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateApplicationsSpot>>,
+  TError,
+  { eventId: number; data: UpdateApplicationsSpotDto },
+  TContext
+> => {
+  const mutationOptions = getUpdateApplicationsSpotMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

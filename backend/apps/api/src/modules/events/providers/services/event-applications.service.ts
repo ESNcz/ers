@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { InjectEntityManager, InjectRepository } from "@nestjs/typeorm";
-import { EntityManager, FindOneOptions, Repository } from "typeorm";
+import { EntityManager, FindOneOptions, In, Repository } from "typeorm";
 
-import { EventApplication, EventCustomOrganization } from "@api/modules/events/entities";
+import { EventApplication, EventCustomOrganization, EventSpot } from "@api/modules/events/entities";
 import { EventFilter } from "@api/modules/events/models";
 import { filterSince } from "@api/modules/events/utilities";
 import type { PaginationOptions } from "utilities/nest/decorators";
@@ -213,6 +213,15 @@ export class EventApplicationsService {
         await em.update(EventApplication, applicationId, { priority });
       }
     });
+  }
+
+  /**
+   * Set the same spot for multiple applications
+   * @param applicationIds Application IDs
+   * @param spot New spot, `null` removes the spot
+   */
+  async updateSpots(applicationIds: number[], spot: EventSpot | null) {
+    await this.eventApplicationRepository.update({ id: In(applicationIds) }, { spotType: spot });
   }
 
   /**

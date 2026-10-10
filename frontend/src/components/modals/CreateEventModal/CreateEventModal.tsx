@@ -6,7 +6,7 @@ import LinkTree, { LinkItem } from "@components/events/LinkTree";
 import DateInput from "@components/primitives/DateInput";
 import { Button, Fieldset, Flex, Group, NumberInput, SimpleGrid, Switch, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
-import { Form, hasLength, isNotEmpty, useForm } from "@mantine/form";
+import { hasLength, isNotEmpty, useForm } from "@mantine/form";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import React from "react";
@@ -82,7 +82,7 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
 
   return (
     <Modal size="xl" opened={isOpened} onClose={handleClose} title="Create Event">
-      <Form form={form} onSubmit={handleCreateEvent}>
+      <form onSubmit={form.onSubmit(handleCreateEvent)} onReset={form.onReset}>
         <Flex direction="column" gap={16}>
           <Switch
             label={`Is published: ${form.values.visible}`}
@@ -152,7 +152,7 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
             Save changes
           </Button>
         </Group>
-      </Form>
+      </form>
     </Modal>
   );
 };

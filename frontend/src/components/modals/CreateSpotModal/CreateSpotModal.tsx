@@ -2,7 +2,7 @@ import { useCreateEventSpot } from "@/utils/api";
 import { CreateEventSpot } from "@/utils/api.schemas";
 import Modal from "@components/Modal/Modal";
 import { Button, Flex, Group, NumberInput, SimpleGrid, TextInput } from "@mantine/core";
-import { Form, hasLength, useForm } from "@mantine/form";
+import { hasLength, useForm } from "@mantine/form";
 import React from "react";
 
 interface CreateSpotModalProps {
@@ -52,7 +52,7 @@ const CreateSpotModal = ({ isOpened, closeModal, eventId, handleSuccess = () => 
 
   return (
     <Modal size="lg" opened={isOpened} onClose={handleCloseModal} title="Add Spot type">
-      <Form form={form} onSubmit={handleCreateSpot}>
+      <form onSubmit={form.onSubmit(handleCreateSpot)} onReset={form.onReset}>
         <Flex direction="column" gap={16}>
           <SimpleGrid cols={2}>
             <TextInput label="Spot Name" {...form.getInputProps("name")}></TextInput>
@@ -64,7 +64,7 @@ const CreateSpotModal = ({ isOpened, closeModal, eventId, handleSuccess = () => 
             Create Spot
           </Button>
         </Group>
-      </Form>
+      </form>
     </Modal>
   );
 };

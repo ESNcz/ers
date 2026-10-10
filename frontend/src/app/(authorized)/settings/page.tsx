@@ -4,7 +4,7 @@ import { useGetSettings, useUpdateSettings } from "@/utils/api";
 import { Settings, SettingsDTO } from "@/utils/api.schemas";
 import RichTextEditor from "@components/Richtext/RichTextEditor";
 import { Button, Container, Grid, Group, TextInput } from "@mantine/core";
-import { Form, useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
 
 const SettingsPage = () => {
@@ -49,7 +49,7 @@ const SettingsPage = () => {
 
   return (
     <Container size="sm" mt="lg">
-      <Form form={form} onSubmit={handleUpdateSettings}>
+      <form onSubmit={form.onSubmit(handleUpdateSettings)} onReset={form.onReset}>
         <Grid>
           <Grid.Col span={{ base: 12, md: 6 }}>
             <TextInput
@@ -78,7 +78,7 @@ const SettingsPage = () => {
             Save changes
           </Button>
         </Group>
-      </Form>
+      </form>
     </Container>
   );
 };

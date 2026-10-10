@@ -8,7 +8,7 @@ import LinkTree, { LinkItem } from "@components/events/LinkTree";
 import DateInput from "@components/primitives/DateInput";
 import { Button, Fieldset, Flex, Group, NumberInput, SimpleGrid, Switch, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
-import { Form, useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import React from "react";
 
@@ -78,7 +78,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
 
   return (
     <Modal size="xl" opened={isOpened} onClose={handleClose} title="Edit Event">
-      <Form form={form} onSubmit={handleEventUpdate}>
+      <form onSubmit={form.onSubmit(handleEventUpdate)} onReset={form.onReset}>
         <Flex direction="column" gap={8}>
           <Switch
             label={form.values.visible ? "Published" : "Unpublished"}
@@ -150,7 +150,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
             Save changes
           </Button>
         </Group>
-      </Form>
+      </form>
     </Modal>
   );
 };

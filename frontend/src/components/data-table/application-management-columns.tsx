@@ -1,7 +1,7 @@
 import { type EventApplicationDetailedWithApplications } from "@/utils/api.schemas";
 import { dateWithTime } from "@/utils/time";
-import { ActionIcon, ComboboxData, Flex, Select, Tooltip } from "@mantine/core";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { ActionIcon, ComboboxData, Flex, Menu, Select } from "@mantine/core";
+import { IconDotsVertical, IconEdit, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 
 interface ApplicationManagementColumnsOptions {
@@ -86,26 +86,36 @@ export const applicationManagementColumns = (
     columns.push({
       id: "actions",
       header: "Operations",
-      size: 148,
+      size: 110,
       enableSorting: false,
       enableHiding: false,
       enableGlobalFilter: false,
+      enableResizing: false,
       cell: ({ row }) => (
-        <Flex justify="space-evenly" gap={16}>
-          {handleEditApplication && (
-            <Tooltip label="Edit Application">
-              <ActionIcon variant="subtle" color="blue" size={48} onClick={() => handleEditApplication(row.original)}>
-                <IconEdit width={32} height={32} />
+        <Flex justify="center">
+          <Menu position="bottom-end" shadow="md" width={200}>
+            <Menu.Target>
+              <ActionIcon variant="subtle" color="gray" size={36} aria-label="Application operations">
+                <IconDotsVertical width={20} height={20} />
               </ActionIcon>
-            </Tooltip>
-          )}
-          {handleDeleteApplication && (
-            <Tooltip label="Delete Application">
-              <ActionIcon variant="subtle" size={48} color="red" onClick={() => handleDeleteApplication(row.original)}>
-                <IconTrash width={32} height={32} />
-              </ActionIcon>
-            </Tooltip>
-          )}
+            </Menu.Target>
+            <Menu.Dropdown>
+              {handleEditApplication && (
+                <Menu.Item leftSection={<IconEdit size={16} />} onClick={() => handleEditApplication(row.original)}>
+                  Edit application
+                </Menu.Item>
+              )}
+              {handleDeleteApplication && (
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
+                  onClick={() => handleDeleteApplication(row.original)}
+                >
+                  Delete application
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
         </Flex>
       ),
     });

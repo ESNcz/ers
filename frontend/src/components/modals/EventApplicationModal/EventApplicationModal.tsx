@@ -34,7 +34,7 @@ import {
   TextInput,
   Textarea,
 } from "@mantine/core";
-import { Form, useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -175,7 +175,7 @@ const EventApplicationModal = ({
 
   return (
     <Modal size="xl" opened={isOpened} onClose={handleClose} title={<Text fz="h3">Event Application</Text>}>
-      <Form form={form} onSubmit={handleEventApplication}>
+      <form onSubmit={form.onSubmit(handleEventApplication)} onReset={form.onReset}>
         <Stepper active={activeStep} iconSize={32}>
           <Stepper.Step label="Step 1:" description="General Information">
             <Flex direction="column" gap="md">
@@ -484,7 +484,7 @@ const EventApplicationModal = ({
             </Button>
           )}
         </Flex>
-      </Form>
+      </form>
     </Modal>
   );
 };

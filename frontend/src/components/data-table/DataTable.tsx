@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Skeleton, Stack, Table, Text } from "@mantine/core";
+import { ActionBar, Box, Skeleton, Stack, Table, Text } from "@mantine/core";
 import { flexRender } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
@@ -29,6 +29,7 @@ export function DataTable<TData>({
   initialSorting,
   initialColumnVisibility,
   getRowId,
+  selectionActions,
 }: DataTableProps<TData>) {
   const { table, globalFilter, resetFilters } = useDataTable({
     columns,
@@ -37,11 +38,15 @@ export function DataTable<TData>({
     initialSorting,
     initialColumnVisibility,
     getRowId,
+    enableRowSelection: !!selectionActions,
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const rows = table.getRowModel().rows;
   const visibleColumnCount = table.getVisibleLeafColumns().length;
+  // Rows hidden by filters stay selected but are left out, so actions apply only to what is visible
+  const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+  const clearSelection = () => table.resetRowSelection(true);
 
   // Only rows inside the scroll viewport are rendered, so large pages stay fast.
   // Rows are measured after render because cells can wrap or hold buttons.
@@ -145,6 +150,7 @@ export function DataTable<TData>({
                       ref={virtualizer.measureElement}
                       data-index={virtualRow.index}
                       data-odd={virtualRow.index % 2 === 1 || undefined}
+                      data-selected={row.getIsSelected() || undefined}
                       className={classes.row}
                     >
                       {row.getVisibleCells().map((cell) => (
@@ -167,6 +173,23 @@ export function DataTable<TData>({
       </Box>
 
       {!loading && <DataTablePagination table={table} pageSizeOptions={pageSizeOptions} />}
+
+      {selectionActions && (
+        <ActionBar
+          opened={selectedRows.length > 0}
+          onClose={clearSelection}
+          closeOnEscape
+          aria-label="Selected rows actions"
+        >
+          <Text size="sm" fw={500} px="xs">
+            {selectedRows.length} selected
+          </Text>
+          <ActionBar.Divider />
+          {selectionActions(selectedRows, clearSelection)}
+          <ActionBar.Divider />
+          <ActionBar.CloseButton aria-label="Clear selection" />
+        </ActionBar>
+      )}
     </Stack>
   );
 }

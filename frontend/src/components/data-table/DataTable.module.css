@@ -46,6 +46,10 @@
   background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
 }
 
+.row[data-selected]:not(:hover) {
+  background-color: var(--mantine-primary-color-light);
+}
+
 .headerLabel {
   display: flex;
   align-items: center;

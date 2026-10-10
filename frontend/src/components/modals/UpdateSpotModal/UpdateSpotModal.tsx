@@ -2,7 +2,7 @@ import { useUpdateEventSpot } from "@/utils/api";
 import { EventSpotSimple, UpdateEventSpot } from "@/utils/api.schemas";
 import Modal from "@components/Modal/Modal";
 import { Button, Flex, Group, NumberInput, SimpleGrid, TextInput } from "@mantine/core";
-import { Form, hasLength, useForm } from "@mantine/form";
+import { hasLength, useForm } from "@mantine/form";
 import React, { useEffect } from "react";
 
 interface UpdateSpotModalProps {
@@ -57,7 +57,7 @@ const UpdateSpotModal = ({ currentSpot, isOpened, closeModal, handleSuccess = ()
 
   return (
     <Modal size="lg" opened={isOpened} onClose={handleClose} title="Add Spot type">
-      <Form form={form} onSubmit={handleUpdateSpot}>
+      <form onSubmit={form.onSubmit(handleUpdateSpot)} onReset={form.onReset}>
         <Flex direction="column" gap={16}>
           <SimpleGrid cols={2}>
             <TextInput label="Spot Name" {...form.getInputProps("name")}></TextInput>
@@ -69,7 +69,7 @@ const UpdateSpotModal = ({ currentSpot, isOpened, closeModal, handleSuccess = ()
             Update Spot
           </Button>
         </Group>
-      </Form>
+      </form>
     </Modal>
   );
 };

@@ -3,7 +3,7 @@
 import { useForgotPassword } from "@/utils/api";
 import routes from "@/utils/routes";
 import { Box, Button, Flex, Text, TextInput } from "@mantine/core";
-import { Form, isNotEmpty, useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import { useRouter } from "next/navigation";
 
 const ForgotPasswordForm = () => {
@@ -31,7 +31,7 @@ const ForgotPasswordForm = () => {
 
   return (
     <Box maw="32rem" w="100%">
-      <Form form={form} onSubmit={(values) => sendRequest(values)}>
+      <form onSubmit={form.onSubmit((values) => sendRequest(values))} onReset={form.onReset}>
         <Flex direction="column" gap={12}>
           <TextInput label="Email" {...form.getInputProps("email")} />
         </Flex>
@@ -46,7 +46,7 @@ const ForgotPasswordForm = () => {
             </Text>
           )}
         </Flex>
-      </Form>
+      </form>
     </Box>
   );
 };
