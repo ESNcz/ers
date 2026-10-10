@@ -1,9 +1,17 @@
 import { Organization, OrganizationMember } from "@/utils/api.schemas";
 import { genderOptions } from "@/utils/table-helpers";
 import ApiImage from "@components/ApiImage/ApiImage";
-import { ActionIcon, Box, Flex, Text, Tooltip } from "@mantine/core";
-import { IconCrown, IconUserPlus, IconUserX } from "@tabler/icons-react";
+import { Box, Flex, Text } from "@mantine/core";
+import { IconCrown, IconUserX } from "@tabler/icons-react";
 import type { ColumnDef, FilterFn } from "@tanstack/react-table";
+
+import { rowActionsColumn } from "./DataTableRowActions";
+
+/** What the current user can do with members, must match the checks of the organisation endpoints */
+export interface OrganizationMemberPermissions {
+  canTransferManager: boolean;
+  canRemoveMembers: boolean;
+}
 
 export const organizationMemberListColumns = (
   currentUserId: string,
@@ -11,14 +19,12 @@ export const organizationMemberListColumns = (
   handleTransferSectionManager: (organisationId: string, userId: string) => void,
   handleDeleteOrganizationMembers: (member: OrganizationMember) => void,
   deleteOrganizationMemberMutationIsPending: boolean,
-  isUserManager: boolean,
-  handleAddMember?: (userId: string) => void,
-  memberUserIds?: Set<string>,
+  permissions: OrganizationMemberPermissions,
 ): ColumnDef<OrganizationMember>[] => [
   {
     id: "photo",
     header: "Photo",
-    size: 64,
+    maxSize: 84,
     enableSorting: false,
     enableHiding: false,
     enableGlobalFilter: false,
@@ -32,7 +38,7 @@ export const organizationMemberListColumns = (
     id: "fullName",
     accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
     header: "Full Name",
-    size: 148,
+    minSize: 148,
     enableHiding: false,
     enableGlobalFilter: true,
     cell: ({ row }) => <Text>{`${row.original.user.firstName} ${row.original.user.lastName}`}</Text>,
@@ -40,7 +46,6 @@ export const organizationMemberListColumns = (
   {
     id: "address",
     header: "Address",
-    size: 148,
     minSize: 148,
     enableSorting: false,
     enableGlobalFilter: false,
@@ -65,7 +70,6 @@ export const organizationMemberListColumns = (
       filterVariant: "select",
       filterOptions: genderOptions,
     },
-    size: 148,
     minSize: 148,
     enableGlobalFilter: true,
     cell: ({ row }) => <Text>{row.original.user.gender}</Text>,
@@ -74,8 +78,7 @@ export const organizationMemberListColumns = (
     id: "email",
     header: "E-mail",
     accessorFn: (row) => row.user.email,
-    size: 220,
-    minSize: 180,
+    minSize: 220,
     enableGlobalFilter: true,
     cell: ({ row }) => <Text>{row.original.user.email}</Text>,
   },
@@ -84,75 +87,35 @@ export const organizationMemberListColumns = (
     accessorFn: (row) => row.user.role?.name ?? "N/A",
     header: "Role",
     meta: { filterVariant: "select" },
-    size: 148,
+    minSize: 148,
     cell: ({ row }) => <Text>{row.original.user.role?.name ?? "N/A"}</Text>,
   },
-  ...(isUserManager
+  ...(permissions.canTransferManager || permissions.canRemoveMembers
     ? ([
-        {
-          id: "operations",
-          header: "Operations",
-          size: 200,
-          enableSorting: false,
-          enableGlobalFilter: false,
-          cell: ({ row }) => {
-            const member = row.original;
-            const isMember = !memberUserIds || memberUserIds.has(member.user.id);
+        rowActionsColumn<OrganizationMember>((member) => {
+          const isManager = currentOrganisation?.manager?.id === member.user.id;
+          const isCurrentUser = member.user.id === currentUserId;
 
-            if (!isMember && handleAddMember) {
-              return (
-                <Flex justify="flex-start" gap={50}>
-                  <Tooltip label="Add to Organization">
-                    <ActionIcon
-                      variant="subtle"
-                      size={48}
-                      color="green"
-                      onClick={() => handleAddMember(member.user.id)}
-                    >
-                      <IconUserPlus width={32} height={32} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Flex>
-              );
-            }
-
-            return (
-              <Flex justify="flex-start" gap={50}>
-                <Tooltip
-                  label={
-                    currentOrganisation?.manager?.id === member.user.id
-                      ? "This person is section manager"
-                      : "Transfer Manager"
-                  }
-                >
-                  <ActionIcon
-                    variant="subtle"
-                    size={48}
-                    color="yellow"
-                    onClick={() => handleTransferSectionManager(currentOrganisation?.id ?? "", member.user.id)}
-                    disabled={currentOrganisation?.manager?.id === member.user.id}
-                  >
-                    <IconCrown width={32} height={32} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip
-                  label={member.user.id === currentUserId ? "You cannot remove yourself" : "Remove from Organization"}
-                >
-                  <ActionIcon
-                    variant="subtle"
-                    size={48}
-                    color="red"
-                    disabled={member.user.id === currentUserId}
-                    loading={deleteOrganizationMemberMutationIsPending}
-                    onClick={() => handleDeleteOrganizationMembers(member)}
-                  >
-                    <IconUserX width={32} height={32} />
-                  </ActionIcon>
-                </Tooltip>
-              </Flex>
-            );
-          },
-        },
+          return [
+            {
+              label: "Transfer manager",
+              icon: <IconCrown size={16} />,
+              hidden: !permissions.canTransferManager,
+              disabled: isManager,
+              hint: isManager ? "This person is section manager" : undefined,
+              onClick: () => handleTransferSectionManager(currentOrganisation?.id ?? "", member.user.id),
+            },
+            {
+              label: "Remove from organization",
+              icon: <IconUserX size={16} />,
+              color: "red",
+              hidden: !permissions.canRemoveMembers,
+              disabled: isCurrentUser || deleteOrganizationMemberMutationIsPending,
+              hint: isCurrentUser ? "You cannot remove yourself" : undefined,
+              onClick: () => handleDeleteOrganizationMembers(member),
+            },
+          ];
+        }, "Member operations"),
       ] as ColumnDef<OrganizationMember>[])
     : []),
 ];

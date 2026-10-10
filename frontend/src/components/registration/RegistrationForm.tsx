@@ -7,7 +7,7 @@ import { genderOptions } from "@/utils/table-helpers";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
 import { Anchor, Box, Button, Checkbox, Flex, Grid, PasswordInput, SimpleGrid, Text, TextInput } from "@mantine/core";
-import { Form, hasLength, isEmail, isNotEmpty, useForm } from "@mantine/form";
+import { hasLength, isEmail, isNotEmpty, useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import CountryList from "country-list-with-dial-code-and-flag";
 import dayjs from "dayjs";
@@ -84,7 +84,7 @@ const RegistrationForm = () => {
 
   return (
     <Box maw="32rem" w="100%">
-      <Form form={form} onSubmit={registerUser}>
+      <form onSubmit={form.onSubmit(registerUser)} onReset={form.onReset}>
         <Flex direction="column" gap={12}>
           <SimpleGrid cols={{ base: 1, xs: 2 }}>
             <TextInput label="First name" {...form.getInputProps("firstName")} required />
@@ -189,7 +189,7 @@ const RegistrationForm = () => {
             )}
           </Flex>
         </Flex>
-      </Form>
+      </form>
     </Box>
   );
 };

@@ -2,7 +2,7 @@ import { useUpdateOrganization } from "@/utils/api";
 import { Organization, UpdateOrganization } from "@/utils/api.schemas";
 import Modal from "@components/Modal/Modal";
 import { Button, Grid, Group, TextInput } from "@mantine/core";
-import { Form, isNotEmpty, useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import React, { useEffect } from "react";
 
 interface CrateOrganizationModalProps {
@@ -95,7 +95,7 @@ const UpdateOrganisationModal = ({
 
   return (
     <Modal size="xl" opened={isOpened} onClose={handleClose} title="Update Organization">
-      <Form form={form} onSubmit={handleCreateOrganization}>
+      <form onSubmit={form.onSubmit(handleCreateOrganization)} onReset={form.onReset}>
         <Grid>
           <Grid.Col span={{ base: 12, md: 6 }}>
             <TextInput label="Organisation Name" {...form.getInputProps("name")} />
@@ -130,7 +130,7 @@ const UpdateOrganisationModal = ({
             Save changes
           </Button>
         </Group>
-      </Form>
+      </form>
     </Modal>
   );
 };

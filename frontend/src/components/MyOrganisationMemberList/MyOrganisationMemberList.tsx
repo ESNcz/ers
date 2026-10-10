@@ -1,13 +1,14 @@
 "use client";
 
 import {
+  getOrganizationMemberCandidatesQueryKey,
   useAddOrganizationMembers,
   useDeleteOrganizationMembers,
   useGetOrganisationById,
   useOrganizationMembers,
   useTransferManager,
 } from "@/utils/api";
-import { OrganizationMember, UserRole } from "@/utils/api.schemas";
+import { OrganizationMember, RolePermissionsItem } from "@/utils/api.schemas";
 import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTable } from "@components/data-table";
 import { organizationMemberListColumns } from "@components/data-table/organization-member-list-columns";
@@ -16,6 +17,7 @@ import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import { Button, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconUserPlus } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 interface MyOrganisationMemberListProps {
@@ -24,6 +26,7 @@ interface MyOrganisationMemberListProps {
 
 const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListProps) => {
   const { currentUser } = useCurrentUser();
+  const queryClient = useQueryClient();
   const { data: currentOrganisation, refetch: refetchCurrentOrganisation } = useGetOrganisationById(organizationId);
   const { data: organizationMembers, refetch: refetchOrganisationMembers } = useOrganizationMembers(organizationId, {
     all: true,
@@ -31,17 +34,25 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
 
   const [isAddModalOpened, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
 
-  const isUserManager = useMemo(() => {
-    return (
-      currentOrganisation?.manager?.id === currentUser.id ||
-      hasSomePermissions(currentUser.role, ["organisation.deleteUser"])
-    );
+  // Same rules as the backend - the organisation manager can do everything, others need the permission
+  const permissions = useMemo(() => {
+    const isOrganisationManager = currentOrganisation?.manager?.id === currentUser.id;
+    const can = (permission: RolePermissionsItem) =>
+      isOrganisationManager || hasSomePermissions(currentUser.role, [permission]);
+
+    return {
+      canAddMembers: can(RolePermissionsItem.organisationaddUser),
+      canRemoveMembers: can(RolePermissionsItem.organisationdeleteUser),
+      canTransferManager: can(RolePermissionsItem.organisationupdate),
+    };
   }, [currentOrganisation, currentUser]);
 
   const addOrganizationMemberMutation = useAddOrganizationMembers({
     mutation: {
       onSuccess: () => {
         refetchOrganisationMembersInfo();
+        // Added user is no longer a candidate, cached searches are stale
+        queryClient.invalidateQueries({ queryKey: getOrganizationMemberCandidatesQueryKey(organizationId) });
         closeAddModal();
       },
     },
@@ -53,11 +64,6 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
       },
     },
   });
-
-  const memberUserIds = useMemo(
-    () => new Set(organizationMembers?.data?.map((m) => m.user.id) ?? []),
-    [organizationMembers],
-  );
 
   const handleDeleteOrganizationMembers = (member: OrganizationMember) => {
     if (
@@ -119,9 +125,9 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
       handleTransferSectionManager,
       handleDeleteOrganizationMembers,
       deleteOrganizationMemberMutation.isPending,
-      isUserManager,
+      permissions,
     );
-  }, [currentUser.role, currentOrganisation]);
+  }, [currentOrganisation, deleteOrganizationMemberMutation.isPending, permissions]);
 
   if (!organizationMembers?.data) {
     return (
@@ -154,7 +160,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         <Title order={1}>My Organisation</Title>
         <Flex direction={{ base: "column", md: "row" }} gap={10}>
           <Title order={2}>{currentOrganisation?.name}</Title>
-          {isUserManager && (
+          {permissions.canAddMembers && (
             <Button leftSection={<IconUserPlus size={18} />} onClick={openAddModal}>
               Add member
             </Button>
@@ -162,11 +168,11 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         </Flex>
       </Flex>
       <DataTable columns={columns} data={tableData} emptyMessage="No members found." />
-      {isUserManager && (
+      {permissions.canAddMembers && (
         <AddOrganisationMemberModal
           isOpened={isAddModalOpened}
           closeModal={closeAddModal}
-          memberUserIds={memberUserIds}
+          organisationId={organizationId}
           onAddMember={handleAddMemberToOrganization}
           isPending={addOrganizationMemberMutation.isPending}
         />

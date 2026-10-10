@@ -50,4 +50,9 @@ export interface DataTableProps<TData> {
   initialSorting?: SortingState;
   initialColumnVisibility?: VisibilityState;
   getRowId?: (row: TData, index: number) => string;
+  /**
+   * Group actions for selected rows. When set, rows get a selection checkbox and selecting rows
+   * shows the actions in a floating action bar. Pass `getRowId` so selection survives data updates.
+   */
+  selectionActions?: (selectedRows: TData[], clearSelection: () => void) => ReactNode;
 }

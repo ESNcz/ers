@@ -668,6 +668,13 @@ export interface UpdateApplicationSlotDto {
   spotId: number | null;
 }
 
+export interface UpdateApplicationsSpotDto {
+  /** @minItems 1 */
+  applicationIds: number[];
+  /** @nullable */
+  spotId: number | null;
+}
+
 export interface EventDetailLink {
   id: number;
   name: string;
@@ -1050,6 +1057,15 @@ export type OrganizationMembersParams = {
 
 export type OrganizationMembers200 = {
   data?: OrganizationMember[];
+  pagination?: PaginationDto;
+};
+
+export type OrganizationMemberCandidatesParams = {
+  search: string;
+};
+
+export type OrganizationMemberCandidates200 = {
+  data?: User[];
   pagination?: PaginationDto;
 };
 

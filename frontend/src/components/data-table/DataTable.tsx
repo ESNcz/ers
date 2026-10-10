@@ -1,11 +1,12 @@
 "use client";
 
-import { Box, Skeleton, Stack, Table, Text } from "@mantine/core";
+import { ActionBar, Box, Skeleton, Stack, Table, Text } from "@mantine/core";
 import { flexRender } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
 
 import classes from "./DataTable.module.css";
+import { DataTableColumnResizer } from "./DataTableColumnResizer";
 import { DataTableHeaderCell } from "./DataTableHeaderCell";
 import { DataTablePagination } from "./DataTablePagination";
 import { DataTableToolbar } from "./DataTableToolbar";
@@ -29,6 +30,7 @@ export function DataTable<TData>({
   initialSorting,
   initialColumnVisibility,
   getRowId,
+  selectionActions,
 }: DataTableProps<TData>) {
   const { table, globalFilter, resetFilters } = useDataTable({
     columns,
@@ -37,11 +39,27 @@ export function DataTable<TData>({
     initialSorting,
     initialColumnVisibility,
     getRowId,
+    enableRowSelection: !!selectionActions,
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const rows = table.getRowModel().rows;
-  const visibleColumnCount = table.getVisibleLeafColumns().length;
+  const visibleColumns = table.getVisibleLeafColumns();
+  const visibleColumnCount = visibleColumns.length;
+  // Every row is its own grid with the same columns, sized only from the column sizes - never from cell content,
+  // so rows stay aligned even though only the rows in view are rendered. Columns grow to fill the free space
+  // with `getSize()` as their minimum, except columns capped by `maxSize` and columns the user resized.
+  const { columnSizing } = table.getState();
+  const gridTemplateColumns = visibleColumns
+    .map((column) => {
+      const width = column.getSize();
+      const isFixed = column.id in columnSizing || width >= (column.columnDef.maxSize ?? Infinity);
+      return isFixed ? `${width}px` : `minmax(${width}px, 1fr)`;
+    })
+    .join(" ");
+  // Rows hidden by filters stay selected but are left out, so actions apply only to what is visible
+  const selectedRows = table.getFilteredSelectedRowModel().rows.map((row) => row.original);
+  const clearSelection = () => table.resetRowSelection(true);
 
   // Only rows inside the scroll viewport are rendered, so large pages stay fast.
   // Rows are measured after render because cells can wrap or hold buttons.
@@ -77,21 +95,22 @@ export function DataTable<TData>({
         <Table
           stickyHeader
           highlightOnHover
-          withColumnBorders
-          layout="fixed"
+          verticalSpacing={7}
+          horizontalSpacing={10}
           className={classes.table}
-          style={{ minWidth: table.getTotalSize() }}
+          style={{ minWidth: table.getTotalSize(), "--data-table-columns": gridTemplateColumns }}
+          role="table"
           aria-busy={loading}
         >
-          <Table.Thead>
+          <Table.Thead role="rowgroup">
             {table.getHeaderGroups().map((headerGroup) => (
-              <Table.Tr key={headerGroup.id}>
+              <Table.Tr key={headerGroup.id} role="row">
                 {headerGroup.headers.map((header) => (
                   <Table.Th
                     key={header.id}
                     colSpan={header.colSpan}
                     className={classes.headerCell}
-                    style={{ width: header.getSize() }}
+                    role="columnheader"
                     aria-sort={
                       header.column.getIsSorted() === "asc"
                         ? "ascending"
@@ -101,40 +120,35 @@ export function DataTable<TData>({
                     }
                   >
                     <DataTableHeaderCell header={header} />
-                    <div
-                      className={classes.resizer}
-                      onMouseDown={header.getResizeHandler()}
-                      onTouchStart={header.getResizeHandler()}
-                      onDoubleClick={() => header.column.resetSize()}
-                    />
+                    {header.column.getCanResize() && <DataTableColumnResizer header={header} />}
                   </Table.Th>
                 ))}
               </Table.Tr>
             ))}
           </Table.Thead>
 
-          <Table.Tbody>
+          <Table.Tbody role="rowgroup">
             {loading ? (
               Array.from({ length: SKELETON_ROWS }, (_, index) => (
-                <Table.Tr key={`skeleton-${index}`}>
-                  {table.getVisibleLeafColumns().map((column) => (
-                    <Table.Td key={column.id}>
+                <Table.Tr key={`skeleton-${index}`} role="row">
+                  {visibleColumns.map((column) => (
+                    <Table.Td key={column.id} role="cell">
                       <Skeleton height={16} radius="sm" />
                     </Table.Td>
                   ))}
                 </Table.Tr>
               ))
             ) : rows.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={visibleColumnCount} className={classes.empty}>
+              <Table.Tr role="row">
+                <Table.Td colSpan={visibleColumnCount} className={`${classes.fullRow} ${classes.empty}`} role="cell">
                   <Text c="dimmed">{emptyMessage}</Text>
                 </Table.Td>
               </Table.Tr>
             ) : (
               <>
                 {paddingTop > 0 && (
-                  <tr aria-hidden>
-                    <td colSpan={visibleColumnCount} style={{ height: paddingTop, padding: 0 }} />
+                  <tr aria-hidden className={classes.spacer}>
+                    <td colSpan={visibleColumnCount} className={classes.fullRow} style={{ height: paddingTop }} />
                   </tr>
                 )}
                 {virtualRows.map((virtualRow) => {
@@ -145,10 +159,12 @@ export function DataTable<TData>({
                       ref={virtualizer.measureElement}
                       data-index={virtualRow.index}
                       data-odd={virtualRow.index % 2 === 1 || undefined}
+                      data-selected={row.getIsSelected() || undefined}
                       className={classes.row}
+                      role="row"
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <Table.Td key={cell.id} title={String(cell.getValue() ?? "")}>
+                        <Table.Td key={cell.id} title={String(cell.getValue() ?? "")} role="cell">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </Table.Td>
                       ))}
@@ -156,8 +172,8 @@ export function DataTable<TData>({
                   );
                 })}
                 {paddingBottom > 0 && (
-                  <tr aria-hidden>
-                    <td colSpan={visibleColumnCount} style={{ height: paddingBottom, padding: 0 }} />
+                  <tr aria-hidden className={classes.spacer}>
+                    <td colSpan={visibleColumnCount} className={classes.fullRow} style={{ height: paddingBottom }} />
                   </tr>
                 )}
               </>
@@ -167,6 +183,23 @@ export function DataTable<TData>({
       </Box>
 
       {!loading && <DataTablePagination table={table} pageSizeOptions={pageSizeOptions} />}
+
+      {selectionActions && (
+        <ActionBar
+          opened={selectedRows.length > 0}
+          onClose={clearSelection}
+          closeOnEscape
+          aria-label="Selected rows actions"
+        >
+          <Text size="sm" fw={500} px="xs">
+            {selectedRows.length} selected
+          </Text>
+          <ActionBar.Divider />
+          {selectionActions(selectedRows, clearSelection)}
+          <ActionBar.Divider />
+          <ActionBar.CloseButton aria-label="Clear selection" />
+        </ActionBar>
+      )}
     </Stack>
   );
 }

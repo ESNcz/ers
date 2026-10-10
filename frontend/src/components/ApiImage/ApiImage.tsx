@@ -12,14 +12,6 @@ const ImagePlaceholder = ({ ...props }: ImagePlaceholderProps) => {
   return <MantineImage src="/imagePlaceholder.svg" {...props} alt="" />;
 };
 
-interface ImageEPProps extends MantineImageProps {
-  alt?: string;
-}
-
-const ImageEP = ({ src, alt = "", ...props }: ImageEPProps) => {
-  return <MantineImage src={apiImageURL(src)} alt={alt} {...props} />;
-};
-
 interface ApiImageProps extends MantineImageProps {
   src: string | undefined;
   alt?: string;
@@ -32,7 +24,7 @@ const ApiImage = ({ src, alt = "", ...props }: ApiImageProps) => {
     return <MantineImage src={src} alt={alt} {...props} />;
   }
 
-  return <ImageEP src={src} alt={alt} {...props} />;
+  return <MantineImage src={apiImageURL(src)} alt={alt} {...props} />;
 };
 
 export default ApiImage;

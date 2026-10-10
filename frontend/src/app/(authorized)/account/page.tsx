@@ -29,7 +29,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { Form, isNotEmpty, useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import { useHover } from "@mantine/hooks";
 import { IconMoodEdit } from "@tabler/icons-react";
 import CountryList from "country-list-with-dial-code-and-flag";
@@ -280,7 +280,7 @@ const AccountPage = () => {
         )}
       </Flex>
 
-      <Form form={form} onSubmit={handleUpdateUser}>
+      <form onSubmit={form.onSubmit(handleUpdateUser)} onReset={form.onReset}>
         <Flex direction="column" gap={12}>
           <SimpleGrid cols={2}>
             <TextInput label="First name" {...form.getInputProps("firstName")} />
@@ -412,7 +412,7 @@ const AccountPage = () => {
             Save changes
           </Button>
         </Group>
-      </Form>
+      </form>
     </Container>
   );
 };

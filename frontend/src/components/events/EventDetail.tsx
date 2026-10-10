@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeleteEventApplication } from "@/utils/api";
+import { useDeleteEventApplication, useGetApplication } from "@/utils/api";
 import { EventDetail as EventDetailType } from "@/utils/api.schemas";
 import { hasEveryPermissions, hasSomePermissions } from "@/utils/checkPermissions";
 import routes from "@/utils/routes";
@@ -9,7 +9,9 @@ import ApiImage from "@components/ApiImage/ApiImage";
 import RichTextRenderer from "@components/Richtext/RichTextRenderer";
 import EventEditModal from "@components/events/modals/EventEditModal";
 import EventApplicationModal from "@components/modals/EventApplicationModal/EventApplicationModal";
+import UpdateEventApplicationModal from "@components/modals/UpdateEventApplicationModal/UpdateEventApplicationModal";
 import UpdateEventPhotoModal from "@components/modals/UpdateEventPhotoModal/UpdateEventPhotoModal";
+import ViewEventApplicationModal from "@components/modals/ViewEventApplicationModal/ViewEventApplicationModal";
 import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   Anchor,
@@ -19,6 +21,7 @@ import {
   Divider,
   Flex,
   Grid,
+  Menu,
   Paper,
   SimpleGrid,
   Text,
@@ -31,6 +34,7 @@ import {
   IconCash,
   IconChevronDown,
   IconEdit,
+  IconFileText,
   IconInfoCircle,
   IconInvoice,
   IconPhoto,
@@ -59,6 +63,10 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
   const [isModalEditOpen, { open: openModalEdit, close: closeModalEdit }] = useDisclosure(false);
   const [isModalUploadPhotoOpen, { open: openModalUploadPhoto, close: closeModalUploadPhoto }] = useDisclosure(false);
   const [isModalJoinEventOpen, { open: openModalJoinEvent, close: closeModalJoinEvent }] = useDisclosure(false);
+  const [isModalViewApplicationOpen, { open: openModalViewApplication, close: closeModalViewApplication }] =
+    useDisclosure(false);
+  const [isModalEditApplicationOpen, { open: openModalEditApplication, close: closeModalEditApplication }] =
+    useDisclosure(false);
 
   const deleteEventApplication = useDeleteEventApplication({
     mutation: {
@@ -69,6 +77,12 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
   });
 
   const isUserRegistered = userApplicationId !== null;
+  // Applicants can edit or cancel their application only until the deadline, the backend checks the same
+  const isRegistrationClosed = dayjs(eventDetail.registrationDeadline).diff(new Date()) <= 0;
+
+  const { data: userApplication, refetch: refetchUserApplication } = useGetApplication(userApplicationId ?? 0, {
+    query: { enabled: isUserRegistered },
+  });
 
   const handleDeleteApplication = () => {
     if (!confirm("Do you really want to unregister from this event?")) return;
@@ -80,6 +94,11 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
   // Data comes from the server page - re-run it after mutations
   const handleRefetchDetail = () => {
     router.refresh();
+  };
+
+  const handleApplicationUpdated = () => {
+    refetchUserApplication();
+    handleRefetchDetail();
   };
 
   const isRegisteredOrAdmin = isUserRegistered || hasSomePermissions(currentUser.role, ["event.reviewSugarCubes"]);
@@ -161,7 +180,7 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
 
             <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 1, xl: 1 }}>
               <Flex direction="column" gap={16}>
-                {currentUser.personalAddress === null && (
+                {!isUserRegistered && currentUser.personalAddress === null && (
                   <Blockquote color="orange" icon={<IconInfoCircle />} p={20} mt={16} radius="md">
                     Add your{" "}
                     <Anchor component={Link} href={routes.ACCOUNT}>
@@ -171,23 +190,51 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
                   </Blockquote>
                 )}
                 {isUserRegistered ? (
-                  <Button
-                    onClick={handleDeleteApplication}
-                    color="red"
-                    leftSection={<IconCancel />}
-                    disabled={dayjs(eventDetail.registrationDeadline).diff(new Date()) <= 0}
-                  >
-                    Unregister from event
-                  </Button>
+                  <Button.Group w="100%">
+                    <Button
+                      flex={1}
+                      leftSection={<IconFileText />}
+                      onClick={openModalViewApplication}
+                      disabled={!userApplication}
+                    >
+                      View application
+                    </Button>
+                    <Menu position="bottom-end" shadow="md" width={240}>
+                      <Menu.Target>
+                        <Button
+                          px={10}
+                          aria-label="Application options"
+                          style={{ borderInlineStart: "1px solid var(--mantine-color-body)" }}
+                        >
+                          <IconChevronDown size={18} />
+                        </Button>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<IconEdit size={16} />}
+                          onClick={openModalEditApplication}
+                          disabled={isRegistrationClosed || !userApplication}
+                        >
+                          Edit application
+                        </Menu.Item>
+                        <Menu.Item
+                          color="red"
+                          leftSection={<IconCancel size={16} />}
+                          onClick={handleDeleteApplication}
+                          disabled={isRegistrationClosed || deleteEventApplication.isPending}
+                        >
+                          Unregister
+                        </Menu.Item>
+                        {isRegistrationClosed && <Menu.Label>Registration deadline has passed</Menu.Label>}
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Button.Group>
                 ) : (
                   <Button
                     onClick={openModalJoinEvent}
                     color="green"
                     leftSection={<IconWritingSign />}
-                    disabled={
-                      currentUser.personalAddress === null ||
-                      dayjs(eventDetail.registrationDeadline).diff(new Date()) <= 0
-                    }
+                    disabled={currentUser.personalAddress === null || isRegistrationClosed}
                   >
                     Register for event
                   </Button>
@@ -211,7 +258,7 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
                 Show management options
               </Button>
             )}
-            <Collapse in={isPhone ? !opened : opened}>
+            <Collapse expanded={isPhone ? !opened : opened}>
               <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 1, xl: 1 }}>
                 {hasEveryPermissions(currentUser.role, ["event.update"]) && (
                   <Button onClick={openModalEdit} leftSection={<IconEdit />}>
@@ -280,6 +327,21 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
         isOpened={isModalJoinEventOpen}
         closeModal={closeModalJoinEvent}
       />
+      {userApplication && (
+        <>
+          <ViewEventApplicationModal
+            application={userApplication}
+            isOpened={isModalViewApplicationOpen}
+            closeModal={closeModalViewApplication}
+          />
+          <UpdateEventApplicationModal
+            currentApplication={userApplication}
+            isOpened={isModalEditApplicationOpen}
+            closeModal={closeModalEditApplication}
+            handleSuccess={handleApplicationUpdated}
+          />
+        </>
+      )}
     </>
   );
 };

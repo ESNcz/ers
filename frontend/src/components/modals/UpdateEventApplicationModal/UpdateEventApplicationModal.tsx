@@ -34,7 +34,7 @@ import {
   TextInput,
   Textarea,
 } from "@mantine/core";
-import { Form, useForm } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 
@@ -162,7 +162,7 @@ const UpdateEventApplicationModal = ({
 
   return (
     <Modal size="xl" opened={isOpened} onClose={handleCloseModal} title="Update Event Applicaton">
-      <Form form={form} onSubmit={handleSubmit}>
+      <form onSubmit={form.onSubmit(handleSubmit)} onReset={form.onReset}>
         <Stack gap="md">
           <Flex direction="column" gap="md">
             <SimpleGrid cols={2}>
@@ -419,7 +419,7 @@ const UpdateEventApplicationModal = ({
             Update Application
           </Button>
         </Group>
-      </Form>
+      </form>
     </Modal>
   );
 };

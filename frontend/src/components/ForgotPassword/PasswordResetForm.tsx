@@ -4,7 +4,7 @@ import { useResetPassword } from "@/utils/api";
 import { ResetPasswordDto } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
 import { Box, Button, Flex, PasswordInput, Text } from "@mantine/core";
-import { Form, isNotEmpty, useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
@@ -50,7 +50,7 @@ const ForgotPasswordForm = () => {
 
   return (
     <Box maw="32rem" w="100%">
-      <Form form={form} onSubmit={(values) => sendRequest(values)}>
+      <form onSubmit={form.onSubmit((values) => sendRequest(values))} onReset={form.onReset}>
         <Flex direction="column" gap={12}>
           <PasswordInput label="Password" type="password" {...form.getInputProps("password")} required />
           <PasswordInput label="Confirm Password" type="password" {...form.getInputProps("confirmPassword")} required />
@@ -67,7 +67,7 @@ const ForgotPasswordForm = () => {
               </Text>
             ))}
         </Flex>
-      </Form>
+      </form>
     </Box>
   );
 };

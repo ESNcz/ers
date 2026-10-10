@@ -4,6 +4,7 @@ import {
   type ColumnFiltersState,
   type FilterFn,
   type PaginationState,
+  type RowSelectionState,
   type SortingState,
   type Updater,
   type VisibilityState,
@@ -19,12 +20,18 @@ import {
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useState } from "react";
 
 import { quickSearchFilterFn, withDefaultFilterFns } from "./filter-fns";
+import { selectionColumn } from "./selection-column";
 import type { DataTableProps } from "./types";
+
+const DEFAULT_COLUMN_MIN_SIZE = 150;
 
 type UseDataTableOptions<TData> = Pick<
   DataTableProps<TData>,
   "columns" | "data" | "defaultPageSize" | "initialSorting" | "initialColumnVisibility" | "getRowId"
->;
+> & {
+  /** Prepends a checkbox column and tracks selected rows */
+  enableRowSelection?: boolean;
+};
 
 export function useDataTable<TData>({
   columns,
@@ -33,12 +40,14 @@ export function useDataTable<TData>({
   initialSorting = [],
   initialColumnVisibility = {},
   getRowId,
+  enableRowSelection = false,
 }: UseDataTableOptions<TData>) {
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(initialColumnVisibility);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: defaultPageSize });
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // Automatic page reset is off so row updates (e.g. an edited cell) keep the current page.
   // Changing what is shown or its order starts from the first page instead.
@@ -51,21 +60,27 @@ export function useDataTable<TData>({
     [],
   );
 
-  const tableColumns = useMemo(() => withDefaultFilterFns(columns), [columns]);
+  const tableColumns = useMemo(
+    () => withDefaultFilterFns(enableRowSelection ? [selectionColumn<TData>(), ...columns] : columns),
+    [columns, enableRowSelection],
+  );
 
   const table = useReactTable<TData>({
     data,
     columns: tableColumns,
-    state: { sorting, columnFilters, columnVisibility, globalFilter, pagination },
+    state: { sorting, columnFilters, columnVisibility, globalFilter, pagination, rowSelection },
     getRowId,
+    // `minSize` is the minimum width, columns grow from it. Resizing stores an exact width in `columnSizing`.
+    defaultColumn: { size: 0, minSize: DEFAULT_COLUMN_MIN_SIZE },
     autoResetPageIndex: false,
+    enableRowSelection,
     enableColumnResizing: true,
-    columnResizeMode: "onChange",
     onSortingChange: withPageReset(setSorting),
     onColumnFiltersChange: withPageReset(setColumnFilters),
     onGlobalFilterChange: withPageReset(setGlobalFilter),
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
+    onRowSelectionChange: setRowSelection,
     globalFilterFn: quickSearchFilterFn as FilterFn<TData>,
     // Quick search looks only at visible data columns
     getColumnCanGlobalFilter: (column) =>

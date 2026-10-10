@@ -51,7 +51,7 @@ const ManageOrganisationsPage = () => {
         openUpdateOrganizationModal,
         deleteOrganizationMutation,
       ),
-    [],
+    [deleteOrganizationMutation.isPending],
   );
 
   if (!organisationsList) {

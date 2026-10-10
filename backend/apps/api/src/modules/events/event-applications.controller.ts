@@ -46,6 +46,7 @@ import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagi
 import { Address } from "@api/modules/addresses/entities";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
 import { UpdateApplicationSlotDto } from "@api/modules/events/dto/update-application-slot.dto";
+import { UpdateApplicationsSpotDto } from "@api/modules/events/dto/update-applications-spot.dto";
 import { UpdateEventApplicationPrioritiesDto } from "@api/modules/events/dto/update-event-application-priorities.dto";
 import { FileStorageService } from "@api/modules/file-storage";
 import { OrganizationService } from "@api/modules/organization";
@@ -55,7 +56,7 @@ import { ajv } from "utilities/ajv";
 import { ParseDatePipe } from "utilities/nest/pipes";
 import { dayMonthYear } from "utilities/time";
 
-import { EventApplication, EventCustomOrganization } from "./entities";
+import { EventApplication, EventCustomOrganization, EventSpot } from "./entities";
 import { EventApplicationsService, EventSpotsService, EventsService } from "./index";
 
 @ApiTags("Event applications")
@@ -207,16 +208,39 @@ export class EventApplicationsController {
   }
 
   /**
-   * Get all event user applications
-   * @returns
-   * @param applicationId
+   * Get event application by ID.
+   * Applicants can see their own application, users with `event.manageApplications` any application.
    */
   @ApiBearerAuth()
-  @ApiOkResponse({ type: [EventApplicationDetailedWithApplications] })
+  @ApiOkResponse({ type: EventApplicationDetailedWithApplications })
+  @ApiNotFoundResponse({ description: "Event application not found" })
+  @ApiForbiddenResponse({ description: "User is not allowed to see this application" })
   @UseGuards(CookieGuard)
   @Get("application/:applicationId")
-  async getApplication(@Param("applicationId", ParseIntPipe) applicationId: number) {
-    return await this.eventApplicationsService.findById(applicationId);
+  async getApplication(
+    @CurrentUser() currentUser: User,
+    @Param("applicationId", ParseIntPipe) applicationId: number,
+  ): Promise<EventApplicationDetailedWithApplications> {
+    const application = await this.eventApplicationsService.findById(applicationId, {
+      relations: {
+        event: { applications: true },
+        organization: true,
+        customOrganization: true,
+        invoiceAddress: true,
+      },
+    });
+    if (!application) throw new NotFoundException("Event application not found");
+
+    if (!(
+      application.user.id === currentUser.id ||
+      currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])
+    )) {
+      throw new ForbiddenException("You don't have permission to perform this action");
+    }
+
+    return this.eventApplicationSimpleWithApplicationsMapper.map(
+      application,
+    ) as unknown as EventApplicationDetailedWithApplications;
   }
 
   /**
@@ -330,6 +354,14 @@ export class EventApplicationsController {
       currentUser.id === application.user.id
     )) {
       throw new UnauthorizedException("You don't have permission to perform this action");
+    }
+
+    // Applicants can edit their application only until the registration deadline, like unregistering
+    if (
+      !currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]) &&
+      dayjs(application.event.registrationDeadline).isBefore(dayjs())
+    ) {
+      throw new ForbiddenException("Registration deadline has passed");
     }
 
     if (body.spotTypeId) {
@@ -485,6 +517,46 @@ export class EventApplicationsController {
     await application.save();
 
     return application;
+  }
+
+  /**
+   * Set the same spot for multiple applications of an event, `spotId: null` removes the spot.
+   *
+   * Permissions required: `event.manageApplications`
+   */
+  @ApiOkResponse({ description: "Application spots updated" })
+  @ApiForbiddenResponse({ description: "Missing `event.manageApplications` permission" })
+  @ApiNotFoundResponse({ description: "Event spot or some of the event applications not found" })
+  @ApiBearerAuth()
+  @UseGuards(CookieGuard)
+  @Patch(":eventId/applications/spot")
+  async updateApplicationsSpot(
+    @CurrentUser() currentUser: User,
+    @Param("eventId", ParseIntPipe) eventId: number,
+    @Body() body: UpdateApplicationsSpotDto,
+  ) {
+    if (!currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])) {
+      throw new ForbiddenException("You don't have permission to perform this action");
+    }
+
+    const applicationIds = [...new Set(body.applicationIds)];
+    const applications = await this.eventApplicationsService.findByIds(applicationIds, {
+      relations: { event: true },
+    });
+    if (
+      applications.length !== applicationIds.length ||
+      applications.some((application) => application.event.id !== eventId)
+    ) {
+      throw new NotFoundException("Some of the event applications not found");
+    }
+
+    let spot: EventSpot | null = null;
+    if (body.spotId !== null && body.spotId !== undefined) {
+      spot = await this.eventSpotsService.findById(body.spotId);
+      if (!spot || spot.event.id !== eventId) throw new NotFoundException("Event spot not found");
+    }
+
+    await this.eventApplicationsService.updateSpots(applicationIds, spot);
   }
 
   /**

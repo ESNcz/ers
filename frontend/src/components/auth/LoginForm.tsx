@@ -4,7 +4,7 @@ import { useLoginUserWithEmailOrUsername } from "@/utils/api";
 import { LoginUser } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
 import { Box, Button, Flex, PasswordInput, Text, TextInput } from "@mantine/core";
-import { Form, isNotEmpty, useForm } from "@mantine/form";
+import { isNotEmpty, useForm } from "@mantine/form";
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -37,7 +37,7 @@ const LoginForm = () => {
 
   return (
     <Box maw="32rem" w="100%">
-      <Form form={form} onSubmit={loginUser}>
+      <form onSubmit={form.onSubmit(loginUser)} onReset={form.onReset}>
         <Flex direction="column" gap={12}>
           <TextInput label="E-mail / Username" {...form.getInputProps("email")} />
           <PasswordInput label="Password" type="password" {...form.getInputProps("password")} />
@@ -54,7 +54,7 @@ const LoginForm = () => {
             </Text>
           )}
         </Flex>
-      </Form>
+      </form>
     </Box>
   );
 };

@@ -60,6 +60,8 @@ import type {
   LoginUser,
   Organization,
   OrganizationMember,
+  OrganizationMemberCandidates200,
+  OrganizationMemberCandidatesParams,
   OrganizationMemberWithoutUser,
   OrganizationMembers200,
   OrganizationMembersParams,
@@ -73,6 +75,7 @@ import type {
   SugarCubeRecipientOptionDto,
   TransferManager201,
   UpdateApplicationSlotDto,
+  UpdateApplicationsSpotDto,
   UpdateEvent,
   UpdateEventApplication,
   UpdateEventApplicationPrioritiesDto,
@@ -2121,6 +2124,134 @@ export const useAddOrganizationMembers = <TError = ErrorType<unknown>, TContext 
 };
 
 /**
+ * Search users that can be added to the organization - users who are not its members yet.
+Matches first name, last name, full name, username or email, returns at most 20 users.
+
+Only organization manager or users with `organisation.addUser` permission can search.
+ */
+export const organizationMemberCandidates = (
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<OrganizationMemberCandidates200>(
+    { url: `/organization/${id}/members/candidates`, method: "GET", params, signal },
+    options,
+  );
+};
+
+export const getOrganizationMemberCandidatesQueryKey = (id?: string, params?: OrganizationMemberCandidatesParams) => {
+  return [`/organization/${id}/members/candidates`, ...(params ? [params] : [])] as const;
+};
+
+export const getOrganizationMemberCandidatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getOrganizationMemberCandidatesQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof organizationMemberCandidates>>> = ({ signal }) =>
+    organizationMemberCandidates(id, params, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof organizationMemberCandidates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type OrganizationMemberCandidatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof organizationMemberCandidates>>
+>;
+export type OrganizationMemberCandidatesQueryError = ErrorType<unknown>;
+
+export function useOrganizationMemberCandidates<
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof organizationMemberCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof organizationMemberCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useOrganizationMemberCandidates<
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof organizationMemberCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof organizationMemberCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useOrganizationMemberCandidates<
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useOrganizationMemberCandidates<
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getOrganizationMemberCandidatesQueryOptions(id, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
  * Delete members from organization (`member.id` not `user.id`)
  */
 export const deleteOrganizationMembers = (
@@ -2531,14 +2662,15 @@ export const useCreateUserApplication = <TError = ErrorType<void>, TContext = un
 };
 
 /**
- * Get all event user applications
+ * Get event application by ID.
+Applicants can see their own application, users with `event.manageApplications` any application.
  */
 export const getApplication = (
   applicationId: number,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<EventApplicationDetailedWithApplications[]>(
+  return customInstance<EventApplicationDetailedWithApplications>(
     { url: `/events/application/${applicationId}`, method: "GET", signal },
     options,
   );
@@ -2906,6 +3038,86 @@ export const useUpdateUserApplicationSpot = <TError = ErrorType<void>, TContext 
   TContext
 > => {
   const mutationOptions = getUpdateUserApplicationSpotMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Set the same spot for multiple applications of an event, `spotId: null` removes the spot.
+
+Permissions required: `event.manageApplications`
+ */
+export const updateApplicationsSpot = (
+  eventId: number,
+  updateApplicationsSpotDto: UpdateApplicationsSpotDto,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<void>(
+    {
+      url: `/events/${eventId}/applications/spot`,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      data: updateApplicationsSpotDto,
+    },
+    options,
+  );
+};
+
+export const getUpdateApplicationsSpotMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateApplicationsSpot>>,
+    TError,
+    { eventId: number; data: UpdateApplicationsSpotDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateApplicationsSpot>>,
+  TError,
+  { eventId: number; data: UpdateApplicationsSpotDto },
+  TContext
+> => {
+  const mutationKey = ["updateApplicationsSpot"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateApplicationsSpot>>,
+    { eventId: number; data: UpdateApplicationsSpotDto }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return updateApplicationsSpot(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateApplicationsSpotMutationResult = NonNullable<Awaited<ReturnType<typeof updateApplicationsSpot>>>;
+export type UpdateApplicationsSpotMutationBody = UpdateApplicationsSpotDto;
+export type UpdateApplicationsSpotMutationError = ErrorType<void>;
+
+export const useUpdateApplicationsSpot = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateApplicationsSpot>>,
+      TError,
+      { eventId: number; data: UpdateApplicationsSpotDto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateApplicationsSpot>>,
+  TError,
+  { eventId: number; data: UpdateApplicationsSpotDto },
+  TContext
+> => {
+  const mutationOptions = getUpdateApplicationsSpotMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
