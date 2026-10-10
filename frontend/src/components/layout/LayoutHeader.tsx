@@ -4,10 +4,12 @@ import { RolePermissionsItem } from "@/utils/api.schemas";
 import { apiImageURL } from "@/utils/apiImageURL";
 import { manageEventLink, manageOrganisationLink, managePeopleLink, settingsLink } from "@/utils/headerLinks";
 import routes from "@/utils/routes";
+import { useInstallPrompt } from "@/utils/useInstallPrompt";
 import LogoERS from "@components/icons/LogoERS";
 import styles from "@components/layout/LayoutHeader.module.css";
 import NavigationItemList from "@components/layout/NavigationItemList";
 import { useOptionalCurrentUser } from "@components/providers/CurrentUserProvider";
+import InstallInstructionsModal from "@components/pwa/InstallInstructionsModal";
 import {
   Anchor,
   Avatar,
@@ -26,7 +28,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconChevronDown, IconLogout, IconUser } from "@tabler/icons-react";
+import { IconChevronDown, IconDeviceMobileDown, IconLogout, IconUser } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -77,6 +79,14 @@ const LayoutHeader = () => {
     : "";
 
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
+  const [instructionsOpened, { open: openInstructions, close: closeInstructions }] = useDisclosure(false);
+
+  const { isAvailable: isInstallAvailable, manualInstall, promptInstall } = useInstallPrompt();
+  const installApp = () => {
+    closeDrawer();
+    if (manualInstall) openInstructions();
+    else promptInstall();
+  };
 
   return (
     <header className={styles.header}>
@@ -136,6 +146,11 @@ const LayoutHeader = () => {
                   >
                     Account
                   </Menu.Item>
+                  {isInstallAvailable && (
+                    <Menu.Item leftSection={<IconDeviceMobileDown size={16} stroke={1.5} />} onClick={installApp}>
+                      Install app
+                    </Menu.Item>
+                  )}
                   <Menu.Divider />
                   <Menu.Item
                     color="red"
@@ -209,6 +224,14 @@ const LayoutHeader = () => {
 
         <Divider my="sm" />
 
+        {isInstallAvailable && (
+        <Group grow px="md" pb="sm">
+          <Button variant="light" leftSection={<IconDeviceMobileDown size={16} stroke={1.5} />} onClick={installApp}>
+            Install app
+          </Button>
+        </Group>
+        )}
+
         <Group justify="center" grow pb="xl" px="md">
           <Button
             variant="default"
@@ -238,6 +261,7 @@ const LayoutHeader = () => {
           </Text>
         </Flex>
       </Drawer>
+      <InstallInstructionsModal platform={manualInstall} opened={instructionsOpened} onClose={closeInstructions} />
     </header>
   );
 };

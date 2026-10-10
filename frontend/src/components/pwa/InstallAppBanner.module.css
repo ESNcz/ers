@@ -1,0 +1,9 @@
+.banner {
+  position: fixed;
+  z-index: 200;
+  right: var(--mantine-spacing-md);
+  bottom: calc(var(--mantine-spacing-md) + env(safe-area-inset-bottom));
+  left: var(--mantine-spacing-md);
+  max-width: 420px;
+  margin-right: auto;
+}
