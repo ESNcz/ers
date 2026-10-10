@@ -7,9 +7,10 @@
  * Usage (in the backend container):
  *   docker compose exec backend node scripts/convert-photos-to-webp.mjs [--dry-run]
  *
- * Usage (locally, from `backend/`):
- *   node --env-file=.env scripts/convert-photos-to-webp.mjs [--dry-run]
+ * Usage (locally, from any directory, reads `backend/.env`):
+ *   node backend/scripts/convert-photos-to-webp.mjs [--dry-run]
  */
+import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
@@ -23,7 +24,12 @@ const MAX_DIMENSION_BY_DIRECTORY = {
 const DEFAULT_MAX_DIMENSION = 1920;
 const WEBP_QUALITY = 80;
 
-const STORAGE_PATH = path.join(process.cwd(), "storage");
+const BACKEND_PATH = path.join(import.meta.dirname, "..");
+const ENV_PATH = path.join(BACKEND_PATH, ".env");
+// Local run - in container the env comes from compose, existing variables are not overridden
+if (existsSync(ENV_PATH)) process.loadEnvFile(ENV_PATH);
+
+const STORAGE_PATH = path.join(BACKEND_PATH, "storage");
 const isDryRun = process.argv.includes("--dry-run");
 
 const client = new pg.Client({
@@ -37,6 +43,9 @@ const client = new pg.Client({
 const formatSize = (bytes) => `${(bytes / 1024).toFixed(0)} kB`;
 
 const main = async () => {
+  const missingEnv = ["DB_HOST", "DB_NAME", "DB_USER", "DB_PASS"].filter((name) => !process.env[name]);
+  if (missingEnv.length > 0) throw new Error(`Missing environment variables: ${missingEnv.join(", ")}`);
+
   await client.connect();
   const { rows } = await client.query(`SELECT id, filename FROM photo WHERE filename NOT LIKE '%.webp'`);
 

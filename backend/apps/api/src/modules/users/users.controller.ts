@@ -181,8 +181,13 @@ export class UsersController {
     const photo = await this.photoService.save(body.file.buffer, "user_photo", PhotoMaxDimension.UserPhoto);
     if (!photo) throw new InternalServerErrorException();
 
+    const oldPhoto = user.photo;
     user.photo = photo;
-    return this.usersService.save(user);
+    const savedUser = await this.usersService.save(user);
+
+    // Best effort, leftovers are removed by scripts/delete-orphaned-photos.mjs
+    if (oldPhoto) await this.photoService.delete(oldPhoto).catch(() => null);
+    return savedUser;
   }
 
   /**

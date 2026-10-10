@@ -341,8 +341,12 @@ export class EventsController {
     const photo = await this.photoService.save(body.file.buffer, "event_photo", PhotoMaxDimension.EventPhoto);
     if (!photo) throw new InternalServerErrorException("Could not save photo");
 
+    const oldPhoto = event.photo;
     event.photo = photo;
     await this.eventsService.save(event);
+
+    // Best effort, leftovers are removed by scripts/delete-orphaned-photos.mjs
+    if (oldPhoto) await this.photoService.delete(oldPhoto).catch(() => null);
     return this.eventSimpleWithApplicationsMapper.map(event);
   }
 
