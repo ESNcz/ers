@@ -81,14 +81,17 @@ export function DataTableRowActions({ actions, label = "Row operations" }: DataT
   );
 }
 
-/** Operations column rendering `DataTableRowActions` with the actions returned for each row */
+const ACTIONS_COLUMN_WIDTH = 90;
+
+/** Fixed width actions column rendering `DataTableRowActions` with the actions returned for each row */
 export const rowActionsColumn = <TData,>(
   getActions: (row: TData) => DataTableRowAction[],
   label?: string,
 ): ColumnDef<TData> => ({
   id: "actions",
-  header: "Operations",
-  size: 110,
+  header: "Actions",
+  minSize: ACTIONS_COLUMN_WIDTH,
+  maxSize: ACTIONS_COLUMN_WIDTH,
   enableSorting: false,
   enableHiding: false,
   enableGlobalFilter: false,

@@ -5,13 +5,47 @@
   overscroll-behavior: contain;
 }
 
+/* Grid instead of table layout - columns get a real minimum width and grow into the free space,
+   see `gridTemplateColumns` in DataTable.tsx. Without table layout there is no border collapsing
+   or vertical centering, so both are done here. */
 .table {
+  display: grid;
   width: 100%;
   text-align: left;
 }
 
 .table thead {
+  display: grid;
   z-index: 2;
+}
+
+.table tbody {
+  display: grid;
+}
+
+.table tr {
+  display: grid;
+  grid-template-columns: var(--data-table-columns);
+}
+
+.table :where(th, td) {
+  min-width: 0;
+  align-content: center;
+}
+
+.table :where(th, td):not(:last-child) {
+  border-inline-end: 1px solid var(--table-border-color);
+}
+
+/* Spans the whole row - empty state and the virtualization spacers */
+.fullRow {
+  grid-column: 1 / -1;
+}
+
+.spacer,
+.spacer td {
+  padding: 0;
+  border: none;
 }
 
 /* Values longer than the column are clipped with an ellipsis instead of spilling out. */

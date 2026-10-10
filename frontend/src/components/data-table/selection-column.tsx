@@ -6,7 +6,8 @@ export const SELECTION_COLUMN_ID = "select";
 /** Checkbox column for row selection, the header checkbox toggles all rows matching the current filters */
 export const selectionColumn = <TData,>(): ColumnDef<TData> => ({
   id: SELECTION_COLUMN_ID,
-  size: 48,
+  minSize: 48,
+  maxSize: 48,
   enableSorting: false,
   enableHiding: false,
   enableColumnFilter: false,

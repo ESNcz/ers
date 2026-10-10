@@ -23,6 +23,8 @@ import { quickSearchFilterFn, withDefaultFilterFns } from "./filter-fns";
 import { selectionColumn } from "./selection-column";
 import type { DataTableProps } from "./types";
 
+const DEFAULT_COLUMN_MIN_SIZE = 150;
+
 type UseDataTableOptions<TData> = Pick<
   DataTableProps<TData>,
   "columns" | "data" | "defaultPageSize" | "initialSorting" | "initialColumnVisibility" | "getRowId"
@@ -68,10 +70,11 @@ export function useDataTable<TData>({
     columns: tableColumns,
     state: { sorting, columnFilters, columnVisibility, globalFilter, pagination, rowSelection },
     getRowId,
+    // `minSize` is the minimum width, columns grow from it. Resizing stores an exact width in `columnSizing`.
+    defaultColumn: { size: 0, minSize: DEFAULT_COLUMN_MIN_SIZE },
     autoResetPageIndex: false,
     enableRowSelection,
     enableColumnResizing: true,
-    columnResizeMode: "onChange",
     onSortingChange: withPageReset(setSorting),
     onColumnFiltersChange: withPageReset(setColumnFilters),
     onGlobalFilterChange: withPageReset(setGlobalFilter),

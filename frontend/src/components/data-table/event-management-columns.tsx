@@ -15,7 +15,7 @@ export const eventManagementColumns = (
   {
     id: "photo",
     header: "Photo",
-    size: 64,
+    minSize: 64,
     enableSorting: false,
     enableHiding: false,
     enableGlobalFilter: false,
@@ -24,7 +24,6 @@ export const eventManagementColumns = (
   {
     accessorKey: "title",
     header: "Event Name",
-    size: 148,
     minSize: 148,
   },
   {
@@ -37,7 +36,7 @@ export const eventManagementColumns = (
   {
     accessorKey: "visible",
     header: "Published?",
-    size: 120,
+    minSize: 120,
     meta: {
       filterVariant: "select",
       filterOptions: [

@@ -22,13 +22,13 @@ export const applicationManagementColumns = (
     {
       accessorKey: "priority",
       header: "Priority",
-      size: 110,
+      minSize: 110,
       meta: { filterVariant: "number" },
     },
     {
       accessorKey: "createdAt",
       header: "Registered at",
-      size: 170,
+      minSize: 170,
       meta: { filterVariant: "date" },
       cell: ({ row }) => dateWithTime(row.original.createdAt),
     },
@@ -36,20 +36,20 @@ export const applicationManagementColumns = (
       id: "name",
       accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
       header: "First and Last Name",
-      size: 148,
+      minSize: 148,
     },
     {
       id: "section",
       accessorFn: (row) => row.organization?.name ?? row.customOrganization?.name ?? "",
       header: "Section",
-      size: 160,
+      minSize: 160,
       meta: { filterVariant: "select" },
     },
     {
       id: "country",
       accessorFn: (row) => row.organization?.address?.country ?? row.customOrganization?.country ?? "",
       header: "Country",
-      size: 148,
+      minSize: 148,
       meta: { filterVariant: "select" },
     },
     {
@@ -57,7 +57,7 @@ export const applicationManagementColumns = (
       accessorFn: (row) =>
         row.spotType ? `${row.spotType.name} - ${row.spotType.price} ${row.spotType.currency}` : "N/A",
       header: "Current Spot",
-      size: 224,
+      minSize: 224,
       meta: { filterVariant: "select" },
     },
   ];
@@ -66,7 +66,7 @@ export const applicationManagementColumns = (
     columns.push({
       id: "changeSpot",
       header: "Change Spot",
-      size: 224,
+      minSize: 224,
       enableSorting: false,
       enableGlobalFilter: false,
       cell: ({ row }) => (

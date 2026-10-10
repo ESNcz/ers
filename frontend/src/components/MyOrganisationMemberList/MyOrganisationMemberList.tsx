@@ -7,7 +7,7 @@ import {
   useOrganizationMembers,
   useTransferManager,
 } from "@/utils/api";
-import { OrganizationMember, UserRole } from "@/utils/api.schemas";
+import { OrganizationMember } from "@/utils/api.schemas";
 import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTable } from "@components/data-table";
 import { organizationMemberListColumns } from "@components/data-table/organization-member-list-columns";
@@ -121,7 +121,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
       deleteOrganizationMemberMutation.isPending,
       isUserManager,
     );
-  }, [currentUser.role, currentOrganisation]);
+  }, [currentUser.role, currentOrganisation, deleteOrganizationMemberMutation.isPending]);
 
   if (!organizationMembers?.data) {
     return (
