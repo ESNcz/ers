@@ -40,21 +40,30 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
     screenshots: [
-      {
-        src: "/screenshots/mobile-1.png",
-        sizes: "540x720",
-        type: "image/png",
-        form_factor: "narrow",
-        platform: "android",
-        label: "Mobile Application",
-      },
-      {
-        src: "/screenshots/desktop-1.png",
-        sizes: "1920x958",
-        type: "image/png",
-        form_factor: "wide",
-        label: "Desktop Application",
-      },
+      ...[
+        "Browse upcoming events",
+        "Event details and registration",
+        "Track your applications",
+        "Send and receive sugar cubes",
+      ].map((label, index) => ({
+        src: `/screenshots/mobile-${index + 1}.webp`,
+        sizes: "780x1688",
+        type: "image/webp",
+        form_factor: "narrow" as const,
+        label,
+      })),
+      ...[
+        "Browse upcoming events",
+        "Event details and registration",
+        "Manage applications and assign spots",
+        "Manage organisations",
+      ].map((label, index) => ({
+        src: `/screenshots/desktop-${index + 1}.webp`,
+        sizes: "1920x1200",
+        type: "image/webp",
+        form_factor: "wide" as const,
+        label,
+      })),
     ],
   };
 }
