@@ -2,10 +2,16 @@ import { Organization, OrganizationMember } from "@/utils/api.schemas";
 import { genderOptions } from "@/utils/table-helpers";
 import ApiImage from "@components/ApiImage/ApiImage";
 import { Box, Flex, Text } from "@mantine/core";
-import { IconCrown, IconUserPlus, IconUserX } from "@tabler/icons-react";
+import { IconCrown, IconUserX } from "@tabler/icons-react";
 import type { ColumnDef, FilterFn } from "@tanstack/react-table";
 
 import { rowActionsColumn } from "./DataTableRowActions";
+
+/** What the current user can do with members, must match the checks of the organisation endpoints */
+export interface OrganizationMemberPermissions {
+  canTransferManager: boolean;
+  canRemoveMembers: boolean;
+}
 
 export const organizationMemberListColumns = (
   currentUserId: string,
@@ -13,9 +19,7 @@ export const organizationMemberListColumns = (
   handleTransferSectionManager: (organisationId: string, userId: string) => void,
   handleDeleteOrganizationMembers: (member: OrganizationMember) => void,
   deleteOrganizationMemberMutationIsPending: boolean,
-  isUserManager: boolean,
-  handleAddMember?: (userId: string) => void,
-  memberUserIds?: Set<string>,
+  permissions: OrganizationMemberPermissions,
 ): ColumnDef<OrganizationMember>[] => [
   {
     id: "photo",
@@ -86,25 +90,17 @@ export const organizationMemberListColumns = (
     minSize: 148,
     cell: ({ row }) => <Text>{row.original.user.role?.name ?? "N/A"}</Text>,
   },
-  ...(isUserManager
+  ...(permissions.canTransferManager || permissions.canRemoveMembers
     ? ([
         rowActionsColumn<OrganizationMember>((member) => {
-          const isMember = !memberUserIds || memberUserIds.has(member.user.id);
           const isManager = currentOrganisation?.manager?.id === member.user.id;
           const isCurrentUser = member.user.id === currentUserId;
 
           return [
             {
-              label: "Add to organization",
-              icon: <IconUserPlus size={16} />,
-              color: "green",
-              hidden: isMember || !handleAddMember,
-              onClick: () => handleAddMember?.(member.user.id),
-            },
-            {
               label: "Transfer manager",
               icon: <IconCrown size={16} />,
-              hidden: !isMember,
+              hidden: !permissions.canTransferManager,
               disabled: isManager,
               hint: isManager ? "This person is section manager" : undefined,
               onClick: () => handleTransferSectionManager(currentOrganisation?.id ?? "", member.user.id),
@@ -113,7 +109,7 @@ export const organizationMemberListColumns = (
               label: "Remove from organization",
               icon: <IconUserX size={16} />,
               color: "red",
-              hidden: !isMember,
+              hidden: !permissions.canRemoveMembers,
               disabled: isCurrentUser || deleteOrganizationMemberMutationIsPending,
               hint: isCurrentUser ? "You cannot remove yourself" : undefined,
               onClick: () => handleDeleteOrganizationMembers(member),

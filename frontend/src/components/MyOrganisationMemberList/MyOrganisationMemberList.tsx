@@ -8,7 +8,7 @@ import {
   useOrganizationMembers,
   useTransferManager,
 } from "@/utils/api";
-import { OrganizationMember } from "@/utils/api.schemas";
+import { OrganizationMember, RolePermissionsItem } from "@/utils/api.schemas";
 import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTable } from "@components/data-table";
 import { organizationMemberListColumns } from "@components/data-table/organization-member-list-columns";
@@ -34,11 +34,17 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
 
   const [isAddModalOpened, { open: openAddModal, close: closeAddModal }] = useDisclosure(false);
 
-  const isUserManager = useMemo(() => {
-    return (
-      currentOrganisation?.manager?.id === currentUser.id ||
-      hasSomePermissions(currentUser.role, ["organisation.deleteUser"])
-    );
+  // Same rules as the backend - the organisation manager can do everything, others need the permission
+  const permissions = useMemo(() => {
+    const isOrganisationManager = currentOrganisation?.manager?.id === currentUser.id;
+    const can = (permission: RolePermissionsItem) =>
+      isOrganisationManager || hasSomePermissions(currentUser.role, [permission]);
+
+    return {
+      canAddMembers: can(RolePermissionsItem.organisationaddUser),
+      canRemoveMembers: can(RolePermissionsItem.organisationdeleteUser),
+      canTransferManager: can(RolePermissionsItem.organisationupdate),
+    };
   }, [currentOrganisation, currentUser]);
 
   const addOrganizationMemberMutation = useAddOrganizationMembers({
@@ -119,9 +125,9 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
       handleTransferSectionManager,
       handleDeleteOrganizationMembers,
       deleteOrganizationMemberMutation.isPending,
-      isUserManager,
+      permissions,
     );
-  }, [currentUser.role, currentOrganisation, deleteOrganizationMemberMutation.isPending]);
+  }, [currentOrganisation, deleteOrganizationMemberMutation.isPending, permissions]);
 
   if (!organizationMembers?.data) {
     return (
@@ -154,7 +160,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         <Title order={1}>My Organisation</Title>
         <Flex direction={{ base: "column", md: "row" }} gap={10}>
           <Title order={2}>{currentOrganisation?.name}</Title>
-          {isUserManager && (
+          {permissions.canAddMembers && (
             <Button leftSection={<IconUserPlus size={18} />} onClick={openAddModal}>
               Add member
             </Button>
@@ -162,7 +168,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         </Flex>
       </Flex>
       <DataTable columns={columns} data={tableData} emptyMessage="No members found." />
-      {isUserManager && (
+      {permissions.canAddMembers && (
         <AddOrganisationMemberModal
           isOpened={isAddModalOpened}
           closeModal={closeAddModal}
