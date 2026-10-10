@@ -15,7 +15,7 @@ export const eventManagementColumns = (
   {
     id: "photo",
     header: "Photo",
-    minSize: 64,
+    maxSize: 84,
     enableSorting: false,
     enableHiding: false,
     enableGlobalFilter: false,
