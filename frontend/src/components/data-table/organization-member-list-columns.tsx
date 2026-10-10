@@ -1,9 +1,11 @@
 import { Organization, OrganizationMember } from "@/utils/api.schemas";
 import { genderOptions } from "@/utils/table-helpers";
 import ApiImage from "@components/ApiImage/ApiImage";
-import { ActionIcon, Box, Flex, Text, Tooltip } from "@mantine/core";
+import { Box, Flex, Text } from "@mantine/core";
 import { IconCrown, IconUserPlus, IconUserX } from "@tabler/icons-react";
 import type { ColumnDef, FilterFn } from "@tanstack/react-table";
+
+import { rowActionsColumn } from "./DataTableRowActions";
 
 export const organizationMemberListColumns = (
   currentUserId: string,
@@ -89,70 +91,38 @@ export const organizationMemberListColumns = (
   },
   ...(isUserManager
     ? ([
-        {
-          id: "operations",
-          header: "Operations",
-          size: 200,
-          enableSorting: false,
-          enableGlobalFilter: false,
-          cell: ({ row }) => {
-            const member = row.original;
-            const isMember = !memberUserIds || memberUserIds.has(member.user.id);
+        rowActionsColumn<OrganizationMember>((member) => {
+          const isMember = !memberUserIds || memberUserIds.has(member.user.id);
+          const isManager = currentOrganisation?.manager?.id === member.user.id;
+          const isCurrentUser = member.user.id === currentUserId;
 
-            if (!isMember && handleAddMember) {
-              return (
-                <Flex justify="flex-start" gap={50}>
-                  <Tooltip label="Add to Organization">
-                    <ActionIcon
-                      variant="subtle"
-                      size={48}
-                      color="green"
-                      onClick={() => handleAddMember(member.user.id)}
-                    >
-                      <IconUserPlus width={32} height={32} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Flex>
-              );
-            }
-
-            return (
-              <Flex justify="flex-start" gap={50}>
-                <Tooltip
-                  label={
-                    currentOrganisation?.manager?.id === member.user.id
-                      ? "This person is section manager"
-                      : "Transfer Manager"
-                  }
-                >
-                  <ActionIcon
-                    variant="subtle"
-                    size={48}
-                    color="yellow"
-                    onClick={() => handleTransferSectionManager(currentOrganisation?.id ?? "", member.user.id)}
-                    disabled={currentOrganisation?.manager?.id === member.user.id}
-                  >
-                    <IconCrown width={32} height={32} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip
-                  label={member.user.id === currentUserId ? "You cannot remove yourself" : "Remove from Organization"}
-                >
-                  <ActionIcon
-                    variant="subtle"
-                    size={48}
-                    color="red"
-                    disabled={member.user.id === currentUserId}
-                    loading={deleteOrganizationMemberMutationIsPending}
-                    onClick={() => handleDeleteOrganizationMembers(member)}
-                  >
-                    <IconUserX width={32} height={32} />
-                  </ActionIcon>
-                </Tooltip>
-              </Flex>
-            );
-          },
-        },
+          return [
+            {
+              label: "Add to organization",
+              icon: <IconUserPlus size={16} />,
+              color: "green",
+              hidden: isMember || !handleAddMember,
+              onClick: () => handleAddMember?.(member.user.id),
+            },
+            {
+              label: "Transfer manager",
+              icon: <IconCrown size={16} />,
+              hidden: !isMember,
+              disabled: isManager,
+              hint: isManager ? "This person is section manager" : undefined,
+              onClick: () => handleTransferSectionManager(currentOrganisation?.id ?? "", member.user.id),
+            },
+            {
+              label: "Remove from organization",
+              icon: <IconUserX size={16} />,
+              color: "red",
+              hidden: !isMember,
+              disabled: isCurrentUser || deleteOrganizationMemberMutationIsPending,
+              hint: isCurrentUser ? "You cannot remove yourself" : undefined,
+              onClick: () => handleDeleteOrganizationMembers(member),
+            },
+          ];
+        }, "Member operations"),
       ] as ColumnDef<OrganizationMember>[])
     : []),
 ];

@@ -1,9 +1,10 @@
 import { Organization } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
-import { ActionIcon, Flex, Text, Tooltip } from "@mantine/core";
+import { Flex, Text } from "@mantine/core";
 import { IconEdit, IconTrash, IconUsersGroup } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
+
+import { rowActionsColumn } from "./DataTableRowActions";
 
 export const organisationManagementColumns = (
   handleDeleteOrganization: (organization: Organization) => void,
@@ -87,49 +88,29 @@ export const organisationManagementColumns = (
     header: "Manager's Username",
     cell: ({ row }) => <Text>{row.original.manager ? row.original.manager.username : "N/A"}</Text>,
   },
-  {
-    id: "operations",
-    header: "Operations",
-    enableSorting: false,
-    enableGlobalFilter: false,
-    cell: ({ row }) => (
-      <Flex justify="space-evenly" gap={16}>
-        <Tooltip label="Organization Members">
-          <ActionIcon
-            component={Link}
-            href={routes.ORGANISATION_MEMBERS({ id: row.original.id })}
-            variant="subtle"
-            size={48}
-            color="black"
-          >
-            <IconUsersGroup width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Edit Organization">
-          <ActionIcon
-            variant="subtle"
-            size={48}
-            color="blue"
-            onClick={() => {
-              setActiveOrganisation(row.original);
-              openUpdateOrganizationModal();
-            }}
-          >
-            <IconEdit width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Delete Organization">
-          <ActionIcon
-            variant="subtle"
-            size={48}
-            color="red"
-            onClick={() => handleDeleteOrganization(row.original)}
-            loading={deleteOrganizationMutation.isPending}
-          >
-            <IconTrash width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-      </Flex>
-    ),
-  },
+  rowActionsColumn<Organization>(
+    (organisation) => [
+      {
+        label: "Organization members",
+        icon: <IconUsersGroup size={16} />,
+        href: routes.ORGANISATION_MEMBERS({ id: organisation.id }),
+      },
+      {
+        label: "Edit organization",
+        icon: <IconEdit size={16} />,
+        onClick: () => {
+          setActiveOrganisation(organisation);
+          openUpdateOrganizationModal();
+        },
+      },
+      {
+        label: "Delete organization",
+        icon: <IconTrash size={16} />,
+        color: "red",
+        disabled: deleteOrganizationMutation.isPending,
+        onClick: () => handleDeleteOrganization(organisation),
+      },
+    ],
+    "Organization operations",
+  ),
 ];

@@ -1,8 +1,10 @@
 import { type EventApplicationDetailedWithApplications } from "@/utils/api.schemas";
 import { dateWithTime } from "@/utils/time";
-import { ActionIcon, ComboboxData, Flex, Menu, Select } from "@mantine/core";
-import { IconDotsVertical, IconEdit, IconTrash } from "@tabler/icons-react";
+import { ComboboxData, Select } from "@mantine/core";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
+
+import { rowActionsColumn } from "./DataTableRowActions";
 
 interface ApplicationManagementColumnsOptions {
   spots?: ComboboxData;
@@ -83,42 +85,26 @@ export const applicationManagementColumns = (
   }
 
   if (handleEditApplication || handleDeleteApplication) {
-    columns.push({
-      id: "actions",
-      header: "Operations",
-      size: 110,
-      enableSorting: false,
-      enableHiding: false,
-      enableGlobalFilter: false,
-      enableResizing: false,
-      cell: ({ row }) => (
-        <Flex justify="center">
-          <Menu position="bottom-end" shadow="md" width={200}>
-            <Menu.Target>
-              <ActionIcon variant="subtle" color="gray" size={36} aria-label="Application operations">
-                <IconDotsVertical width={20} height={20} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              {handleEditApplication && (
-                <Menu.Item leftSection={<IconEdit size={16} />} onClick={() => handleEditApplication(row.original)}>
-                  Edit application
-                </Menu.Item>
-              )}
-              {handleDeleteApplication && (
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconTrash size={16} />}
-                  onClick={() => handleDeleteApplication(row.original)}
-                >
-                  Delete application
-                </Menu.Item>
-              )}
-            </Menu.Dropdown>
-          </Menu>
-        </Flex>
+    columns.push(
+      rowActionsColumn<EventApplicationDetailedWithApplications>(
+        (application) => [
+          {
+            label: "Edit application",
+            icon: <IconEdit size={16} />,
+            hidden: !handleEditApplication,
+            onClick: () => handleEditApplication?.(application),
+          },
+          {
+            label: "Delete application",
+            icon: <IconTrash size={16} />,
+            color: "red",
+            hidden: !handleDeleteApplication,
+            onClick: () => handleDeleteApplication?.(application),
+          },
+        ],
+        "Application operations",
       ),
-    });
+    );
   }
 
   return columns;

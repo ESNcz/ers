@@ -1,9 +1,11 @@
 import { RolePermissionsItem, User, UserRole } from "@/utils/api.schemas";
 import { hasSomePermissions } from "@/utils/checkPermissions";
-import { ActionIcon, Flex, Text, Tooltip } from "@mantine/core";
+import { Flex, Text } from "@mantine/core";
 import { IconCheck, IconEdit, IconSwitchHorizontal, IconTrash, IconX } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
+
+import { rowActionsColumn } from "./DataTableRowActions";
 
 const hasPermission = (role: UserRole, permission: RolePermissionsItem) => hasSomePermissions(role, [permission]);
 
@@ -115,59 +117,38 @@ export const peopleManagementColumns = (
   hasPermission(currentUserRole, RolePermissionsItem.userdelete) ||
   hasPermission(currentUserRole, RolePermissionsItem.userupdate)
     ? ([
-        {
-          id: "operations",
-          header: "Operations",
-          enableSorting: false,
-          enableGlobalFilter: false,
-          cell: ({ row }) => (
-            <Flex justify="flex-start" gap={16}>
-              {hasPermission(currentUserRole, RolePermissionsItem.userupdate) && (
-                <Tooltip label="Edit User">
-                  <ActionIcon
-                    variant="subtle"
-                    size={48}
-                    color="green"
-                    onClick={() => {
-                      setSelectedUserId(row.original.id);
-                      openEditUserModal();
-                    }}
-                  >
-                    <IconEdit width={32} height={32} />
-                  </ActionIcon>
-                </Tooltip>
-              )}
-              {hasPermission(currentUserRole, RolePermissionsItem.userupdateRole) && (
-                <Tooltip label="Change Role">
-                  <ActionIcon
-                    variant="subtle"
-                    size={48}
-                    color="blue"
-                    onClick={() => {
-                      setSelectedUserId(row.original.id);
-                      openChangeRoleModal();
-                    }}
-                  >
-                    <IconSwitchHorizontal width={32} height={32} />
-                  </ActionIcon>
-                </Tooltip>
-              )}
-              {hasPermission(currentUserRole, RolePermissionsItem.userdelete) && (
-                <Tooltip label={row.original.id === currentUserId ? "You cannot delete yourself" : "Delete User"}>
-                  <ActionIcon
-                    variant="subtle"
-                    size={48}
-                    color="red"
-                    disabled={row.original.id === currentUserId}
-                    onClick={() => handleDeleteUser(row.original.id)}
-                  >
-                    <IconTrash width={32} height={32} />
-                  </ActionIcon>
-                </Tooltip>
-              )}
-            </Flex>
-          ),
-        },
+        rowActionsColumn<User>(
+          (user) => [
+            {
+              label: "Edit user",
+              icon: <IconEdit size={16} />,
+              hidden: !hasPermission(currentUserRole, RolePermissionsItem.userupdate),
+              onClick: () => {
+                setSelectedUserId(user.id);
+                openEditUserModal();
+              },
+            },
+            {
+              label: "Change role",
+              icon: <IconSwitchHorizontal size={16} />,
+              hidden: !hasPermission(currentUserRole, RolePermissionsItem.userupdateRole),
+              onClick: () => {
+                setSelectedUserId(user.id);
+                openChangeRoleModal();
+              },
+            },
+            {
+              label: "Delete user",
+              icon: <IconTrash size={16} />,
+              color: "red",
+              hidden: !hasPermission(currentUserRole, RolePermissionsItem.userdelete),
+              disabled: user.id === currentUserId,
+              hint: user.id === currentUserId ? "You cannot delete yourself" : undefined,
+              onClick: () => handleDeleteUser(user.id),
+            },
+          ],
+          "User operations",
+        ),
       ] as ColumnDef<User>[])
     : []),
 ];

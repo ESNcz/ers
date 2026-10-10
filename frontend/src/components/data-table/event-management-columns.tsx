@@ -2,10 +2,11 @@ import { EventSimple } from "@/utils/api.schemas";
 import routes from "@/utils/routes";
 import ApiImage from "@components/ApiImage/ApiImage";
 import RichTextRenderer from "@components/Richtext/RichTextRenderer";
-import { ActionIcon, Flex, Tooltip } from "@mantine/core";
+import { Flex, Tooltip } from "@mantine/core";
 import { IconCheck, IconCopy, IconEye, IconTrash, IconX } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
+
+import { rowActionsColumn } from "./DataTableRowActions";
 
 export const eventManagementColumns = (
   handleDuplicateEvent: (event: EventSimple) => void,
@@ -59,31 +60,12 @@ export const eventManagementColumns = (
         </Flex>
       ),
   },
-  {
-    id: "actions",
-    header: "Operations",
-    size: 200,
-    enableSorting: false,
-    enableHiding: false,
-    enableGlobalFilter: false,
-    cell: ({ row }) => (
-      <Flex justify="space-between" gap={16}>
-        <Tooltip label="View Event">
-          <ActionIcon component={Link} href={routes.EVENT_DETAIL({ id: row.original.id })} variant="subtle" size={48}>
-            <IconEye width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Duplicate Event">
-          <ActionIcon variant="subtle" color="purple" size={48} onClick={() => handleDuplicateEvent(row.original)}>
-            <IconCopy width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label="Delete Event">
-          <ActionIcon variant="subtle" size={48} color="red" onClick={() => handleDeleteEvent(row.original)}>
-            <IconTrash width={32} height={32} />
-          </ActionIcon>
-        </Tooltip>
-      </Flex>
-    ),
-  },
+  rowActionsColumn<EventSimple>(
+    (event) => [
+      { label: "View event", icon: <IconEye size={16} />, href: routes.EVENT_DETAIL({ id: event.id }) },
+      { label: "Duplicate event", icon: <IconCopy size={16} />, onClick: () => handleDuplicateEvent(event) },
+      { label: "Delete event", icon: <IconTrash size={16} />, color: "red", onClick: () => handleDeleteEvent(event) },
+    ],
+    "Event operations",
+  ),
 ];
