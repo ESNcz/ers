@@ -1,6 +1,8 @@
 import { useUpdateEventPhoto } from "@/utils/api";
+import { useUploadProgress } from "@/utils/useUploadProgress";
 import { Dropzone } from "@components/Dropzone/Dropzone";
 import Modal from "@components/Modal/Modal";
+import UploadProgress from "@components/UploadProgress/UploadProgress";
 import { Button, Center, Group, Image } from "@mantine/core";
 import React, { useState } from "react";
 import { FileWithPath } from "react-dropzone-esm";
@@ -14,6 +16,7 @@ interface MyModalProps {
 
 const UpdateEventPhotoModal: React.FC<MyModalProps> = ({ eventId, isOpened, closeModal, handleSuccess = () => {} }) => {
   const [file, setFile] = useState<FileWithPath | null>(null);
+  const { progress, onUploadProgress, resetProgress } = useUploadProgress();
 
   const uploadEventPhoto = useUpdateEventPhoto({
     mutation: {
@@ -23,10 +26,12 @@ const UpdateEventPhotoModal: React.FC<MyModalProps> = ({ eventId, isOpened, clos
         closeModal();
       },
     },
+    request: { onUploadProgress },
   });
 
   const handleUpdateEvenPhoto = () => {
     if (!file) return;
+    resetProgress();
     uploadEventPhoto.mutate({
       eventId: eventId,
       data: {
@@ -67,6 +72,9 @@ const UpdateEventPhotoModal: React.FC<MyModalProps> = ({ eventId, isOpened, clos
         <Button onClick={handleUpdateEvenPhoto} disabled={!file} loading={uploadEventPhoto.isPending}>
           Upload Photo
         </Button>
+      </Group>
+      <Group justify="center" mt="sm">
+        <UploadProgress progress={progress} isPending={uploadEventPhoto.isPending} />
       </Group>
     </Modal>
   );
