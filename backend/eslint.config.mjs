@@ -75,4 +75,17 @@ export default tseslint.config(
       "@typescript-eslint/consistent-type-imports": "off",
     },
   },
+  {
+    // Standalone maintenance scripts, run directly with node (not part of tsconfig)
+    files: ["scripts/**/*.mjs"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      sourceType: "module",
+    },
+    rules: {
+      ...tseslint.configs.disableTypeChecked.rules,
+      "no-console": "off",
+    },
+  },
 );

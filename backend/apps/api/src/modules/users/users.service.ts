@@ -5,6 +5,7 @@ import { isEmail } from "class-validator";
 import { randomUUID } from "node:crypto";
 import { FindManyOptions, FindOptionsWhere, In, Repository } from "typeorm";
 
+import { PhotoService } from "@api/modules/photo";
 import type { PaginationOptions } from "utilities/nest/decorators";
 import { formatPaginatedResponse } from "utilities/pagination.helper";
 
@@ -17,6 +18,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly UsersRepository: Repository<User>,
+    private readonly photoService: PhotoService,
   ) {}
 
   /**
@@ -158,7 +160,7 @@ export class UsersService {
   }
 
   /**
-   * Deleting user anonymizes user data but keep the row and all relations.
+   * Deleting user anonymises user data but keep the row and all relations.
    */
   async deleteUser(id: string): Promise<User> {
     const user = await this.UsersRepository.findOne({
@@ -186,6 +188,7 @@ export class UsersService {
     user.personalAddress = null;
 
     // Remove photo, role, etc. as desired
+    const photo = user.photo;
     user.photo = null;
     user.role = null;
 
@@ -199,6 +202,9 @@ export class UsersService {
 
     const deletedUser = await this.UsersRepository.save(user);
     await this.incrementTokenVersion(deletedUser.id);
+
+    // Photo is personal data, delete the file as well
+    if (photo) await this.photoService.delete(photo).catch(() => null);
     return deletedUser;
   }
 }

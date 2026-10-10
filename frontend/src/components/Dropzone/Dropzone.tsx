@@ -6,6 +6,7 @@ import {
   IMAGE_MIME_TYPE,
   DropzoneProps as MantineDropzoneProps,
 } from "@mantine/dropzone";
+import { notifications } from "@mantine/notifications";
 import { IconCloudUpload, IconDownload, IconX } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 
@@ -25,7 +26,23 @@ export function Dropzone({ handleOnDrop, maxSize, ...props }: DropzoneProps) {
         onDrop={(files) => {
           handleOnDrop(files);
         }}
-        onReject={(files) => console.warn("rejected files", files)}
+        onReject={(rejections) => {
+          rejections.forEach(({ file, errors }) => {
+            const message = errors
+              .map((error) => {
+                switch (error.code) {
+                  case "file-too-large":
+                    return `File is larger than ${defaultSize}MB`;
+                  case "file-invalid-type":
+                    return "File type is not supported";
+                  default:
+                    return error.message;
+                }
+              })
+              .join(", ");
+            notifications.show({ title: `Cannot upload ${file.name}`, message, color: "red" });
+          });
+        }}
         className={styles.dropzone}
         radius="md"
         accept={props.accept ?? IMAGE_MIME_TYPE}

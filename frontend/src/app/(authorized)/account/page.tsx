@@ -4,9 +4,11 @@ import { useUpdateCurrentUser, useUpdateCurrentUserPhoto } from "@/utils/api";
 import { CreateAddress, UpdateUser } from "@/utils/api.schemas";
 import { apiImageURL } from "@/utils/apiImageURL";
 import { genderOptions } from "@/utils/table-helpers";
+import { useUploadProgress } from "@/utils/useUploadProgress";
 import { Dropzone } from "@components/Dropzone/Dropzone";
 import ImageEditor from "@components/ImageEditor/ImageEditor";
 import getCroppedImg from "@components/ImageEditor/imageEdit";
+import UploadProgress from "@components/UploadProgress/UploadProgress";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
 import { useCurrentUser } from "@components/providers/CurrentUserProvider";
@@ -168,6 +170,7 @@ const AccountPage = () => {
 
   const isTouchedDirty = form.isTouched() && form.isDirty();
 
+  const { progress: uploadProgress, onUploadProgress, resetProgress } = useUploadProgress();
   const updateUserPhotoMutation = useUpdateCurrentUserPhoto({
     mutation: {
       onSuccess: () => {
@@ -176,6 +179,7 @@ const AccountPage = () => {
         fetchCurrentUser();
       },
     },
+    request: { onUploadProgress },
   });
 
   const uploadNewUserImage = async () => {
@@ -186,6 +190,7 @@ const AccountPage = () => {
         returnType: "Blob",
       });
       if (croppedImage instanceof Blob) {
+        resetProgress();
         updateUserPhotoMutation.mutate({
           data: {
             file: croppedImage,
@@ -243,10 +248,13 @@ const AccountPage = () => {
                 />
               </Box>
               <Stack>
-                <Button onClick={uploadNewUserImage}>Update Image</Button>
-                <Button onClick={cancelPhotoUpdate} color="red">
+                <Button onClick={uploadNewUserImage} loading={updateUserPhotoMutation.isPending}>
+                  Update Image
+                </Button>
+                <Button onClick={cancelPhotoUpdate} color="red" disabled={updateUserPhotoMutation.isPending}>
                   Cancel
                 </Button>
+                <UploadProgress progress={uploadProgress} isPending={updateUserPhotoMutation.isPending} />
               </Stack>
             </>
           )}

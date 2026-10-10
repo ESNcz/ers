@@ -36,7 +36,7 @@ import { EventDetail, EventDetailView, EventSimple } from "@api/models/responses
 import { PaginationDto, PaginationResponseDto } from "@api/models/responses/pagination-response.dto";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
 import { OrganizationService } from "@api/modules/organization";
-import { PhotoService } from "@api/modules/photo";
+import { PhotoMaxDimension, PhotoService } from "@api/modules/photo";
 import { Permission } from "@api/modules/roles";
 import type { User } from "@api/modules/users";
 import { Pagination, PaginationOptions } from "utilities/nest/decorators";
@@ -338,11 +338,15 @@ export class EventsController {
     });
     if (!event) throw new NotFoundException("Event not found");
 
-    const photo = await this.photoService.save(body.file.buffer, "event_photo");
-    if (!photo) new InternalServerErrorException("Could not save photo");
+    const photo = await this.photoService.save(body.file.buffer, "event_photo", PhotoMaxDimension.EventPhoto);
+    if (!photo) throw new InternalServerErrorException("Could not save photo");
 
+    const oldPhoto = event.photo;
     event.photo = photo;
     await this.eventsService.save(event);
+
+    // Best effort, leftovers are removed by scripts/delete-orphaned-photos.mjs
+    if (oldPhoto) await this.photoService.delete(oldPhoto).catch(() => null);
     return this.eventSimpleWithApplicationsMapper.map(event);
   }
 

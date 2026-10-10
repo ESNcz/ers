@@ -1,3 +1,3 @@
 export { PhotoModule } from "./photo.module";
-export { PhotoService } from "./photo.service";
+export { PhotoMaxDimension, PhotoService, PhotoWidths } from "./photo.service";
 export { Photo } from "./entities";

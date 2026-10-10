@@ -43,7 +43,7 @@ import { AuthService } from "@api/modules/auth";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
 import { setAuthCookie } from "@api/modules/auth/utilities/auth-cookie";
 import { OrganizationService } from "@api/modules/organization";
-import { PhotoService } from "@api/modules/photo";
+import { PhotoMaxDimension, PhotoService } from "@api/modules/photo";
 import { Permission } from "@api/modules/roles";
 import { Pagination, PaginationOptions } from "utilities/nest/decorators";
 
@@ -178,11 +178,16 @@ export class UsersController {
   @UseGuards(CookieGuard)
   @Patch("photo")
   async updateCurrentUserPhoto(@CurrentUser() user: User, @Body() body: UpdatePhoto) {
-    const photo = await this.photoService.save(body.file.buffer, "user_photo");
+    const photo = await this.photoService.save(body.file.buffer, "user_photo", PhotoMaxDimension.UserPhoto);
     if (!photo) throw new InternalServerErrorException();
 
+    const oldPhoto = user.photo;
     user.photo = photo;
-    return this.usersService.save(user);
+    const savedUser = await this.usersService.save(user);
+
+    // Best effort, leftovers are removed by scripts/delete-orphaned-photos.mjs
+    if (oldPhoto) await this.photoService.delete(oldPhoto).catch(() => null);
+    return savedUser;
   }
 
   /**

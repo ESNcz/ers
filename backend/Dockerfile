@@ -50,6 +50,8 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml ./
 # Copy e-mail templates
 COPY --from=builder /app/templates/ ./templates/
+# Copy maintenance scripts
+COPY --from=builder /app/scripts/ ./scripts/
 
 # Install prod dependencies
 RUN pnpm install --frozen-lockfile --prod=true --ignore-scripts

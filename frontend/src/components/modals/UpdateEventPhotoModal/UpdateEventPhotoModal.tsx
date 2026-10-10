@@ -1,8 +1,10 @@
 import { useUpdateEventPhoto } from "@/utils/api";
+import { useUploadProgress } from "@/utils/useUploadProgress";
 import { Dropzone } from "@components/Dropzone/Dropzone";
 import Modal from "@components/Modal/Modal";
-import { Button, Center, Group, Image } from "@mantine/core";
-import React, { useState } from "react";
+import UploadProgress from "@components/UploadProgress/UploadProgress";
+import { Button, Group, Image, Stack, Text } from "@mantine/core";
+import React, { useEffect, useMemo, useState } from "react";
 import { FileWithPath } from "react-dropzone-esm";
 
 interface MyModalProps {
@@ -14,6 +16,15 @@ interface MyModalProps {
 
 const UpdateEventPhotoModal: React.FC<MyModalProps> = ({ eventId, isOpened, closeModal, handleSuccess = () => {} }) => {
   const [file, setFile] = useState<FileWithPath | null>(null);
+  const { progress, onUploadProgress, resetProgress } = useUploadProgress();
+
+  // Create preview URL once per file - creating it in render reloads the image on every progress update
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   const uploadEventPhoto = useUpdateEventPhoto({
     mutation: {
@@ -23,10 +34,12 @@ const UpdateEventPhotoModal: React.FC<MyModalProps> = ({ eventId, isOpened, clos
         closeModal();
       },
     },
+    request: { onUploadProgress },
   });
 
   const handleUpdateEvenPhoto = () => {
     if (!file) return;
+    resetProgress();
     uploadEventPhoto.mutate({
       eventId: eventId,
       data: {
@@ -45,29 +58,34 @@ const UpdateEventPhotoModal: React.FC<MyModalProps> = ({ eventId, isOpened, clos
       }}
       title="Update Event Photo"
     >
-      <Dropzone
-        handleOnDrop={(files) => {
-          setFile(files[0]);
-        }}
-        multiple={false}
-        maxFiles={1}
-      />
-      {file && (
-        <Center>
-          <Image
-            key="result-image-preview"
-            src={URL.createObjectURL(file)}
-            w="200px"
-            h="200px"
-            alt="User photo preview"
+      <Stack gap="md">
+        {!uploadEventPhoto.isPending && (
+          <Dropzone
+            handleOnDrop={(files) => {
+              setFile(files[0]);
+            }}
+            multiple={false}
+            maxFiles={1}
           />
-        </Center>
-      )}
-      <Group justify="center" mt="lg">
-        <Button onClick={handleUpdateEvenPhoto} disabled={!file} loading={uploadEventPhoto.isPending}>
-          Upload Photo
-        </Button>
-      </Group>
+        )}
+        {file && previewUrl && (
+          <Stack gap={4} align="center">
+            <Image src={previewUrl} w="100%" mah={360} fit="contain" radius="md" alt="Event photo preview" />
+            <Text size="sm" c="dimmed">
+              {file.name} · {(file.size / 1024 ** 2).toFixed(1)} MB
+            </Text>
+          </Stack>
+        )}
+        {uploadEventPhoto.isPending ? (
+          <UploadProgress progress={progress} isPending={uploadEventPhoto.isPending} />
+        ) : (
+          <Group justify="center">
+            <Button onClick={handleUpdateEvenPhoto} disabled={!file}>
+              Upload Photo
+            </Button>
+          </Group>
+        )}
+      </Stack>
     </Modal>
   );
 };
