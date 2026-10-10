@@ -60,6 +60,8 @@ import type {
   LoginUser,
   Organization,
   OrganizationMember,
+  OrganizationMemberCandidates200,
+  OrganizationMemberCandidatesParams,
   OrganizationMemberWithoutUser,
   OrganizationMembers200,
   OrganizationMembersParams,
@@ -2120,6 +2122,134 @@ export const useAddOrganizationMembers = <TError = ErrorType<unknown>, TContext 
 
   return useMutation(mutationOptions, queryClient);
 };
+
+/**
+ * Search users that can be added to the organization - users who are not its members yet.
+Matches first name, last name, full name, username or email, returns at most 20 users.
+
+Only organization manager or users with `organisation.addUser` permission can search.
+ */
+export const organizationMemberCandidates = (
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<OrganizationMemberCandidates200>(
+    { url: `/organization/${id}/members/candidates`, method: "GET", params, signal },
+    options,
+  );
+};
+
+export const getOrganizationMemberCandidatesQueryKey = (id?: string, params?: OrganizationMemberCandidatesParams) => {
+  return [`/organization/${id}/members/candidates`, ...(params ? [params] : [])] as const;
+};
+
+export const getOrganizationMemberCandidatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getOrganizationMemberCandidatesQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof organizationMemberCandidates>>> = ({ signal }) =>
+    organizationMemberCandidates(id, params, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof organizationMemberCandidates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type OrganizationMemberCandidatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof organizationMemberCandidates>>
+>;
+export type OrganizationMemberCandidatesQueryError = ErrorType<unknown>;
+
+export function useOrganizationMemberCandidates<
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof organizationMemberCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof organizationMemberCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useOrganizationMemberCandidates<
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof organizationMemberCandidates>>,
+          TError,
+          Awaited<ReturnType<typeof organizationMemberCandidates>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useOrganizationMemberCandidates<
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useOrganizationMemberCandidates<
+  TData = Awaited<ReturnType<typeof organizationMemberCandidates>>,
+  TError = ErrorType<unknown>,
+>(
+  id: string,
+  params: OrganizationMemberCandidatesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof organizationMemberCandidates>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getOrganizationMemberCandidatesQueryOptions(id, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
 
 /**
  * Delete members from organization (`member.id` not `user.id`)

@@ -1,73 +1,80 @@
 "use client";
 
-import { useGetAllUsers } from "@/utils/api";
+import { useOrganizationMemberCandidates } from "@/utils/api";
 import ApiImage from "@components/ApiImage/ApiImage";
 import { ActionIcon, Flex, Modal, Paper, ScrollArea, Stack, Text, TextInput, Tooltip } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { IconSearch, IconUserPlus } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useState } from "react";
 
 interface AddOrganisationMemberModalProps {
+  organisationId: string;
   isOpened: boolean;
   closeModal: () => void;
-  memberUserIds: Set<string>;
   onAddMember: (userId: string) => void;
   isPending: boolean;
 }
 
-const PAGE_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const AddOrganisationMemberModal = ({
+  organisationId,
   isOpened,
   closeModal,
-  memberUserIds,
   onAddMember,
   isPending,
 }: AddOrganisationMemberModalProps) => {
   const [search, setSearch] = useState("");
-  const hasSearch = !!search.trim();
+  const [debouncedSearch] = useDebouncedValue(search.trim(), SEARCH_DEBOUNCE_MS);
+  const hasSearch = debouncedSearch.length > 0;
 
-  const { data: allUsersList, isFetching } = useGetAllUsers(
-    hasSearch ? { all: true } : { page: 1, perPage: PAGE_SIZE },
-    { query: { enabled: isOpened } },
+  // Users are searched on the backend, which also leaves out current members
+  const { data: candidatesList, isFetching } = useOrganizationMemberCandidates(
+    organisationId,
+    { search: debouncedSearch },
+    { query: { enabled: isOpened && hasSearch, placeholderData: keepPreviousData } },
   );
 
-  const candidates = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const allUsers = allUsersList?.data ?? [];
-    const nonMembers = allUsers.filter((u) => !memberUserIds.has(u.id));
-    if (!q) return nonMembers;
-    return nonMembers.filter((u) =>
-      [u.firstName, u.lastName, `${u.firstName} ${u.lastName}`, u.username, u.email].some((v) =>
-        v?.toLowerCase().includes(q),
-      ),
-    );
-  }, [allUsersList?.data, memberUserIds, search]);
-
-  const totalCount = allUsersList?.pagination?.totalCount;
+  const candidates = hasSearch ? (candidatesList?.data ?? []) : [];
+  const totalCount = candidatesList?.pagination?.totalCount ?? 0;
 
   return (
-    <Modal opened={isOpened} onClose={closeModal} title="Add member to organisation" size="lg" centered>
+    <Modal
+      opened={isOpened}
+      onClose={closeModal}
+      // Next opening starts with an empty search
+      onExitTransitionEnd={() => setSearch("")}
+      title="Add member to organisation"
+      size="lg"
+      centered
+    >
       <Stack>
         <TextInput
           placeholder="Search by name, username or email"
           leftSection={<IconSearch size={16} />}
           value={search}
           onChange={(e) => setSearch(e.currentTarget.value)}
+          data-autofocus
         />
-        {!hasSearch && totalCount !== undefined && totalCount > PAGE_SIZE ? (
+        {hasSearch && totalCount > candidates.length ? (
           <Text size="xs" c="dimmed">
-            Showing {candidates.length} of {totalCount} — type to search all users.
+            Showing {candidates.length} of {totalCount} users — refine the search to find others.
           </Text>
         ) : null}
         <ScrollArea h={400}>
           <Stack gap="xs">
-            {isFetching && !allUsersList ? (
+            {!hasSearch ? (
+              <Text c="dimmed" ta="center">
+                Start typing to search users.
+              </Text>
+            ) : isFetching && !candidatesList ? (
               <Text c="dimmed" ta="center">
                 Loading...
               </Text>
             ) : candidates.length === 0 ? (
               <Text c="dimmed" ta="center">
-                {hasSearch ? "No users found." : "No users available."}
+                No users found.
               </Text>
             ) : (
               candidates.map((user) => (

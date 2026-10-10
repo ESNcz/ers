@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import bcrypt from "bcryptjs";
 import { isEmail } from "class-validator";
 import { randomUUID } from "node:crypto";
-import { FindManyOptions, FindOptionsWhere, In, Repository } from "typeorm";
+import { Brackets, FindManyOptions, FindOptionsWhere, In, Repository } from "typeorm";
 
 import { PhotoService } from "@api/modules/photo";
 import type { PaginationOptions } from "utilities/nest/decorators";
@@ -130,6 +130,50 @@ export class UsersService {
     });
 
     return formatPaginatedResponse<User>(users, totalCount, pagination);
+  }
+
+  /**
+   * Search users that are not members of the organization yet, by name, username or email (case-insensitive).
+   * @param organizationId Organization ID
+   * @param search Searched text, must not be empty
+   * @param limit Max number of returned users
+   * @returns Matching users ordered by name and the count of all matches
+   */
+  async findOrganizationMemberCandidates(organizationId: string, search: string, limit: number) {
+    // Search text is matched literally, `%` and `_` are not wildcards
+    const pattern = `%${search.replace(/[\\%_]/g, "\\$&")}%`;
+
+    const [users, totalCount] = await this.UsersRepository.createQueryBuilder("user")
+      .leftJoinAndSelect("user.photo", "photo")
+      .where("user.isDeleted = :isDeleted", { isDeleted: false })
+      .andWhere((qb) => {
+        const memberUserIds = qb
+          .subQuery()
+          .select("memberUser.id")
+          .from("OrganizationMember", "member")
+          .innerJoin("member.user", "memberUser")
+          .innerJoin("member.organization", "organization")
+          .where("organization.id = :organizationId", { organizationId })
+          .getQuery();
+        return `user.id NOT IN ${memberUserIds}`;
+      })
+      .andWhere(
+        new Brackets((qb) =>
+          qb
+            .where("user.firstName ILIKE :pattern")
+            .orWhere("user.lastName ILIKE :pattern")
+            .orWhere("CONCAT(user.firstName, ' ', user.lastName) ILIKE :pattern")
+            .orWhere("user.username ILIKE :pattern")
+            .orWhere("user.email ILIKE :pattern"),
+        ),
+      )
+      .setParameter("pattern", pattern)
+      .orderBy("user.lastName", "ASC")
+      .addOrderBy("user.firstName", "ASC")
+      .take(limit)
+      .getManyAndCount();
+
+    return { users, totalCount };
   }
 
   /**

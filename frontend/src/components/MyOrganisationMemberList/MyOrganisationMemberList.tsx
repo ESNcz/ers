@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  getOrganizationMemberCandidatesQueryKey,
   useAddOrganizationMembers,
   useDeleteOrganizationMembers,
   useGetOrganisationById,
@@ -16,6 +17,7 @@ import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import { Button, Flex, Stack, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconUserPlus } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 interface MyOrganisationMemberListProps {
@@ -24,6 +26,7 @@ interface MyOrganisationMemberListProps {
 
 const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListProps) => {
   const { currentUser } = useCurrentUser();
+  const queryClient = useQueryClient();
   const { data: currentOrganisation, refetch: refetchCurrentOrganisation } = useGetOrganisationById(organizationId);
   const { data: organizationMembers, refetch: refetchOrganisationMembers } = useOrganizationMembers(organizationId, {
     all: true,
@@ -42,6 +45,8 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
     mutation: {
       onSuccess: () => {
         refetchOrganisationMembersInfo();
+        // Added user is no longer a candidate, cached searches are stale
+        queryClient.invalidateQueries({ queryKey: getOrganizationMemberCandidatesQueryKey(organizationId) });
         closeAddModal();
       },
     },
@@ -53,11 +58,6 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
       },
     },
   });
-
-  const memberUserIds = useMemo(
-    () => new Set(organizationMembers?.data?.map((m) => m.user.id) ?? []),
-    [organizationMembers],
-  );
 
   const handleDeleteOrganizationMembers = (member: OrganizationMember) => {
     if (
@@ -166,7 +166,7 @@ const MyOrganisationMemberList = ({ organizationId }: MyOrganisationMemberListPr
         <AddOrganisationMemberModal
           isOpened={isAddModalOpened}
           closeModal={closeAddModal}
-          memberUserIds={memberUserIds}
+          organisationId={organizationId}
           onAddMember={handleAddMemberToOrganization}
           isPending={addOrganizationMemberMutation.isPending}
         />

@@ -1060,6 +1060,15 @@ export type OrganizationMembers200 = {
   pagination?: PaginationDto;
 };
 
+export type OrganizationMemberCandidatesParams = {
+  search: string;
+};
+
+export type OrganizationMemberCandidates200 = {
+  data?: User[];
+  pagination?: PaginationDto;
+};
+
 export type GetUserApplicationsParams = {
   sinceSince?: number;
   toSince?: number;
