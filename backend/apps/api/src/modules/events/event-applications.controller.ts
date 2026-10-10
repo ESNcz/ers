@@ -208,16 +208,39 @@ export class EventApplicationsController {
   }
 
   /**
-   * Get all event user applications
-   * @returns
-   * @param applicationId
+   * Get event application by ID.
+   * Applicants can see their own application, users with `event.manageApplications` any application.
    */
   @ApiBearerAuth()
-  @ApiOkResponse({ type: [EventApplicationDetailedWithApplications] })
+  @ApiOkResponse({ type: EventApplicationDetailedWithApplications })
+  @ApiNotFoundResponse({ description: "Event application not found" })
+  @ApiForbiddenResponse({ description: "User is not allowed to see this application" })
   @UseGuards(CookieGuard)
   @Get("application/:applicationId")
-  async getApplication(@Param("applicationId", ParseIntPipe) applicationId: number) {
-    return await this.eventApplicationsService.findById(applicationId);
+  async getApplication(
+    @CurrentUser() currentUser: User,
+    @Param("applicationId", ParseIntPipe) applicationId: number,
+  ): Promise<EventApplicationDetailedWithApplications> {
+    const application = await this.eventApplicationsService.findById(applicationId, {
+      relations: {
+        event: { applications: true },
+        organization: true,
+        customOrganization: true,
+        invoiceAddress: true,
+      },
+    });
+    if (!application) throw new NotFoundException("Event application not found");
+
+    if (!(
+      application.user.id === currentUser.id ||
+      currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])
+    )) {
+      throw new ForbiddenException("You don't have permission to perform this action");
+    }
+
+    return this.eventApplicationSimpleWithApplicationsMapper.map(
+      application,
+    ) as unknown as EventApplicationDetailedWithApplications;
   }
 
   /**
@@ -331,6 +354,14 @@ export class EventApplicationsController {
       currentUser.id === application.user.id
     )) {
       throw new UnauthorizedException("You don't have permission to perform this action");
+    }
+
+    // Applicants can edit their application only until the registration deadline, like unregistering
+    if (
+      !currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]) &&
+      dayjs(application.event.registrationDeadline).isBefore(dayjs())
+    ) {
+      throw new ForbiddenException("Registration deadline has passed");
     }
 
     if (body.spotTypeId) {

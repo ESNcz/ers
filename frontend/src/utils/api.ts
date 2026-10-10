@@ -2662,14 +2662,15 @@ export const useCreateUserApplication = <TError = ErrorType<void>, TContext = un
 };
 
 /**
- * Get all event user applications
+ * Get event application by ID.
+Applicants can see their own application, users with `event.manageApplications` any application.
  */
 export const getApplication = (
   applicationId: number,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<EventApplicationDetailedWithApplications[]>(
+  return customInstance<EventApplicationDetailedWithApplications>(
     { url: `/events/application/${applicationId}`, method: "GET", signal },
     options,
   );
