@@ -134,7 +134,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
               label="Date Until"
               value={dayjs(form.values.until).toDate()}
               onChange={(value) => {
-                value && form.setFieldValue("until", dayjs(value).toISOString());
+                value && form.setFieldValue("until", dayjs(value).endOf("day").toISOString());
               }}
               error={form.errors.until}
             />

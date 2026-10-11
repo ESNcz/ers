@@ -45,7 +45,7 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
       longDescription: "",
       links: [],
       since: new Date().toISOString(),
-      until: new Date().toISOString(),
+      until: dayjs().endOf("day").toISOString(),
       registrationDeadline: dayjs().endOf("day").toISOString(),
       priorityListDeadline: undefined,
       termsAndConditionsLink: "",
@@ -136,7 +136,7 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
               label="Event Date Until"
               value={dayjs(form.values.until).toDate()}
               onChange={(value) => {
-                value && form.setFieldValue("until", dayjs(value).toISOString());
+                value && form.setFieldValue("until", dayjs(value).endOf("day").toISOString());
               }}
               error={form.errors.until}
             />
