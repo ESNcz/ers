@@ -8,6 +8,6 @@ export class Photo {
   @Column()
   filename: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 }

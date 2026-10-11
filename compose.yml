@@ -4,6 +4,8 @@ services:
   database:
     container_name: database
     image: postgres:16-alpine
+    # Pin DB session timezone (now() defaults, text output) regardless of host/data-dir config
+    command: postgres -c timezone=UTC
     environment:
       - POSTGRES_PORT=${DB_PORT:-5432}
       - POSTGRES_DB=${DB_NAME:-database}

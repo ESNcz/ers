@@ -58,7 +58,7 @@ export class Organization {
   children: Organization[] | null;
 
   // Metadata
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
   update(data: DeepPartial<Organization>) {

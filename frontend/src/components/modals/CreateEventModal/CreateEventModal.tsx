@@ -1,5 +1,6 @@
 import { getGetEventsQueryKey, useCreateEvent } from "@/utils/api";
 import { CreateEvent } from "@/utils/api.schemas";
+import { END_OF_DAY_TIME } from "@/utils/time";
 import Modal from "@components/Modal/Modal";
 import RichTextEditor from "@components/Richtext/RichTextEditor";
 import LinkTree, { LinkItem } from "@components/events/LinkTree";
@@ -45,7 +46,7 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
       links: [],
       since: new Date().toISOString(),
       until: new Date().toISOString(),
-      registrationDeadline: new Date().toISOString(),
+      registrationDeadline: dayjs().endOf("day").toISOString(),
       priorityListDeadline: undefined,
       termsAndConditionsLink: "",
       codeOfConductLink: "",
@@ -100,6 +101,7 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
             />
             <DateTimePicker
               label="Registration Deadline"
+              defaultTimeValue={END_OF_DAY_TIME}
               value={dayjs(form.values.registrationDeadline).toDate()}
               onChange={(value) => {
                 value && form.setFieldValue("registrationDeadline", dayjs(value).toISOString());
@@ -111,6 +113,7 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
             />
             <DateTimePicker
               label="Priority List Deadline"
+              defaultTimeValue={END_OF_DAY_TIME}
               placeholder="Defaults to event start date"
               value={form.values.priorityListDeadline ? dayjs(form.values.priorityListDeadline).toDate() : null}
               onChange={(value) => {

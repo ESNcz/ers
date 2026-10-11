@@ -39,7 +39,7 @@ export class SugarCube extends BaseEntity {
   @ApiProperty({ type: () => Event })
   event: Event;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   @ApiProperty()
   createdAt: Date;
 

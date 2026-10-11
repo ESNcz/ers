@@ -20,7 +20,7 @@ export class EventCustomOrganization {
   @Column()
   country: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
   constructor(base?: Partial<EventCustomOrganization>) {

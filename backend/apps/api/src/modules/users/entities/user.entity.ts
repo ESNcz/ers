@@ -47,7 +47,7 @@ export class User extends BaseEntity {
   @ApiProperty()
   lastName: string;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: "timestamptz", nullable: true })
   birthDate: Date | null;
 
   @Column({ nullable: true })
@@ -78,10 +78,10 @@ export class User extends BaseEntity {
   @ManyToOne(() => Photo, { eager: true, onDelete: "SET NULL" })
   photo: Photo | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 
   @ManyToOne(() => Address, { nullable: true, onDelete: "SET NULL", cascade: true })

@@ -14,9 +14,9 @@ export class Settings extends BaseEntity {
   @Column({ type: "text", nullable: true })
   footerDescription?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 }
