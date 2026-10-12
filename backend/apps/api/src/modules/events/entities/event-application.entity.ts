@@ -91,7 +91,7 @@ export class EventApplication extends BaseEntity {
   @Column({ default: "" })
   healthLimitations: string;
 
-  @Column({ nullable: true })
+  @Column({ type: "timestamptz", nullable: true })
   validUntil: Date;
 
   @Column({ select: true })
@@ -100,7 +100,7 @@ export class EventApplication extends BaseEntity {
   @Column({ type: "int", nullable: true })
   priority: number | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
   constructor(initial?: DeepPartial<EventApplication>) {

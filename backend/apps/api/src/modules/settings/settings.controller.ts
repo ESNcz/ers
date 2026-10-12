@@ -1,11 +1,13 @@
 // src/app-info/app-info.controller.ts
-import { Body, Controller, Get, Put, UseGuards } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Put, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOkResponse } from "@nestjs/swagger";
 
+import { CurrentUser } from "@api/decorators";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
 import { SettingsDTO } from "@api/modules/settings/dto/update-settings.dto";
 import { Settings } from "@api/modules/settings/entities/settings.entity";
 import { SettingsService } from "@api/modules/settings/settings.service";
+import type { User } from "@api/modules/users";
 
 @Controller("settings")
 export class SettingsController {
@@ -21,13 +23,17 @@ export class SettingsController {
   }
 
   /**
-   * Update the global setting of the app
+   * Update the global setting of the app, admin only
    */
   @ApiBearerAuth()
   @UseGuards(CookieGuard)
   @ApiOkResponse({ type: Settings, description: "Returns settings" })
   @Put()
-  async updateSettings(@Body() dto: SettingsDTO) {
+  async updateSettings(@Body() dto: SettingsDTO, @CurrentUser() user: User) {
+    if (!user.role?.isAdmin()) {
+      throw new ForbiddenException("You don't have permission to update settings");
+    }
+
     return this.settingsService.updateSettings(dto);
   }
 }

@@ -2,6 +2,7 @@
 
 import { useUpdateEvent } from "@/utils/api";
 import { EventDetail, type UpdateEvent } from "@/utils/api.schemas";
+import { END_OF_DAY_TIME } from "@/utils/time";
 import Modal from "@components/Modal/Modal";
 import RichTextEditor from "@components/Richtext/RichTextEditor";
 import LinkTree, { LinkItem } from "@components/events/LinkTree";
@@ -97,6 +98,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
             />
             <DateTimePicker
               label="Registration Deadline"
+              defaultTimeValue={END_OF_DAY_TIME}
               value={dayjs(form.values.registrationDeadline).toDate()}
               onChange={(value) => {
                 value && form.setFieldValue("registrationDeadline", dayjs(value).toISOString());
@@ -107,6 +109,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
           <SimpleGrid cols={2}>
             <DateTimePicker
               label="Priority List Deadline"
+              defaultTimeValue={END_OF_DAY_TIME}
               placeholder="Defaults to event end date"
               value={form.values.priorityListDeadline ? dayjs(form.values.priorityListDeadline).toDate() : null}
               onChange={(value) => {
@@ -131,7 +134,7 @@ const EventEditModal = ({ eventDetail, isOpened, close, handleSuccess = () => {}
               label="Date Until"
               value={dayjs(form.values.until).toDate()}
               onChange={(value) => {
-                value && form.setFieldValue("until", dayjs(value).toISOString());
+                value && form.setFieldValue("until", dayjs(value).endOf("day").toISOString());
               }}
               error={form.errors.until}
             />

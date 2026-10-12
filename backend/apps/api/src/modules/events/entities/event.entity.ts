@@ -49,16 +49,16 @@ export class Event extends BaseEntity {
   })
   longDescription: string;
 
-  @Column()
+  @Column({ type: "timestamptz" })
   since: Date;
 
-  @Column()
+  @Column({ type: "timestamptz" })
   until: Date;
 
   @ManyToOne(() => User, { nullable: false, eager: true, onDelete: "CASCADE" })
   createdByUser: User;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
   @ManyToOne(() => Photo, { nullable: true, eager: true, onDelete: "SET NULL" })
@@ -76,10 +76,10 @@ export class Event extends BaseEntity {
   @Column({ default: true })
   visible: boolean;
 
-  @Column()
+  @Column({ type: "timestamptz" })
   registrationDeadline: Date;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: "timestamptz", nullable: true })
   priorityListDeadline: Date | null;
 
   /**

@@ -15,7 +15,7 @@ export class OrganizationMember {
   @ManyToOne(() => User, (user) => user.memberships, { nullable: false, onDelete: "CASCADE" })
   user: User;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
   update(data: DeepPartial<OrganizationMember>) {
