@@ -38,6 +38,8 @@ import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 
+const EMPTY_ADDRESS = { street: "", houseNumber: "", zip: "", city: "", country: "" };
+
 interface UpdateEventModalProps {
   currentApplication: EventApplicationDetailedWithApplications;
   isOpened: boolean;
@@ -128,7 +130,7 @@ const UpdateEventApplicationModal = ({
       healthLimitations: getOtherHealthLimitations(),
       additionalInformation: currentApplication.additionalInformation,
       invoicedTo: currentApplication.invoicedTo,
-      invoiceAddress: currentApplication.invoiceAddress,
+      invoiceAddress: currentApplication.invoiceAddress ?? { ...EMPTY_ADDRESS },
     });
   }, [currentApplication, isOpened]);
 
@@ -290,7 +292,8 @@ const UpdateEventApplicationModal = ({
                     break;
                   }
                   case "different": {
-                    form.setFieldValue("invoiceAddress", undefined);
+                    // Inputs bind to `invoiceAddress.*` - setting a nested field on `undefined` throws
+                    form.setFieldValue("invoiceAddress", { ...EMPTY_ADDRESS });
                     form.setFieldValue("invoicedTo", null);
                   }
                 }

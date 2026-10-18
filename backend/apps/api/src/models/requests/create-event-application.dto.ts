@@ -44,7 +44,7 @@ export class CreateEventApplication {
   spotTypeId?: number | null;
 
   @IsEnum(InvoiceMethods)
-  invoiceMethod: InvoiceMethods = InvoiceMethods.personal;
+  invoiceMethod: InvoiceMethods;
 
   @IsString()
   invoicedTo: string | null;
