@@ -3,17 +3,19 @@
 import {
   useDeleteEventApplication,
   useDeleteEventSpot,
-  useGenerateSheetEventApplication,
   useUpdateApplicationsSpot,
   useUpdateUserApplicationSpot,
 } from "@/utils/api";
 import { type EventApplicationDetailedWithApplications, type EventSpotSimple } from "@/utils/api.schemas";
-import { downloadFile } from "@/utils/downloadFile";
+import { hasSomePermissions } from "@/utils/checkPermissions";
 import { DataTable } from "@components/data-table";
 import { applicationManagementColumns } from "@components/data-table/application-management-columns";
+import ApplicationFormsModal from "@components/eventForms/ApplicationFormsModal";
 import CreateSpotModal from "@components/modals/CreateSpotModal/CreateSpotModal";
+import ExportApplicationsModal from "@components/modals/ExportApplicationsModal/ExportApplicationsModal";
 import UpdateEventApplicationModal from "@components/modals/UpdateEventApplicationModal/UpdateEventApplicationModal";
 import UpdateSpotModal from "@components/modals/UpdateSpotModal/UpdateSpotModal";
+import { useCurrentUser } from "@components/providers/CurrentUserProvider";
 import {
   ActionIcon,
   Box,
@@ -41,6 +43,10 @@ interface ManageApplicationsTableViewProps {
 
 const ManageApplicationsTableView = ({ eventId, eventSpotsList, applications }: ManageApplicationsTableViewProps) => {
   const router = useRouter();
+  const { currentUser } = useCurrentUser();
+  // Form answers are visible to event editors, see EventFormsController
+  const canViewForms = hasSomePermissions(currentUser.role, ["event.create", "event.update"]);
+  const [formsApplication, setFormsApplication] = useState<EventApplicationDetailedWithApplications | null>(null);
 
   // Spots and applications come from the server component - re-run it after structural changes
   const handleRefetchApplications = () => {
@@ -155,15 +161,7 @@ const ManageApplicationsTableView = ({ eventId, eventSpotsList, applications }: 
     openEditApplicationModal();
   };
 
-  const exportToSheet = useGenerateSheetEventApplication(eventId, {
-    request: { responseType: "blob" },
-  });
-
-  const exportDataXLSX = () => {
-    exportToSheet.refetch().then((response) => {
-      downloadFile(response?.data);
-    });
-  };
+  const [isExportModalOpen, { open: openExportModal, close: closeExportModal }] = useDisclosure(false);
 
   const columns = useMemo(
     () =>
@@ -172,8 +170,9 @@ const ManageApplicationsTableView = ({ eventId, eventSpotsList, applications }: 
         handleChangeApplicationSpot,
         handleEditApplication,
         handleDeleteApplication,
+        handleViewForms: canViewForms ? setFormsApplication : undefined,
       }),
-    [eventSpotsList],
+    [eventSpotsList, canViewForms],
   );
 
   return (
@@ -181,7 +180,7 @@ const ManageApplicationsTableView = ({ eventId, eventSpotsList, applications }: 
       <Flex justify="space-between" align="center" w="100%" wrap="wrap" gap={16}>
         <Title order={1}>Manage Event Applications</Title>
         <Flex gap={16}>
-          <Button onClick={exportDataXLSX} leftSection={<IconTableExport />} color="green" variant="outline">
+          <Button onClick={openExportModal} leftSection={<IconTableExport />} color="green" variant="outline">
             Export Data
           </Button>
           <Button onClick={openCreateSpotModal} leftSection={<IconPlus />}>
@@ -283,6 +282,20 @@ const ManageApplicationsTableView = ({ eventId, eventSpotsList, applications }: 
           isOpened={isUpdateSpotModalOpen}
           handleSuccess={handleRefetchApplications}
           closeModal={closeUpdateSpotModal}
+        />
+      )}
+      <ExportApplicationsModal
+        eventId={eventId}
+        canIncludeForms={canViewForms}
+        isOpened={isExportModalOpen}
+        closeModal={closeExportModal}
+      />
+      {formsApplication && (
+        <ApplicationFormsModal
+          eventId={eventId}
+          application={formsApplication}
+          isOpened
+          closeModal={() => setFormsApplication(null)}
         />
       )}
     </>

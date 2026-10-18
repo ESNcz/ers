@@ -27,6 +27,7 @@ export const routes = {
   EVENT_DETAIL: (props: { id: number }) => `/event/${props.id}`,
   EVENT_APPLICATIONS: (props: { id: number }) => `/event/applications/${props.id}`,
   EVENT_APPLICATIONS_MANAGE: (props: { id: number }) => `/event/manage/${props.id}`,
+  EVENT_FORMS_MANAGE: (props: { id: number }) => `/event/forms/${props.id}`,
   SUGAR_CUBES: (props: { id: number }) => `/event/${props.id}/sugar-cubes`,
 
   // Organization

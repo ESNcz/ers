@@ -19,10 +19,7 @@ export const GET = (request: NextRequest) => {
     "Set-Cookie",
     `${authCookieName}=; ${expired}; Domain=${hostname}; Secure; SameSite=None; Partitioned`,
   );
-  response.headers.append(
-    "Set-Cookie",
-    `${authCookieName}=; ${expired}; Domain=${hostname}; Secure; SameSite=None`,
-  );
+  response.headers.append("Set-Cookie", `${authCookieName}=; ${expired}; Domain=${hostname}; Secure; SameSite=None`);
 
   return response;
 };

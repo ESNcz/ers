@@ -35,7 +35,7 @@ const Providers = ({ children }: ProvidersProps) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Notifications />
+      <Notifications layout={"stacked"} />
       {children}
     </QueryClientProvider>
   );

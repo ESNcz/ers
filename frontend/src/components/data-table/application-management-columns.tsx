@@ -1,7 +1,7 @@
 import { type EventApplicationDetailedWithApplications } from "@/utils/api.schemas";
 import { dateWithTime } from "@/utils/time";
 import { ComboboxData, Select } from "@mantine/core";
-import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { IconEdit, IconForms, IconTrash } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { rowActionsColumn } from "./DataTableRowActions";
@@ -11,12 +11,14 @@ interface ApplicationManagementColumnsOptions {
   handleChangeApplicationSpot?: (application: EventApplicationDetailedWithApplications, spotId: number | null) => void;
   handleEditApplication?: (application: EventApplicationDetailedWithApplications) => void;
   handleDeleteApplication?: (application: EventApplicationDetailedWithApplications) => void;
+  handleViewForms?: (application: EventApplicationDetailedWithApplications) => void;
 }
 
 export const applicationManagementColumns = (
   options: ApplicationManagementColumnsOptions = {},
 ): ColumnDef<EventApplicationDetailedWithApplications>[] => {
-  const { spots, handleChangeApplicationSpot, handleEditApplication, handleDeleteApplication } = options;
+  const { spots, handleChangeApplicationSpot, handleEditApplication, handleDeleteApplication, handleViewForms } =
+    options;
 
   const columns: ColumnDef<EventApplicationDetailedWithApplications>[] = [
     {
@@ -84,10 +86,16 @@ export const applicationManagementColumns = (
     });
   }
 
-  if (handleEditApplication || handleDeleteApplication) {
+  if (handleEditApplication || handleDeleteApplication || handleViewForms) {
     columns.push(
       rowActionsColumn<EventApplicationDetailedWithApplications>(
         (application) => [
+          {
+            label: "Additional forms",
+            icon: <IconForms size={16} />,
+            hidden: !handleViewForms,
+            onClick: () => handleViewForms?.(application),
+          },
           {
             label: "Edit application",
             icon: <IconEdit size={16} />,

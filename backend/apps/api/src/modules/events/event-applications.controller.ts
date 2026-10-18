@@ -57,7 +57,8 @@ import { ParseDatePipe } from "utilities/nest/pipes";
 import { dayMonthYear } from "utilities/time";
 
 import { EventApplication, EventCustomOrganization, EventSpot } from "./entities";
-import { EventApplicationsService, EventSpotsService, EventsService } from "./index";
+import { type ExportedForm, formExportCells, formExportColumns, mergeFormHeaders } from "./forms/form-export";
+import { EventApplicationsService, EventFormsService, EventSpotsService, EventsService } from "./index";
 
 @ApiTags("Event applications")
 @Controller("events")
@@ -69,6 +70,7 @@ export class EventApplicationsController {
     private readonly organizationService: OrganizationService,
     private readonly eventSpotsService: EventSpotsService,
     private readonly fileStorageService: FileStorageService,
+    private readonly eventFormsService: EventFormsService,
 
     private readonly eventApplicationSimpleWithApplicationsMapper: EventApplicationSimpleWithApplicationsMapper,
     private readonly eventSimpleWithApplicationsMapper: EventSimpleWithApplicationsMapper,
@@ -560,9 +562,14 @@ export class EventApplicationsController {
   }
 
   /**
-   * Export event applications with personal data of applicants
+   * Export event applications with personal data of applicants.
+   * With `includeForms=true` answers to additional forms are appended under a two-row header,
+   * which additionally requires `event.create` or `event.update` (same as viewing form responses).
+   * With `onlyWithSpot=true` applications without an assigned spot are left out.
    */
   @ApiBearerAuth()
+  @ApiQuery({ name: "includeForms", type: Boolean, required: false })
+  @ApiQuery({ name: "onlyWithSpot", type: Boolean, required: false })
   @UseGuards(CookieGuard)
   @Header("Content-disposition", "attachment; filename=EventApplicationExport.xlsx")
   @Get("export/:eventId/applications")
@@ -570,17 +577,28 @@ export class EventApplicationsController {
     @CurrentUser() currentUser: User,
     @Res() res: Response,
     @Param("eventId", ParseIntPipe) eventId: number,
+    @Query("includeForms") includeForms?: string,
+    @Query("onlyWithSpot") onlyWithSpot?: string,
   ) {
     if (!currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])) {
       throw new ForbiddenException("You don't have permission to perform this action");
     }
+    const withForms = includeForms === "true";
+    if (withForms && !currentUser.role.hasOneOfPermissions([Permission.EventCreate, Permission.EventUpdate])) {
+      throw new ForbiddenException("You don't have permission to export additional forms");
+    }
 
-    const applicationList = await this.eventApplicationsService.findByEventId(eventId);
+    const forms: ExportedForm[] = withForms ? await this.eventFormsService.findByEventId(eventId) : [];
+    const answersByApplication = await this.eventFormsService.findAnswersByApplication(forms.map((form) => form.id));
+
+    const allApplications = await this.eventApplicationsService.findByEventId(eventId);
+    const applicationList =
+      onlyWithSpot === "true" ? allApplications.filter((application) => application.spotType) : allApplications;
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Export");
 
-    worksheet.columns = [
+    const baseColumns = [
       { header: "Organisation Name", key: "organisation" },
       { header: "Spot Name", key: "spotName" },
       { header: "Spot Price", key: "spotPrice" },
@@ -605,6 +623,8 @@ export class EventApplicationsController {
       { header: "Disability or Health Limitations", key: "healthLimitations" },
       { header: "Additional Information", key: "additionalInformation" },
     ];
+    worksheet.columns = [...baseColumns, ...formExportColumns(forms)];
+    if (forms.length > 0) mergeFormHeaders(worksheet, baseColumns.length, forms);
 
     applicationList.map((application) => {
       const { organization, user, spotType } = application;
@@ -648,6 +668,7 @@ ${organization?.cin ? `IČO: ${organization.cin}` : ""}`,
         foodRestrictions: application?.foodRestriction,
         healthLimitations: application?.healthLimitations,
         additionalInformation: application?.additionalInformation,
+        ...formExportCells(forms, answersByApplication.get(application.id)),
       });
     });
 
