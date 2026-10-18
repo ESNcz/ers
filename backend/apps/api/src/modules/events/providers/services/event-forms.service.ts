@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { randomUUID } from "node:crypto";
 import { In, QueryFailedError, Repository } from "typeorm";
 
 import type { CreateEventForm, UpdateEventForm } from "@api/models/requests";
@@ -85,6 +86,29 @@ export class EventFormsService {
     if (body.fields !== undefined) form.fields = this.assertValidFields(body.fields);
 
     return this.formRepository.save(form);
+  }
+
+  /**
+   * Copies forms of one event to another, used when duplicating events. Responses are not copied.
+   */
+  async copyToEvent(sourceEventId: number, targetEventId: number) {
+    const forms = await this.findByEventId(sourceEventId);
+    if (forms.length === 0) return;
+
+    await this.formRepository.save(
+      forms.map(
+        (form) =>
+          new EventForm({
+            event: { id: targetEventId },
+            name: form.name,
+            description: form.description,
+            required: form.required,
+            deadline: form.deadline,
+            position: form.position,
+            fields: form.fields.map((field) => ({ ...field, id: randomUUID() })),
+          }),
+      ),
+    );
   }
 
   async remove(eventId: number, formId: number) {

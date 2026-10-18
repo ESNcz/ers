@@ -43,7 +43,7 @@ import { Pagination, PaginationOptions } from "utilities/nest/decorators";
 import { ParseDatePipe } from "utilities/nest/pipes";
 
 import { EventSpot } from "./entities";
-import { Event, EventApplicationsService, EventsService } from "./index";
+import { Event, EventApplicationsService, EventFormsService, EventsService } from "./index";
 
 @ApiTags("Events")
 @Controller("events")
@@ -51,6 +51,7 @@ export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly eventApplicationsService: EventApplicationsService,
+    private readonly eventFormsService: EventFormsService,
     private readonly organizationService: OrganizationService,
     private readonly photoService: PhotoService,
     private readonly eventSimpleWithApplicationsMapper: EventSimpleWithApplicationsMapper,
@@ -227,7 +228,7 @@ export class EventsController {
   }
 
   /**
-   * Duplicate event by ID
+   * Duplicate event by ID, including its additional forms (without responses)
    */
   @ApiCreatedResponse({ type: EventDetail, description: "Duplicated event" })
   @ApiBearerAuth()
@@ -263,6 +264,7 @@ export class EventsController {
     });
 
     newEvent = await this.eventsService.save(newEvent);
+    await this.eventFormsService.copyToEvent(event.id, newEvent.id);
     return this.eventSimpleWithApplicationsMapper.map(newEvent);
   }
 
