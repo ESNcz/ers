@@ -52,7 +52,6 @@ const CreateEventModal = ({ onCreateSuccess, isOpened, closeModal }: MyModalProp
       codeOfConductLink: "",
       photoPolicyLink: "",
       generateInvoices: false,
-      registrationForm: {},
     },
     validate: {
       title: hasLength({ min: 6 }, "Must be at least 6 characters"),

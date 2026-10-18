@@ -9,6 +9,7 @@ import { AuthModule } from "@api/modules/auth";
 import { AuthController } from "@api/modules/auth/auth.controller";
 import { EventsModule } from "@api/modules/events";
 import { EventApplicationsController } from "@api/modules/events/event-applications.controller";
+import { EventFormsController } from "@api/modules/events/event-forms.controller";
 import { EventSpotsController } from "@api/modules/events/event-spots.controller";
 import { EventsManagementController } from "@api/modules/events/events-management.controller";
 import { EventsController } from "@api/modules/events/events.controller";
@@ -67,6 +68,7 @@ import { EventApplicationSimpleWithApplicationsMapper, EventSimpleWithApplicatio
     OrganizationsController,
     OrganizationMembersController,
     EventApplicationsController,
+    EventFormsController,
     EventsController,
     EventSpotsController,
     RolesController,

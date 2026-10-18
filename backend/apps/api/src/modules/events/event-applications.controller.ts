@@ -14,7 +14,6 @@ import {
   Post,
   Query,
   Res,
-  UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -52,12 +51,12 @@ import { FileStorageService } from "@api/modules/file-storage";
 import { OrganizationService } from "@api/modules/organization";
 import { Permission } from "@api/modules/roles";
 import { User, UsersService } from "@api/modules/users";
-import { ajv } from "utilities/ajv";
 import { ParseDatePipe } from "utilities/nest/pipes";
 import { dayMonthYear } from "utilities/time";
 
 import { EventApplication, EventCustomOrganization, EventSpot } from "./entities";
-import { EventApplicationsService, EventSpotsService, EventsService } from "./index";
+import { type ExportedForm, formExportCells, formExportColumns, mergeFormHeaders } from "./forms/form-export";
+import { EventApplicationsService, EventFormsService, EventSpotsService, EventsService } from "./index";
 
 @ApiTags("Event applications")
 @Controller("events")
@@ -69,6 +68,7 @@ export class EventApplicationsController {
     private readonly organizationService: OrganizationService,
     private readonly eventSpotsService: EventSpotsService,
     private readonly fileStorageService: FileStorageService,
+    private readonly eventFormsService: EventFormsService,
 
     private readonly eventApplicationSimpleWithApplicationsMapper: EventApplicationSimpleWithApplicationsMapper,
     private readonly eventSimpleWithApplicationsMapper: EventSimpleWithApplicationsMapper,
@@ -296,25 +296,21 @@ export class EventApplicationsController {
 
     const event = await this.eventService.findById(eventId, {
       relations: { spotTypes: true, applications: true },
-      select: { registrationForm: {}, id: true },
+      select: { id: true },
     });
     if (!event) throw new NotFoundException("Event not found");
 
     application.event = event;
 
     if (body.spotTypeId) {
+      // Spots are assigned by managers, applicants register without one
+      if (!currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])) {
+        throw new ForbiddenException("Only event managers can assign spots");
+      }
       const spotType = event.spotTypes.find((e) => e.id === body.spotTypeId);
       if (!spotType) throw new NotFoundException("Spot type not found");
 
       application.spotType = spotType;
-    }
-
-    if (event.registrationForm) {
-      const isFormValid = await ajv.validate(event.registrationForm, body.additionalFormData);
-
-      if (!isFormValid) throw new BadRequestException("Registration form data are not valid");
-
-      application.additionalData = body.additionalFormData;
     }
 
     // Hard-coded invoice
@@ -340,7 +336,7 @@ export class EventApplicationsController {
   ): Promise<EventApplicationSimpleWithApplications> {
     let application = await this.eventApplicationsService.findById(applicationId, {
       relations: {
-        personalAddress: true,
+        invoiceAddress: true,
         customOrganization: true,
         event: {
           applications: true,
@@ -349,30 +345,36 @@ export class EventApplicationsController {
     });
     if (!application) throw new NotFoundException("Event application not found");
 
-    if (!(
-      currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]) ||
-      currentUser.id === application.user.id
-    )) {
-      throw new UnauthorizedException("You don't have permission to perform this action");
+    const canManage = currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]);
+    if (!(canManage || currentUser.id === application.user.id)) {
+      throw new ForbiddenException("You don't have permission to perform this action");
     }
 
     // Applicants can edit their application only until the registration deadline, like unregistering
-    if (
-      !currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications]) &&
-      dayjs(application.event.registrationDeadline).isBefore(dayjs())
-    ) {
+    if (!canManage && dayjs(application.event.registrationDeadline).isBefore(dayjs())) {
       throw new ForbiddenException("Registration deadline has passed");
     }
 
-    if (body.spotTypeId) {
-      const eventSpot = await this.eventSpotsService.findById(body.spotTypeId);
-      if (!eventSpot) throw new BadRequestException("Invalid event spot");
+    if (body.spotTypeId !== undefined) {
+      // Spots are assigned by managers, the edit form never sends one for applicants
+      if (!canManage) throw new ForbiddenException("Only event managers can assign spots");
 
-      application.spotType = eventSpot;
+      if (body.spotTypeId === null) {
+        application.spotType = null;
+      } else {
+        const eventSpot = await this.eventSpotsService.findById(body.spotTypeId);
+        if (!eventSpot || eventSpot.event.id !== application.event.id) {
+          throw new BadRequestException("Invalid event spot");
+        }
+        application.spotType = eventSpot;
+      }
     }
-    if (body.spotTypeId === null) application.spotType = null;
 
-    if (body.invoiceAddress) application.personalAddress.update(body.invoiceAddress);
+    // The edit form sends the invoice address - the personal address is a copy from registration and stays
+    if (body.invoiceAddress) {
+      if (application.invoiceAddress) application.invoiceAddress.update(body.invoiceAddress);
+      else application.invoiceAddress = new Address(body.invoiceAddress);
+    }
 
     application.invoicedTo = body.invoicedTo ?? application.invoicedTo;
     application.validUntil = body.validUntil ?? application.validUntil;
@@ -391,7 +393,8 @@ export class EventApplicationsController {
         application.customOrganization = null;
       }
 
-      const member = await this.organizationService.findMemberByUserId(body.organization.id, currentUser.id, {
+      // The applicant must be a member, not whoever edits the application
+      const member = await this.organizationService.findMemberByUserId(body.organization.id, application.user.id, {
         relations: { organization: true },
       });
 
@@ -408,22 +411,6 @@ export class EventApplicationsController {
         country: body.organization.country,
         name: body.organization.name,
       });
-    }
-
-    if (body?.additionalFormData) {
-      const event = await this.eventService.findById(application.event.id, {
-        relations: { spotTypes: true },
-        select: { registrationForm: {}, id: true },
-      });
-      if (!event) throw new NotFoundException("Event not found");
-
-      if (event.registrationForm) {
-        const isFormValid = await ajv.validate(event.registrationForm, body.additionalFormData);
-
-        if (!isFormValid) throw new BadRequestException("Registration form data are not valid");
-
-        application.additionalData = body.additionalFormData;
-      }
     }
 
     application = await this.eventApplicationsService.save(application);
@@ -502,18 +489,20 @@ export class EventApplicationsController {
     @Param("applicationId", ParseIntPipe) applicationId: number,
     @Body() body: UpdateApplicationSlotDto,
   ) {
-    const application = await this.eventApplicationsService.findById(applicationId);
-
-    if (!(
-      currentUser.id === application?.user.id ||
-      currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])
-    )) {
+    if (!currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])) {
       throw new ForbiddenException("You don't have permission to perform this action");
     }
 
+    const application = await this.eventApplicationsService.findById(applicationId, { relations: { event: true } });
     if (!application) throw new NotFoundException("Event application not found");
 
-    application.spotType = body.spotId === null ? null : await this.eventSpotsService.findById(body.spotId);
+    if (body.spotId === null) {
+      application.spotType = null;
+    } else {
+      const spot = await this.eventSpotsService.findById(body.spotId);
+      if (!spot || spot.event.id !== application.event.id) throw new NotFoundException("Event spot not found");
+      application.spotType = spot;
+    }
     await application.save();
 
     return application;
@@ -560,9 +549,14 @@ export class EventApplicationsController {
   }
 
   /**
-   * Export event applications with personal data of applicants
+   * Export event applications with personal data of applicants.
+   * With `includeForms=true` answers to additional forms are appended under a two-row header,
+   * which additionally requires `event.create` or `event.update` (same as viewing form responses).
+   * With `onlyWithSpot=true` applications without an assigned spot are left out.
    */
   @ApiBearerAuth()
+  @ApiQuery({ name: "includeForms", type: Boolean, required: false })
+  @ApiQuery({ name: "onlyWithSpot", type: Boolean, required: false })
   @UseGuards(CookieGuard)
   @Header("Content-disposition", "attachment; filename=EventApplicationExport.xlsx")
   @Get("export/:eventId/applications")
@@ -570,17 +564,28 @@ export class EventApplicationsController {
     @CurrentUser() currentUser: User,
     @Res() res: Response,
     @Param("eventId", ParseIntPipe) eventId: number,
+    @Query("includeForms") includeForms?: string,
+    @Query("onlyWithSpot") onlyWithSpot?: string,
   ) {
     if (!currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])) {
       throw new ForbiddenException("You don't have permission to perform this action");
     }
+    const withForms = includeForms === "true";
+    if (withForms && !currentUser.role.hasOneOfPermissions([Permission.EventCreate, Permission.EventUpdate])) {
+      throw new ForbiddenException("You don't have permission to export additional forms");
+    }
 
-    const applicationList = await this.eventApplicationsService.findByEventId(eventId);
+    const forms: ExportedForm[] = withForms ? await this.eventFormsService.findByEventId(eventId) : [];
+    const answersByApplication = await this.eventFormsService.findAnswersByApplication(forms.map((form) => form.id));
+
+    const allApplications = await this.eventApplicationsService.findByEventId(eventId);
+    const applicationList =
+      onlyWithSpot === "true" ? allApplications.filter((application) => application.spotType) : allApplications;
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Export");
 
-    worksheet.columns = [
+    const baseColumns = [
       { header: "Organisation Name", key: "organisation" },
       { header: "Spot Name", key: "spotName" },
       { header: "Spot Price", key: "spotPrice" },
@@ -605,6 +610,8 @@ export class EventApplicationsController {
       { header: "Disability or Health Limitations", key: "healthLimitations" },
       { header: "Additional Information", key: "additionalInformation" },
     ];
+    worksheet.columns = [...baseColumns, ...formExportColumns(forms)];
+    if (forms.length > 0) mergeFormHeaders(worksheet, baseColumns.length, forms);
 
     applicationList.map((application) => {
       const { organization, user, spotType } = application;
@@ -648,6 +655,7 @@ ${organization?.cin ? `IČO: ${organization.cin}` : ""}`,
         foodRestrictions: application?.foodRestriction,
         healthLimitations: application?.healthLimitations,
         additionalInformation: application?.additionalInformation,
+        ...formExportCells(forms, answersByApplication.get(application.id)),
       });
     });
 

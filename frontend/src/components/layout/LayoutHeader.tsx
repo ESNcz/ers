@@ -225,11 +225,11 @@ const LayoutHeader = () => {
         <Divider my="sm" />
 
         {isInstallAvailable && (
-        <Group grow px="md" pb="sm">
-          <Button variant="light" leftSection={<IconDeviceMobileDown size={16} stroke={1.5} />} onClick={installApp}>
-            Install app
-          </Button>
-        </Group>
+          <Group grow px="md" pb="sm">
+            <Button variant="light" leftSection={<IconDeviceMobileDown size={16} stroke={1.5} />} onClick={installApp}>
+              Install app
+            </Button>
+          </Group>
         )}
 
         <Group justify="center" grow pb="xl" px="md">

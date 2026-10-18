@@ -23,8 +23,10 @@ import type {
 
 import type {
   AddOrganizationMembers,
+  ApplicantEventForm,
   CreateEvent,
   CreateEventApplication,
+  CreateEventForm,
   CreateEventSpot,
   CreateOrganization,
   CreateOrganization201,
@@ -32,18 +34,22 @@ import type {
   CreateSugarCubeDto,
   CreateUser,
   Error,
-  Event,
   EventApplicationDetailedWithApplications,
   EventApplicationSimpleWithApplications,
   EventApplicationsManagement,
   EventApplicationsOverview,
   EventDetail,
   EventDetailView,
+  EventFormDetail,
+  EventFormManageItem,
+  EventFormResponsesTable,
   EventSimple,
   EventSimpleWithApplications,
   EventSpotSimple,
+  ExportEventFormResponsesParams,
   ForgotPasswordParams,
   GenerateSheetEventApplication200,
+  GenerateSheetEventApplicationParams,
   GenerateSheetUsers200,
   GetAllUsers200,
   GetAllUsersParams,
@@ -53,6 +59,7 @@ import type {
   GetManagementEventsParams,
   GetOngoingEvents200,
   GetOngoingEventsParams,
+  GetPhotoParams,
   GetRoleAllPermissions200Item,
   GetUserApplications200,
   GetUserApplicationsParams,
@@ -65,12 +72,14 @@ import type {
   OrganizationMemberWithoutUser,
   OrganizationMembers200,
   OrganizationMembersParams,
+  ReorderEventForms,
   ResendVerificationParams,
   ResetPasswordDto,
   Role,
   SendEmailDTO,
   Settings,
   SettingsDTO,
+  SubmitEventFormResponse,
   SugarCube,
   SugarCubeRecipientOptionDto,
   TransferManager201,
@@ -79,6 +88,7 @@ import type {
   UpdateEvent,
   UpdateEventApplication,
   UpdateEventApplicationPrioritiesDto,
+  UpdateEventForm,
   UpdateEventSpot,
   UpdateOrganization,
   UpdateOrganization201,
@@ -93,7 +103,7 @@ import type { ErrorType } from "./customInstance";
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 export const getInitialised = (options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
-  return customInstance<void | void>({ url: `/initialise`, method: "GET", signal }, options);
+  return customInstance<void>({ url: `/initialise`, method: "GET", signal }, options);
 };
 
 export const getGetInitialisedQueryKey = () => {
@@ -885,6 +895,64 @@ export function useGetCurrentUser<TData = Awaited<ReturnType<typeof getCurrentUs
   return query;
 }
 
+export const updateCurrentUserPhoto = (updatePhoto: UpdatePhoto, options?: SecondParameter<typeof customInstance>) => {
+  const formData = new FormData();
+  formData.append(`file`, updatePhoto.file);
+
+  return customInstance<User>(
+    { url: `/users/photo`, method: "PATCH", headers: { "Content-Type": "multipart/form-data" }, data: formData },
+    options,
+  );
+};
+
+export const getUpdateCurrentUserPhotoMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCurrentUserPhoto>>,
+    TError,
+    { data: UpdatePhoto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, TError, { data: UpdatePhoto }, TContext> => {
+  const mutationKey = ["updateCurrentUserPhoto"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, { data: UpdatePhoto }> = (
+    props,
+  ) => {
+    const { data } = props ?? {};
+
+    return updateCurrentUserPhoto(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateCurrentUserPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof updateCurrentUserPhoto>>>;
+export type UpdateCurrentUserPhotoMutationBody = UpdatePhoto;
+export type UpdateCurrentUserPhotoMutationError = ErrorType<unknown>;
+
+export const useUpdateCurrentUserPhoto = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateCurrentUserPhoto>>,
+      TError,
+      { data: UpdatePhoto },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, TError, { data: UpdatePhoto }, TContext> => {
+  const mutationOptions = getUpdateCurrentUserPhotoMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
 /**
  * Update user data by admin
  */
@@ -962,7 +1030,7 @@ export const useUpdateUserById = <TError = ErrorType<void>, TContext = unknown>(
 Users are not getting deleted but their data are replaced with non-identifiable placeholders
  */
 export const deleteUser = (id: string, options?: SecondParameter<typeof customInstance>) => {
-  return customInstance<void | void>({ url: `/users/${id}`, method: "DELETE" }, options);
+  return customInstance<void>({ url: `/users/${id}`, method: "DELETE" }, options);
 };
 
 export const getDeleteUserMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
@@ -997,64 +1065,6 @@ export const useDeleteUser = <TError = ErrorType<unknown>, TContext = unknown>(
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof deleteUser>>, TError, { id: string }, TContext> => {
   const mutationOptions = getDeleteUserMutationOptions(options);
-
-  return useMutation(mutationOptions, queryClient);
-};
-
-export const updateCurrentUserPhoto = (updatePhoto: UpdatePhoto, options?: SecondParameter<typeof customInstance>) => {
-  const formData = new FormData();
-  formData.append(`file`, updatePhoto.file);
-
-  return customInstance<User>(
-    { url: `/users/photo`, method: "PATCH", headers: { "Content-Type": "multipart/form-data" }, data: formData },
-    options,
-  );
-};
-
-export const getUpdateCurrentUserPhotoMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof updateCurrentUserPhoto>>,
-    TError,
-    { data: UpdatePhoto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customInstance>;
-}): UseMutationOptions<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, TError, { data: UpdatePhoto }, TContext> => {
-  const mutationKey = ["updateCurrentUserPhoto"];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, { data: UpdatePhoto }> = (
-    props,
-  ) => {
-    const { data } = props ?? {};
-
-    return updateCurrentUserPhoto(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type UpdateCurrentUserPhotoMutationResult = NonNullable<Awaited<ReturnType<typeof updateCurrentUserPhoto>>>;
-export type UpdateCurrentUserPhotoMutationBody = UpdatePhoto;
-export type UpdateCurrentUserPhotoMutationError = ErrorType<unknown>;
-
-export const useUpdateCurrentUserPhoto = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: {
-    mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof updateCurrentUserPhoto>>,
-      TError,
-      { data: UpdatePhoto },
-      TContext
-    >;
-    request?: SecondParameter<typeof customInstance>;
-  },
-  queryClient?: QueryClient,
-): UseMutationResult<Awaited<ReturnType<typeof updateCurrentUserPhoto>>, TError, { data: UpdatePhoto }, TContext> => {
-  const mutationOptions = getUpdateCurrentUserPhotoMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
@@ -1277,6 +1287,9 @@ export function useGetAllUsers<TData = Awaited<ReturnType<typeof getAllUsers>>, 
   return query;
 }
 
+/**
+ * Export all users with personal data. Admin only - same as the Manage people page.
+ */
 export const generateSheetUsers = (options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
   return customInstance<GenerateSheetUsers200>({ url: `/users/export/users`, method: "GET", signal }, options);
 };
@@ -1377,16 +1390,22 @@ export function useGenerateSheetUsers<
   return query;
 }
 
-export const getPhoto = (id: string, options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
-  return customInstance<void>({ url: `/photo/${id}`, method: "GET", signal }, options);
+export const getPhoto = (
+  id: string,
+  params?: GetPhotoParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<void>({ url: `/photo/${id}`, method: "GET", params, signal }, options);
 };
 
-export const getGetPhotoQueryKey = (id?: string) => {
-  return [`/photo/${id}`] as const;
+export const getGetPhotoQueryKey = (id?: string, params?: GetPhotoParams) => {
+  return [`/photo/${id}`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetPhotoQueryOptions = <TData = Awaited<ReturnType<typeof getPhoto>>, TError = ErrorType<void>>(
   id: string,
+  params?: GetPhotoParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhoto>>, TError, TData>>;
     request?: SecondParameter<typeof customInstance>;
@@ -1394,10 +1413,10 @@ export const getGetPhotoQueryOptions = <TData = Awaited<ReturnType<typeof getPho
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetPhotoQueryKey(id);
+  const queryKey = queryOptions?.queryKey ?? getGetPhotoQueryKey(id, params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getPhoto>>> = ({ signal }) =>
-    getPhoto(id, requestOptions, signal);
+    getPhoto(id, params, requestOptions, signal);
 
   return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getPhoto>>,
@@ -1411,6 +1430,7 @@ export type GetPhotoQueryError = ErrorType<void>;
 
 export function useGetPhoto<TData = Awaited<ReturnType<typeof getPhoto>>, TError = ErrorType<void>>(
   id: string,
+  params: undefined | GetPhotoParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhoto>>, TError, TData>> &
       Pick<
@@ -1423,6 +1443,7 @@ export function useGetPhoto<TData = Awaited<ReturnType<typeof getPhoto>>, TError
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useGetPhoto<TData = Awaited<ReturnType<typeof getPhoto>>, TError = ErrorType<void>>(
   id: string,
+  params?: GetPhotoParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhoto>>, TError, TData>> &
       Pick<
@@ -1435,6 +1456,7 @@ export function useGetPhoto<TData = Awaited<ReturnType<typeof getPhoto>>, TError
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useGetPhoto<TData = Awaited<ReturnType<typeof getPhoto>>, TError = ErrorType<void>>(
   id: string,
+  params?: GetPhotoParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhoto>>, TError, TData>>;
     request?: SecondParameter<typeof customInstance>;
@@ -1444,13 +1466,14 @@ export function useGetPhoto<TData = Awaited<ReturnType<typeof getPhoto>>, TError
 
 export function useGetPhoto<TData = Awaited<ReturnType<typeof getPhoto>>, TError = ErrorType<void>>(
   id: string,
+  params?: GetPhotoParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPhoto>>, TError, TData>>;
     request?: SecondParameter<typeof customInstance>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetPhotoQueryOptions(id, options);
+  const queryOptions = getGetPhotoQueryOptions(id, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -2443,30 +2466,10 @@ export function useGetUserApplications<
 }
 
 /**
- * Get all event user applications
+ * Get event applications visible to the current user.
+Users with `event.manageApplications` get all applications, others only their own
+and applications of organisations they manage.
  */
-export const getEventApplicationsManagement = (
-  eventId: number,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
-) => {
-  return customInstance<EventApplicationsManagement>(
-    { url: `/events/${eventId}/applications/manage`, method: "GET", signal },
-    options,
-  );
-};
-
-export const getEventApplicationsOverview = (
-  eventId: number,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
-) => {
-  return customInstance<EventApplicationsOverview>(
-    { url: `/events/${eventId}/applications/overview`, method: "GET", signal },
-    options,
-  );
-};
-
 export const getEventApplications = (
   eventId: number,
   options?: SecondParameter<typeof customInstance>,
@@ -2662,6 +2665,248 @@ export const useCreateUserApplication = <TError = ErrorType<void>, TContext = un
 };
 
 /**
+ * Event applications page data - event, visible applications and the user's memberships in one request.
+
+Only admins and organization managers can access it.
+ */
+export const getEventApplicationsOverview = (
+  eventId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<EventApplicationsOverview>(
+    { url: `/events/${eventId}/applications/overview`, method: "GET", signal },
+    options,
+  );
+};
+
+export const getGetEventApplicationsOverviewQueryKey = (eventId?: number) => {
+  return [`/events/${eventId}/applications/overview`] as const;
+};
+
+export const getGetEventApplicationsOverviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEventApplicationsOverview>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsOverview>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetEventApplicationsOverviewQueryKey(eventId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEventApplicationsOverview>>> = ({ signal }) =>
+    getEventApplicationsOverview(eventId, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!eventId, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getEventApplicationsOverview>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetEventApplicationsOverviewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getEventApplicationsOverview>>
+>;
+export type GetEventApplicationsOverviewQueryError = ErrorType<void>;
+
+export function useGetEventApplicationsOverview<
+  TData = Awaited<ReturnType<typeof getEventApplicationsOverview>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsOverview>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventApplicationsOverview>>,
+          TError,
+          Awaited<ReturnType<typeof getEventApplicationsOverview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventApplicationsOverview<
+  TData = Awaited<ReturnType<typeof getEventApplicationsOverview>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsOverview>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventApplicationsOverview>>,
+          TError,
+          Awaited<ReturnType<typeof getEventApplicationsOverview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventApplicationsOverview<
+  TData = Awaited<ReturnType<typeof getEventApplicationsOverview>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsOverview>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetEventApplicationsOverview<
+  TData = Awaited<ReturnType<typeof getEventApplicationsOverview>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsOverview>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetEventApplicationsOverviewQueryOptions(eventId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Manage event applications page data - event spots and all applications in one request.
+
+Permissions required: `event.manageApplications`
+ */
+export const getEventApplicationsManagement = (
+  eventId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<EventApplicationsManagement>(
+    { url: `/events/${eventId}/applications/manage`, method: "GET", signal },
+    options,
+  );
+};
+
+export const getGetEventApplicationsManagementQueryKey = (eventId?: number) => {
+  return [`/events/${eventId}/applications/manage`] as const;
+};
+
+export const getGetEventApplicationsManagementQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEventApplicationsManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsManagement>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetEventApplicationsManagementQueryKey(eventId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEventApplicationsManagement>>> = ({ signal }) =>
+    getEventApplicationsManagement(eventId, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!eventId, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getEventApplicationsManagement>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetEventApplicationsManagementQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getEventApplicationsManagement>>
+>;
+export type GetEventApplicationsManagementQueryError = ErrorType<void>;
+
+export function useGetEventApplicationsManagement<
+  TData = Awaited<ReturnType<typeof getEventApplicationsManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsManagement>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventApplicationsManagement>>,
+          TError,
+          Awaited<ReturnType<typeof getEventApplicationsManagement>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventApplicationsManagement<
+  TData = Awaited<ReturnType<typeof getEventApplicationsManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsManagement>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventApplicationsManagement>>,
+          TError,
+          Awaited<ReturnType<typeof getEventApplicationsManagement>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventApplicationsManagement<
+  TData = Awaited<ReturnType<typeof getEventApplicationsManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsManagement>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetEventApplicationsManagement<
+  TData = Awaited<ReturnType<typeof getEventApplicationsManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventApplicationsManagement>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetEventApplicationsManagementQueryOptions(eventId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
  * Get event application by ID.
 Applicants can see their own application, users with `event.manageApplications` any application.
  */
@@ -2682,7 +2927,7 @@ export const getGetApplicationQueryKey = (applicationId?: number) => {
 
 export const getGetApplicationQueryOptions = <
   TData = Awaited<ReturnType<typeof getApplication>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<void>,
 >(
   applicationId: number,
   options?: {
@@ -2705,9 +2950,9 @@ export const getGetApplicationQueryOptions = <
 };
 
 export type GetApplicationQueryResult = NonNullable<Awaited<ReturnType<typeof getApplication>>>;
-export type GetApplicationQueryError = ErrorType<unknown>;
+export type GetApplicationQueryError = ErrorType<void>;
 
-export function useGetApplication<TData = Awaited<ReturnType<typeof getApplication>>, TError = ErrorType<unknown>>(
+export function useGetApplication<TData = Awaited<ReturnType<typeof getApplication>>, TError = ErrorType<void>>(
   applicationId: number,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplication>>, TError, TData>> &
@@ -2723,7 +2968,7 @@ export function useGetApplication<TData = Awaited<ReturnType<typeof getApplicati
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetApplication<TData = Awaited<ReturnType<typeof getApplication>>, TError = ErrorType<unknown>>(
+export function useGetApplication<TData = Awaited<ReturnType<typeof getApplication>>, TError = ErrorType<void>>(
   applicationId: number,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplication>>, TError, TData>> &
@@ -2739,7 +2984,7 @@ export function useGetApplication<TData = Awaited<ReturnType<typeof getApplicati
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetApplication<TData = Awaited<ReturnType<typeof getApplication>>, TError = ErrorType<unknown>>(
+export function useGetApplication<TData = Awaited<ReturnType<typeof getApplication>>, TError = ErrorType<void>>(
   applicationId: number,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplication>>, TError, TData>>;
@@ -2748,7 +2993,7 @@ export function useGetApplication<TData = Awaited<ReturnType<typeof getApplicati
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useGetApplication<TData = Awaited<ReturnType<typeof getApplication>>, TError = ErrorType<unknown>>(
+export function useGetApplication<TData = Awaited<ReturnType<typeof getApplication>>, TError = ErrorType<void>>(
   applicationId: number,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplication>>, TError, TData>>;
@@ -2846,7 +3091,9 @@ export const useUpdateEventApplication = <TError = ErrorType<unknown>, TContext 
 };
 
 /**
- * Delete event application by ID
+ * Delete event application by ID.
+Users with `event.manageApplications` can delete any application,
+applicants only their own before the registration deadline.
  */
 export const deleteEventApplication = (id: number, options?: SecondParameter<typeof customInstance>) => {
   return customInstance<void>({ url: `/events/application/${id}`, method: "DELETE" }, options);
@@ -3122,19 +3369,29 @@ export const useUpdateApplicationsSpot = <TError = ErrorType<void>, TContext = u
   return useMutation(mutationOptions, queryClient);
 };
 
+/**
+ * Export event applications with personal data of applicants.
+With `includeForms=true` answers to additional forms are appended under a two-row header,
+which additionally requires `event.create` or `event.update` (same as viewing form responses).
+With `onlyWithSpot=true` applications without an assigned spot are left out.
+ */
 export const generateSheetEventApplication = (
   eventId: number,
+  params?: GenerateSheetEventApplicationParams,
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
   return customInstance<GenerateSheetEventApplication200>(
-    { url: `/events/export/${eventId}/applications`, method: "GET", signal },
+    { url: `/events/export/${eventId}/applications`, method: "GET", params, signal },
     options,
   );
 };
 
-export const getGenerateSheetEventApplicationQueryKey = (eventId?: number) => {
-  return [`/events/export/${eventId}/applications`] as const;
+export const getGenerateSheetEventApplicationQueryKey = (
+  eventId?: number,
+  params?: GenerateSheetEventApplicationParams,
+) => {
+  return [`/events/export/${eventId}/applications`, ...(params ? [params] : [])] as const;
 };
 
 export const getGenerateSheetEventApplicationQueryOptions = <
@@ -3142,6 +3399,7 @@ export const getGenerateSheetEventApplicationQueryOptions = <
   TError = ErrorType<unknown>,
 >(
   eventId: number,
+  params?: GenerateSheetEventApplicationParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof generateSheetEventApplication>>, TError, TData>>;
     request?: SecondParameter<typeof customInstance>;
@@ -3149,10 +3407,10 @@ export const getGenerateSheetEventApplicationQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGenerateSheetEventApplicationQueryKey(eventId);
+  const queryKey = queryOptions?.queryKey ?? getGenerateSheetEventApplicationQueryKey(eventId, params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof generateSheetEventApplication>>> = ({ signal }) =>
-    generateSheetEventApplication(eventId, requestOptions, signal);
+    generateSheetEventApplication(eventId, params, requestOptions, signal);
 
   return { queryKey, queryFn, enabled: !!eventId, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof generateSheetEventApplication>>,
@@ -3171,6 +3429,7 @@ export function useGenerateSheetEventApplication<
   TError = ErrorType<unknown>,
 >(
   eventId: number,
+  params: undefined | GenerateSheetEventApplicationParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof generateSheetEventApplication>>, TError, TData>> &
       Pick<
@@ -3190,6 +3449,7 @@ export function useGenerateSheetEventApplication<
   TError = ErrorType<unknown>,
 >(
   eventId: number,
+  params?: GenerateSheetEventApplicationParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof generateSheetEventApplication>>, TError, TData>> &
       Pick<
@@ -3209,6 +3469,7 @@ export function useGenerateSheetEventApplication<
   TError = ErrorType<unknown>,
 >(
   eventId: number,
+  params?: GenerateSheetEventApplicationParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof generateSheetEventApplication>>, TError, TData>>;
     request?: SecondParameter<typeof customInstance>;
@@ -3221,13 +3482,14 @@ export function useGenerateSheetEventApplication<
   TError = ErrorType<unknown>,
 >(
   eventId: number,
+  params?: GenerateSheetEventApplicationParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof generateSheetEventApplication>>, TError, TData>>;
     request?: SecondParameter<typeof customInstance>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGenerateSheetEventApplicationQueryOptions(eventId, options);
+  const queryOptions = getGenerateSheetEventApplicationQueryOptions(eventId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -3237,6 +3499,1004 @@ export function useGenerateSheetEventApplication<
 
   return query;
 }
+
+/**
+ * Forms of the event with response counts.
+
+Permissions required: `event.create` or `event.update`
+ */
+export const getEventFormsForManagement = (
+  eventId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<EventFormManageItem[]>(
+    { url: `/events/${eventId}/forms/manage`, method: "GET", signal },
+    options,
+  );
+};
+
+export const getGetEventFormsForManagementQueryKey = (eventId?: number) => {
+  return [`/events/${eventId}/forms/manage`] as const;
+};
+
+export const getGetEventFormsForManagementQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEventFormsForManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormsForManagement>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetEventFormsForManagementQueryKey(eventId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEventFormsForManagement>>> = ({ signal }) =>
+    getEventFormsForManagement(eventId, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!eventId, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getEventFormsForManagement>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetEventFormsForManagementQueryResult = NonNullable<Awaited<ReturnType<typeof getEventFormsForManagement>>>;
+export type GetEventFormsForManagementQueryError = ErrorType<void>;
+
+export function useGetEventFormsForManagement<
+  TData = Awaited<ReturnType<typeof getEventFormsForManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormsForManagement>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventFormsForManagement>>,
+          TError,
+          Awaited<ReturnType<typeof getEventFormsForManagement>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventFormsForManagement<
+  TData = Awaited<ReturnType<typeof getEventFormsForManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormsForManagement>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventFormsForManagement>>,
+          TError,
+          Awaited<ReturnType<typeof getEventFormsForManagement>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventFormsForManagement<
+  TData = Awaited<ReturnType<typeof getEventFormsForManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormsForManagement>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetEventFormsForManagement<
+  TData = Awaited<ReturnType<typeof getEventFormsForManagement>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormsForManagement>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetEventFormsForManagementQueryOptions(eventId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Create additional form. New forms are placed last.
+
+Permissions required: `event.create` or `event.update`
+ */
+export const createEventForm = (
+  eventId: number,
+  createEventForm: CreateEventForm,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<EventFormDetail>(
+    {
+      url: `/events/${eventId}/forms`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: createEventForm,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getCreateEventFormMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEventForm>>,
+    TError,
+    { eventId: number; data: CreateEventForm },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createEventForm>>,
+  TError,
+  { eventId: number; data: CreateEventForm },
+  TContext
+> => {
+  const mutationKey = ["createEventForm"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createEventForm>>,
+    { eventId: number; data: CreateEventForm }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return createEventForm(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateEventFormMutationResult = NonNullable<Awaited<ReturnType<typeof createEventForm>>>;
+export type CreateEventFormMutationBody = CreateEventForm;
+export type CreateEventFormMutationError = ErrorType<void>;
+
+export const useCreateEventForm = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createEventForm>>,
+      TError,
+      { eventId: number; data: CreateEventForm },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createEventForm>>,
+  TError,
+  { eventId: number; data: CreateEventForm },
+  TContext
+> => {
+  const mutationOptions = getCreateEventFormMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Forms of the event with the signed-in applicant's answers.
+
+Only applicants of the event can access it.
+ */
+export const getMyEventForms = (
+  eventId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<ApplicantEventForm[]>({ url: `/events/${eventId}/forms`, method: "GET", signal }, options);
+};
+
+export const getGetMyEventFormsQueryKey = (eventId?: number) => {
+  return [`/events/${eventId}/forms`] as const;
+};
+
+export const getGetMyEventFormsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyEventForms>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEventForms>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyEventFormsQueryKey(eventId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyEventForms>>> = ({ signal }) =>
+    getMyEventForms(eventId, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!eventId, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyEventForms>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetMyEventFormsQueryResult = NonNullable<Awaited<ReturnType<typeof getMyEventForms>>>;
+export type GetMyEventFormsQueryError = ErrorType<void>;
+
+export function useGetMyEventForms<TData = Awaited<ReturnType<typeof getMyEventForms>>, TError = ErrorType<void>>(
+  eventId: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEventForms>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyEventForms>>,
+          TError,
+          Awaited<ReturnType<typeof getMyEventForms>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyEventForms<TData = Awaited<ReturnType<typeof getMyEventForms>>, TError = ErrorType<void>>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEventForms>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyEventForms>>,
+          TError,
+          Awaited<ReturnType<typeof getMyEventForms>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyEventForms<TData = Awaited<ReturnType<typeof getMyEventForms>>, TError = ErrorType<void>>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEventForms>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetMyEventForms<TData = Awaited<ReturnType<typeof getMyEventForms>>, TError = ErrorType<void>>(
+  eventId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyEventForms>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyEventFormsQueryOptions(eventId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Set form order. Must be declared before `:formId` routes, otherwise `order` is parsed as form ID.
+
+Permissions required: `event.create` or `event.update`
+ */
+export const reorderEventForms = (
+  eventId: number,
+  reorderEventForms: ReorderEventForms,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<void>(
+    {
+      url: `/events/${eventId}/forms/order`,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      data: reorderEventForms,
+    },
+    options,
+  );
+};
+
+export const getReorderEventFormsMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reorderEventForms>>,
+    TError,
+    { eventId: number; data: ReorderEventForms },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reorderEventForms>>,
+  TError,
+  { eventId: number; data: ReorderEventForms },
+  TContext
+> => {
+  const mutationKey = ["reorderEventForms"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reorderEventForms>>,
+    { eventId: number; data: ReorderEventForms }
+  > = (props) => {
+    const { eventId, data } = props ?? {};
+
+    return reorderEventForms(eventId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReorderEventFormsMutationResult = NonNullable<Awaited<ReturnType<typeof reorderEventForms>>>;
+export type ReorderEventFormsMutationBody = ReorderEventForms;
+export type ReorderEventFormsMutationError = ErrorType<void>;
+
+export const useReorderEventForms = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reorderEventForms>>,
+      TError,
+      { eventId: number; data: ReorderEventForms },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reorderEventForms>>,
+  TError,
+  { eventId: number; data: ReorderEventForms },
+  TContext
+> => {
+  const mutationOptions = getReorderEventFormsMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Update additional form. Allowed after the deadline and with existing responses - answers are kept.
+
+Permissions required: `event.create` or `event.update`
+ */
+export const updateEventForm = (
+  eventId: number,
+  formId: number,
+  updateEventForm: UpdateEventForm,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<EventFormDetail>(
+    {
+      url: `/events/${eventId}/forms/${formId}`,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      data: updateEventForm,
+    },
+    options,
+  );
+};
+
+export const getUpdateEventFormMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEventForm>>,
+    TError,
+    { eventId: number; formId: number; data: UpdateEventForm },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateEventForm>>,
+  TError,
+  { eventId: number; formId: number; data: UpdateEventForm },
+  TContext
+> => {
+  const mutationKey = ["updateEventForm"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateEventForm>>,
+    { eventId: number; formId: number; data: UpdateEventForm }
+  > = (props) => {
+    const { eventId, formId, data } = props ?? {};
+
+    return updateEventForm(eventId, formId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateEventFormMutationResult = NonNullable<Awaited<ReturnType<typeof updateEventForm>>>;
+export type UpdateEventFormMutationBody = UpdateEventForm;
+export type UpdateEventFormMutationError = ErrorType<void>;
+
+export const useUpdateEventForm = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateEventForm>>,
+      TError,
+      { eventId: number; formId: number; data: UpdateEventForm },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateEventForm>>,
+  TError,
+  { eventId: number; formId: number; data: UpdateEventForm },
+  TContext
+> => {
+  const mutationOptions = getUpdateEventFormMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * Delete additional form together with all its responses.
+
+Permissions required: `event.create` or `event.update`
+ */
+export const deleteEventForm = (eventId: number, formId: number, options?: SecondParameter<typeof customInstance>) => {
+  return customInstance<void>({ url: `/events/${eventId}/forms/${formId}`, method: "DELETE" }, options);
+};
+
+export const getDeleteEventFormMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEventForm>>,
+    TError,
+    { eventId: number; formId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEventForm>>,
+  TError,
+  { eventId: number; formId: number },
+  TContext
+> => {
+  const mutationKey = ["deleteEventForm"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEventForm>>,
+    { eventId: number; formId: number }
+  > = (props) => {
+    const { eventId, formId } = props ?? {};
+
+    return deleteEventForm(eventId, formId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEventFormMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEventForm>>>;
+
+export type DeleteEventFormMutationError = ErrorType<void>;
+
+export const useDeleteEventForm = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteEventForm>>,
+      TError,
+      { eventId: number; formId: number },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEventForm>>,
+  TError,
+  { eventId: number; formId: number },
+  TContext
+> => {
+  const mutationOptions = getDeleteEventFormMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * One row per event application with its answers to the form.
+
+Permissions required: `event.create` or `event.update`
+ */
+export const getEventFormResponses = (
+  eventId: number,
+  formId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<EventFormResponsesTable>(
+    { url: `/events/${eventId}/forms/${formId}/responses`, method: "GET", signal },
+    options,
+  );
+};
+
+export const getGetEventFormResponsesQueryKey = (eventId?: number, formId?: number) => {
+  return [`/events/${eventId}/forms/${formId}/responses`] as const;
+};
+
+export const getGetEventFormResponsesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormResponses>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetEventFormResponsesQueryKey(eventId, formId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEventFormResponses>>> = ({ signal }) =>
+    getEventFormResponses(eventId, formId, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!(eventId && formId), ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getEventFormResponses>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetEventFormResponsesQueryResult = NonNullable<Awaited<ReturnType<typeof getEventFormResponses>>>;
+export type GetEventFormResponsesQueryError = ErrorType<void>;
+
+export function useGetEventFormResponses<
+  TData = Awaited<ReturnType<typeof getEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormResponses>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventFormResponses>>,
+          TError,
+          Awaited<ReturnType<typeof getEventFormResponses>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventFormResponses<
+  TData = Awaited<ReturnType<typeof getEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormResponses>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventFormResponses>>,
+          TError,
+          Awaited<ReturnType<typeof getEventFormResponses>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventFormResponses<
+  TData = Awaited<ReturnType<typeof getEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormResponses>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetEventFormResponses<
+  TData = Awaited<ReturnType<typeof getEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventFormResponses>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetEventFormResponsesQueryOptions(eventId, formId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Export form responses as XLSX (default) or CSV.
+
+Permissions required: `event.create` or `event.update`
+ */
+export const exportEventFormResponses = (
+  eventId: number,
+  formId: number,
+  params?: ExportEventFormResponsesParams,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<Blob>(
+    { url: `/events/${eventId}/forms/${formId}/export`, method: "GET", params, responseType: "blob", signal },
+    options,
+  );
+};
+
+export const getExportEventFormResponsesQueryKey = (
+  eventId?: number,
+  formId?: number,
+  params?: ExportEventFormResponsesParams,
+) => {
+  return [`/events/${eventId}/forms/${formId}/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportEventFormResponsesQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  params?: ExportEventFormResponsesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportEventFormResponses>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportEventFormResponsesQueryKey(eventId, formId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportEventFormResponses>>> = ({ signal }) =>
+    exportEventFormResponses(eventId, formId, params, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!(eventId && formId), ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportEventFormResponses>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportEventFormResponsesQueryResult = NonNullable<Awaited<ReturnType<typeof exportEventFormResponses>>>;
+export type ExportEventFormResponsesQueryError = ErrorType<void>;
+
+export function useExportEventFormResponses<
+  TData = Awaited<ReturnType<typeof exportEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  params: undefined | ExportEventFormResponsesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportEventFormResponses>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportEventFormResponses>>,
+          TError,
+          Awaited<ReturnType<typeof exportEventFormResponses>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportEventFormResponses<
+  TData = Awaited<ReturnType<typeof exportEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  params?: ExportEventFormResponsesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportEventFormResponses>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportEventFormResponses>>,
+          TError,
+          Awaited<ReturnType<typeof exportEventFormResponses>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportEventFormResponses<
+  TData = Awaited<ReturnType<typeof exportEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  params?: ExportEventFormResponsesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportEventFormResponses>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useExportEventFormResponses<
+  TData = Awaited<ReturnType<typeof exportEventFormResponses>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  formId: number,
+  params?: ExportEventFormResponsesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportEventFormResponses>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportEventFormResponsesQueryOptions(eventId, formId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * All forms of the event with answers of one application.
+
+Permissions required: `event.create` or `event.update`
+ */
+export const getApplicationEventForms = (
+  eventId: number,
+  applicationId: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<ApplicantEventForm[]>(
+    { url: `/events/${eventId}/applications/${applicationId}/forms`, method: "GET", signal },
+    options,
+  );
+};
+
+export const getGetApplicationEventFormsQueryKey = (eventId?: number, applicationId?: number) => {
+  return [`/events/${eventId}/applications/${applicationId}/forms`] as const;
+};
+
+export const getGetApplicationEventFormsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApplicationEventForms>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  applicationId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplicationEventForms>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetApplicationEventFormsQueryKey(eventId, applicationId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getApplicationEventForms>>> = ({ signal }) =>
+    getApplicationEventForms(eventId, applicationId, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!(eventId && applicationId), ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApplicationEventForms>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetApplicationEventFormsQueryResult = NonNullable<Awaited<ReturnType<typeof getApplicationEventForms>>>;
+export type GetApplicationEventFormsQueryError = ErrorType<void>;
+
+export function useGetApplicationEventForms<
+  TData = Awaited<ReturnType<typeof getApplicationEventForms>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  applicationId: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplicationEventForms>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApplicationEventForms>>,
+          TError,
+          Awaited<ReturnType<typeof getApplicationEventForms>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetApplicationEventForms<
+  TData = Awaited<ReturnType<typeof getApplicationEventForms>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  applicationId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplicationEventForms>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApplicationEventForms>>,
+          TError,
+          Awaited<ReturnType<typeof getApplicationEventForms>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetApplicationEventForms<
+  TData = Awaited<ReturnType<typeof getApplicationEventForms>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  applicationId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplicationEventForms>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetApplicationEventForms<
+  TData = Awaited<ReturnType<typeof getApplicationEventForms>>,
+  TError = ErrorType<void>,
+>(
+  eventId: number,
+  applicationId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApplicationEventForms>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetApplicationEventFormsQueryOptions(eventId, applicationId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * Create or replace the signed-in applicant's answers. Possible until the form deadline.
+ */
+export const submitEventFormResponse = (
+  eventId: number,
+  formId: number,
+  submitEventFormResponse: SubmitEventFormResponse,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<ApplicantEventForm>(
+    {
+      url: `/events/${eventId}/forms/${formId}/response`,
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      data: submitEventFormResponse,
+    },
+    options,
+  );
+};
+
+export const getSubmitEventFormResponseMutationOptions = <TError = ErrorType<void>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitEventFormResponse>>,
+    TError,
+    { eventId: number; formId: number; data: SubmitEventFormResponse },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof submitEventFormResponse>>,
+  TError,
+  { eventId: number; formId: number; data: SubmitEventFormResponse },
+  TContext
+> => {
+  const mutationKey = ["submitEventFormResponse"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof submitEventFormResponse>>,
+    { eventId: number; formId: number; data: SubmitEventFormResponse }
+  > = (props) => {
+    const { eventId, formId, data } = props ?? {};
+
+    return submitEventFormResponse(eventId, formId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubmitEventFormResponseMutationResult = NonNullable<Awaited<ReturnType<typeof submitEventFormResponse>>>;
+export type SubmitEventFormResponseMutationBody = SubmitEventFormResponse;
+export type SubmitEventFormResponseMutationError = ErrorType<void>;
+
+export const useSubmitEventFormResponse = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof submitEventFormResponse>>,
+      TError,
+      { eventId: number; formId: number; data: SubmitEventFormResponse },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof submitEventFormResponse>>,
+  TError,
+  { eventId: number; formId: number; data: SubmitEventFormResponse },
+  TContext
+> => {
+  const mutationOptions = getSubmitEventFormResponseMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 /**
  * Ongoing events:
@@ -3505,14 +4765,6 @@ export const useCreateEvent = <TError = ErrorType<void>, TContext = unknown>(
 /**
  * Find event by ID or slug
  */
-export const getEventDetailView = (
-  id: number,
-  options?: SecondParameter<typeof customInstance>,
-  signal?: AbortSignal,
-) => {
-  return customInstance<EventDetailView>({ url: `/events/${id}/detail`, method: "GET", signal }, options);
-};
-
 export const getEvent = (id: number, options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
   return customInstance<EventDetail>({ url: `/events/${id}`, method: "GET", signal }, options);
 };
@@ -3639,6 +4891,108 @@ export const useDuplicateEvent = <TError = ErrorType<unknown>, TContext = unknow
 
   return useMutation(mutationOptions, queryClient);
 };
+
+/**
+ * Event detail for the signed-in user - event, the user's application ID and manager flag in one request
+ */
+export const getEventDetailView = (
+  id: number,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<EventDetailView>({ url: `/events/${id}/detail`, method: "GET", signal }, options);
+};
+
+export const getGetEventDetailViewQueryKey = (id?: number) => {
+  return [`/events/${id}/detail`] as const;
+};
+
+export const getGetEventDetailViewQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEventDetailView>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventDetailView>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetEventDetailViewQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEventDetailView>>> = ({ signal }) =>
+    getEventDetailView(id, requestOptions, signal);
+
+  return { queryKey, queryFn, enabled: !!id, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getEventDetailView>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetEventDetailViewQueryResult = NonNullable<Awaited<ReturnType<typeof getEventDetailView>>>;
+export type GetEventDetailViewQueryError = ErrorType<void>;
+
+export function useGetEventDetailView<TData = Awaited<ReturnType<typeof getEventDetailView>>, TError = ErrorType<void>>(
+  id: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventDetailView>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventDetailView>>,
+          TError,
+          Awaited<ReturnType<typeof getEventDetailView>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventDetailView<TData = Awaited<ReturnType<typeof getEventDetailView>>, TError = ErrorType<void>>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventDetailView>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getEventDetailView>>,
+          TError,
+          Awaited<ReturnType<typeof getEventDetailView>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetEventDetailView<TData = Awaited<ReturnType<typeof getEventDetailView>>, TError = ErrorType<void>>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventDetailView>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetEventDetailView<TData = Awaited<ReturnType<typeof getEventDetailView>>, TError = ErrorType<void>>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getEventDetailView>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetEventDetailViewQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
 
 export const updateEvent = (
   eventId: number,
@@ -3838,7 +5192,7 @@ export const createEventLinks = (
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void | Event>(
+  return customInstance<void>(
     {
       url: `/events/${eventId}/link`,
       method: "POST",
@@ -4693,7 +6047,7 @@ export function useGetSettings<TData = Awaited<ReturnType<typeof getSettings>>, 
 }
 
 /**
- * Update the global setting of the app
+ * Update the global setting of the app, admin only
  */
 export const updateSettings = (settingsDTO: SettingsDTO, options?: SecondParameter<typeof customInstance>) => {
   return customInstance<Settings>(
@@ -5038,7 +6392,7 @@ export function useGetSentSugarCubes<
 }
 
 export const reportSugarCube = (id: number, options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
-  return customInstance<SugarCube | SugarCube>({ url: `/sugar-cubes/${id}/report`, method: "POST", signal }, options);
+  return customInstance<SugarCube>({ url: `/sugar-cubes/${id}/report`, method: "POST", signal }, options);
 };
 
 export const getReportSugarCubeMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
@@ -5312,7 +6666,7 @@ export const sendMail = (
   options?: SecondParameter<typeof customInstance>,
   signal?: AbortSignal,
 ) => {
-  return customInstance<void | void>(
+  return customInstance<void>(
     { url: `/mail`, method: "POST", headers: { "Content-Type": "application/json" }, data: sendEmailDTO, signal },
     options,
   );

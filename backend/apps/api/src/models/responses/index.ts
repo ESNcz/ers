@@ -10,3 +10,4 @@ export * from "./sugar-cube-recipient-option.dto";
 export * from "./event-detail-view.dto";
 export * from "./event-applications-overview.dto";
 export * from "./event-applications-management.dto";
+export * from "./event-form.dto";

@@ -38,6 +38,8 @@ import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
 
+const EMPTY_ADDRESS = { street: "", houseNumber: "", zip: "", city: "", country: "" };
+
 interface UpdateEventModalProps {
   currentApplication: EventApplicationDetailedWithApplications;
   isOpened: boolean;
@@ -112,24 +114,23 @@ const UpdateEventApplicationModal = ({
       idNumber: currentApplication.idNumber,
       validUntil: currentApplication.validUntil,
       invoiceMethod: currentApplication.invoiceMethod,
-      organization:
-        currentApplication.customOrganization === null
-          ? {
-              type: "organization",
-              id: currentApplication.organization.id,
-            }
-          : {
-              type: "custom",
-              id: currentApplication.customOrganization.id,
-              name: currentApplication.customOrganization.name,
-              country: currentApplication.customOrganization.country,
-            },
+      organization: currentApplication.organization
+        ? {
+            type: "organization",
+            id: currentApplication.organization.id,
+          }
+        : {
+            type: "custom",
+            id: currentApplication.customOrganization?.id,
+            name: currentApplication.customOrganization?.name ?? "",
+            country: currentApplication.customOrganization?.country ?? "",
+          },
       allergies: getOtherAllergens(),
       foodRestriction: getOtherFoodRestrictions(),
       healthLimitations: getOtherHealthLimitations(),
       additionalInformation: currentApplication.additionalInformation,
       invoicedTo: currentApplication.invoicedTo,
-      invoiceAddress: currentApplication.invoiceAddress,
+      invoiceAddress: currentApplication.invoiceAddress ?? { ...EMPTY_ADDRESS },
     });
   }, [currentApplication, isOpened]);
 
@@ -291,7 +292,8 @@ const UpdateEventApplicationModal = ({
                     break;
                   }
                   case "different": {
-                    form.setFieldValue("invoiceAddress", undefined);
+                    // Inputs bind to `invoiceAddress.*` - setting a nested field on `undefined` throws
+                    form.setFieldValue("invoiceAddress", { ...EMPTY_ADDRESS });
                     form.setFieldValue("invoicedTo", null);
                   }
                 }

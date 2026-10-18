@@ -62,9 +62,6 @@ export class EventApplication extends BaseEntity {
   })
   spotType: EventSpot | null;
 
-  @Column({ type: "json", default: {}, select: false })
-  additionalData: object;
-
   @OneToOne(() => Address, { cascade: true })
   @JoinColumn()
   personalAddress: Address;

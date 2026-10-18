@@ -3,15 +3,31 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { PhotoModule } from "@api/modules/photo";
 
-import { Event, EventApplication, EventCustomOrganization, EventLink, EventSpot } from "./entities";
-import { EventApplicationsService, EventSpotsService, EventsService } from "./providers/services";
+import {
+  Event,
+  EventApplication,
+  EventCustomOrganization,
+  EventForm,
+  EventFormResponse,
+  EventLink,
+  EventSpot,
+} from "./entities";
+import { EventApplicationsService, EventFormsService, EventSpotsService, EventsService } from "./providers/services";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Event, EventSpot, EventApplication, EventLink, EventCustomOrganization]),
+    TypeOrmModule.forFeature([
+      Event,
+      EventSpot,
+      EventApplication,
+      EventLink,
+      EventCustomOrganization,
+      EventForm,
+      EventFormResponse,
+    ]),
     PhotoModule,
   ],
-  providers: [EventsService, EventSpotsService, EventApplicationsService],
-  exports: [EventsService, EventSpotsService, EventApplicationsService],
+  providers: [EventsService, EventSpotsService, EventApplicationsService, EventFormsService],
+  exports: [EventsService, EventSpotsService, EventApplicationsService, EventFormsService],
 })
 export class EventsModule {}

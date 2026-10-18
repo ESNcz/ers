@@ -5,7 +5,6 @@ import { EventApplication } from "@api/modules/events/entities";
 import { EventApplicationSimpleWithApplications } from "./event-application-simple-with-applications.dto";
 
 export class EventApplicationDetailed extends PickType(EventApplication, [
-  "additionalData",
   "id",
   "createdAt",
   "idNumber",

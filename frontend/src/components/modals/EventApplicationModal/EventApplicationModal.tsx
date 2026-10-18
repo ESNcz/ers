@@ -78,7 +78,6 @@ const EventApplicationModal = ({
       allergies: "",
       foodRestriction: "",
       healthLimitations: "",
-      additionalFormData: {},
     },
     validate: (values) => {
       const errors: Record<string, string | null> = {};

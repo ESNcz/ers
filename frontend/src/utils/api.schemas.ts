@@ -11,7 +11,7 @@ export interface CreateAddress {
   street: string;
   /**
    * House number with entrance support
-   * @pattern /^(\d+)(\/\d+)?$/
+   * @pattern ^(\d+)(\/\d+)?$
    */
   houseNumber: string;
   zip: string;
@@ -30,6 +30,11 @@ export const CreateUserGender = {
   "prefer-not-to-say": "prefer-not-to-say",
 } as const;
 
+/**
+ * @nullable
+ */
+export type CreateUserPersonalAddress = CreateAddress | null;
+
 export interface CreateUser {
   /** User email */
   email: string;
@@ -45,7 +50,7 @@ export interface CreateUser {
   /**
    * Must not contain special characters
    * @minLength 6
-   * @pattern /^[a-zA-Z0-9_-]+$/
+   * @pattern ^[a-zA-Z0-9_-]+$
    */
   username: string;
   /** User birthdate */
@@ -58,14 +63,17 @@ export interface CreateUser {
   phoneNumber: string;
   /** User gender */
   gender: CreateUserGender;
-  personalAddress?: CreateAddress;
+  /** @nullable */
+  personalAddress?: CreateUserPersonalAddress;
 }
 
 export interface CreateOrganization {
   name: string;
   legalName: string;
-  cin?: string;
-  vatin?: string;
+  /** @nullable */
+  cin?: string | null;
+  /** @nullable */
+  vatin?: string | null;
   address: CreateAddress;
 }
 
@@ -187,11 +195,6 @@ export interface User {
 }
 
 /**
- * @nullable
- */
-export type UpdateUserPersonalAddress = CreateAddress | null;
-
-/**
  * User gender
  */
 export type UpdateUserGender = (typeof UpdateUserGender)[keyof typeof UpdateUserGender];
@@ -204,15 +207,22 @@ export const UpdateUserGender = {
   "prefer-not-to-say": "prefer-not-to-say",
 } as const;
 
+/**
+ * @nullable
+ */
+export type UpdateUserPersonalAddress = CreateAddress | null;
+
 export interface UpdateUser {
-  /** @nullable */
-  personalAddress?: UpdateUserPersonalAddress;
-  /** @nullable */
-  pronouns?: string | null;
   /** First name */
   firstName?: string;
   /** Last name */
   lastName?: string;
+  /**
+   * Must not contain special characters
+   * @minLength 6
+   * @pattern ^[a-zA-Z0-9_-]+$
+   */
+  username?: string;
   /**
    * User password
    * @minLength 6
@@ -228,6 +238,10 @@ export interface UpdateUser {
   birthDate?: string;
   /** User nationality */
   nationality?: string;
+  /** @nullable */
+  personalAddress?: UpdateUserPersonalAddress;
+  /** @nullable */
+  pronouns?: string | null;
 }
 
 export interface UpdatePhoto {
@@ -283,8 +297,10 @@ export interface PaginationResponseDto {
 export interface UpdateOrganization {
   name?: string;
   legalName?: string;
-  cin?: string;
-  vatin?: string;
+  /** @nullable */
+  cin?: string | null;
+  /** @nullable */
+  vatin?: string | null;
   address?: CreateAddress;
 }
 
@@ -326,6 +342,11 @@ export interface EventCustomOrganization {
 /**
  * @nullable
  */
+export type EventApplicationOrganization = Organization | null;
+
+/**
+ * @nullable
+ */
 export type EventApplicationCustomOrganization = EventCustomOrganization | null;
 
 /**
@@ -333,8 +354,6 @@ export type EventApplicationCustomOrganization = EventCustomOrganization | null;
  * @nullable
  */
 export type EventApplicationSpotType = EventSpot | null;
-
-export type EventApplicationAdditionalData = { [key: string]: unknown };
 
 export type EventApplicationInvoiceMethod =
   (typeof EventApplicationInvoiceMethod)[keyof typeof EventApplicationInvoiceMethod];
@@ -350,7 +369,8 @@ export interface EventApplication {
   id: number;
   user: User;
   event: Event;
-  organization: Organization;
+  /** @nullable */
+  organization: EventApplicationOrganization;
   /** @nullable */
   customOrganization: EventApplicationCustomOrganization;
   /**
@@ -358,7 +378,6 @@ export interface EventApplication {
    * @nullable
    */
   spotType: EventApplicationSpotType;
-  additionalData: EventApplicationAdditionalData;
   personalAddress: Address;
   invoiceMethod: EventApplicationInvoiceMethod;
   /** @nullable */
@@ -387,13 +406,6 @@ export interface EventLink {
  */
 export type EventPhoto = Photo | null;
 
-/**
- * Additional registration form
-Each event can have different "requirements"
- * @nullable
- */
-export type EventRegistrationForm = { [key: string]: unknown } | null;
-
 export interface Event {
   /** Short description in JSON format for RichText */
   shortDescription: string;
@@ -416,12 +428,6 @@ export interface Event {
   priorityListDeadline: string | null;
   /** If true, generate invoices after {@link registrationDeadline} */
   generateInvoices: boolean;
-  /**
-   * Additional registration form
-Each event can have different "requirements"
-   * @nullable
-   */
-  registrationForm: EventRegistrationForm;
   /** Event capacity */
   capacity: number;
   /** Links */
@@ -453,7 +459,6 @@ export type EventSimpleWithApplicationsPhoto = Photo | null;
 export interface EventSimpleWithApplications {
   /** Short description in JSON format for RichText */
   shortDescription: string;
-  applications: number;
   id: number;
   /** @nullable */
   photo: EventSimpleWithApplicationsPhoto;
@@ -462,6 +467,8 @@ export interface EventSimpleWithApplications {
   title: string;
   createdByUser: User;
   registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
   visible: boolean;
   /** Links */
   termsAndConditionsLink: string;
@@ -469,9 +476,8 @@ export interface EventSimpleWithApplications {
   codeOfConductLink: string;
   /** Event capacity */
   capacity: number;
+  applications: number;
 }
-
-export type EventApplicationDetailedWithApplicationsAdditionalData = { [key: string]: unknown };
 
 /**
  * @nullable
@@ -479,6 +485,12 @@ export type EventApplicationDetailedWithApplicationsAdditionalData = { [key: str
 export type EventApplicationDetailedWithApplicationsCustomOrganization = EventCustomOrganization | null;
 
 /**
+ * @nullable
+ */
+export type EventApplicationDetailedWithApplicationsOrganization = Organization | null;
+
+/**
+ * Spot, must be one of {@link event} spots
  * @nullable
  */
 export type EventApplicationDetailedWithApplicationsSpotType = SpotTypeSimple | null;
@@ -494,15 +506,18 @@ export const EventApplicationDetailedWithApplicationsInvoiceMethod = {
 } as const;
 
 export interface EventApplicationDetailedWithApplications {
-  additionalData: EventApplicationDetailedWithApplicationsAdditionalData;
   id: number;
   createdAt: string;
   idNumber: string;
   /** @nullable */
   customOrganization: EventApplicationDetailedWithApplicationsCustomOrganization;
-  organization: Organization;
-  user: User;
   /** @nullable */
+  organization: EventApplicationDetailedWithApplicationsOrganization;
+  user: User;
+  /**
+   * Spot, must be one of {@link event} spots
+   * @nullable
+   */
   spotType: EventApplicationDetailedWithApplicationsSpotType;
   invoiceAddress: Address;
   invoiceMethod: EventApplicationDetailedWithApplicationsInvoiceMethod;
@@ -516,6 +531,72 @@ export interface EventApplicationDetailedWithApplications {
   /** @nullable */
   priority: number | null;
   event: EventSimpleWithApplications;
+}
+
+export interface EventDetailLink {
+  id: number;
+  name: string;
+  link: string;
+}
+
+/**
+ * @nullable
+ */
+export type EventDetailPhoto = Photo | null;
+
+export interface EventDetail {
+  /** Short description in JSON format for RichText */
+  shortDescription: string;
+  /** Long description in JSON format for RichText */
+  longDescription: string;
+  id: number;
+  /** Event capacity */
+  capacity: number;
+  codeOfConductLink: string;
+  photoPolicyLink: string;
+  /** Links */
+  termsAndConditionsLink: string;
+  createdAt: string;
+  registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
+  since: string;
+  until: string;
+  title: string;
+  visible: boolean;
+  createdByUser: User;
+  /** @nullable */
+  photo: EventDetailPhoto;
+  links: EventDetailLink[];
+  applications: number;
+}
+
+export interface EventApplicationsOverview {
+  event: EventDetail;
+  /** Applications visible to the signed-in user */
+  applications: EventApplicationDetailedWithApplications[];
+  /** Organization memberships of the signed-in user */
+  userOrganisationMemberships: OrganizationMemberWithoutUser[];
+}
+
+export type EventSpotSimpleCurrency = (typeof EventSpotSimpleCurrency)[keyof typeof EventSpotSimpleCurrency];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventSpotSimpleCurrency = {
+  CZK: "CZK",
+  EUR: "EUR",
+} as const;
+
+export interface EventSpotSimple {
+  id: number;
+  name: string;
+  price: number;
+  currency: EventSpotSimpleCurrency;
+}
+
+export interface EventApplicationsManagement {
+  spots: EventSpotSimple[];
+  applications: EventApplicationDetailedWithApplications[];
 }
 
 export type CreateEventApplicationExistingOrganizationType =
@@ -550,8 +631,6 @@ export type CreateEventApplicationOrganization =
   | CreateEventApplicationExistingOrganization
   | CreateEventApplicationCustomOrganization;
 
-export type CreateEventApplicationAdditionalFormData = { [key: string]: unknown };
-
 export type CreateEventApplicationInvoiceMethod =
   (typeof CreateEventApplicationInvoiceMethod)[keyof typeof CreateEventApplicationInvoiceMethod];
 
@@ -566,7 +645,6 @@ export interface CreateEventApplication {
   organization: CreateEventApplicationOrganization;
   /** @nullable */
   spotTypeId?: number | null;
-  additionalFormData: CreateEventApplicationAdditionalFormData;
   invoiceMethod: CreateEventApplicationInvoiceMethod;
   /** @nullable */
   invoicedTo: string | null;
@@ -586,7 +664,6 @@ export interface CreateEventApplication {
 export type EventApplicationSimpleWithApplicationsSpotType = SpotTypeSimple | null;
 
 export interface EventApplicationSimpleWithApplications {
-  event: EventSimpleWithApplications;
   createdAt: string;
   id: number;
   user: User;
@@ -594,6 +671,7 @@ export interface EventApplicationSimpleWithApplications {
   priority: number | null;
   /** @nullable */
   spotType: EventApplicationSimpleWithApplicationsSpotType;
+  event: EventSimpleWithApplications;
 }
 
 export type UpdateEventApplicationExistingOrganizationType =
@@ -624,10 +702,6 @@ export interface UpdateEventApplicationCustomOrganization {
   country: string;
 }
 
-export type UpdateEventApplicationOrganization =
-  | UpdateEventApplicationExistingOrganization
-  | UpdateEventApplicationCustomOrganization;
-
 export type UpdateEventApplicationInvoiceMethod =
   (typeof UpdateEventApplicationInvoiceMethod)[keyof typeof UpdateEventApplicationInvoiceMethod];
 
@@ -638,8 +712,11 @@ export const UpdateEventApplicationInvoiceMethod = {
   different: "different",
 } as const;
 
+export type UpdateEventApplicationOrganization =
+  | UpdateEventApplicationExistingOrganization
+  | UpdateEventApplicationCustomOrganization;
+
 export interface UpdateEventApplication {
-  organization: UpdateEventApplicationOrganization;
   idNumber?: string;
   /** Date until the ID number is valid */
   validUntil?: string;
@@ -651,6 +728,9 @@ export interface UpdateEventApplication {
   healthLimitations?: string;
   additionalInformation?: string;
   invoiceAddress?: CreateAddress;
+  /** @nullable */
+  spotTypeId?: number | null;
+  organization: UpdateEventApplicationOrganization;
 }
 
 export interface EventApplicationPriorityDto {
@@ -675,35 +755,198 @@ export interface UpdateApplicationsSpotDto {
   spotId: number | null;
 }
 
-export interface EventDetailLink {
+export type FormFieldType = (typeof FormFieldType)[keyof typeof FormFieldType];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const FormFieldType = {
+  shortText: "shortText",
+  longText: "longText",
+  number: "number",
+  singleSelect: "singleSelect",
+  multiSelect: "multiSelect",
+  checkbox: "checkbox",
+} as const;
+
+export interface FormFieldDefinition {
+  type: FormFieldType;
+  /** Stable field ID generated by the client, answers are keyed by it */
+  id: string;
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  label: string;
+  /** @maxLength 1000 */
+  description?: string;
+  required: boolean;
+  /** Choices for `singleSelect` and `multiSelect`, ignored for other types */
+  options?: string[];
+}
+
+export interface EventFormResponseCounts {
+  complete: number;
+  incomplete: number;
+  /** Applications without any response */
+  missing: number;
+}
+
+export interface EventFormManageItem {
+  fields: FormFieldDefinition[];
+  counts: EventFormResponseCounts;
   id: number;
   name: string;
-  link: string;
+  /** @nullable */
+  description: string | null;
+  required: boolean;
+  deadline: string;
+  position: number;
+  updatedAt: string;
+}
+
+export interface CreateEventForm {
+  /** @minItems 1 */
+  fields: FormFieldDefinition[];
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  name: string;
+  /**
+   * @maxLength 1000
+   * @nullable
+   */
+  description?: string | null;
+  /** Shown as required to applicants, nothing is blocked when not filled */
+  required: boolean;
+  deadline: string;
+}
+
+export interface EventFormDetail {
+  fields: FormFieldDefinition[];
+  id: number;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  required: boolean;
+  deadline: string;
+  position: number;
+  updatedAt: string;
+}
+
+export interface ReorderEventForms {
+  /** Every form ID of the event exactly once, in the new order */
+  formIds: number[];
+}
+
+export interface UpdateEventForm {
+  /** @minItems 1 */
+  fields?: FormFieldDefinition[];
+  /**
+   * @minLength 1
+   * @maxLength 200
+   */
+  name?: string;
+  /**
+   * @maxLength 1000
+   * @nullable
+   */
+  description?: string | null;
+  /** Shown as required to applicants, nothing is blocked when not filled */
+  required?: boolean;
+  deadline?: string;
+}
+
+export type EventFormStatus = (typeof EventFormStatus)[keyof typeof EventFormStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventFormStatus = {
+  complete: "complete",
+  incomplete: "incomplete",
+  missing: "missing",
+} as const;
+
+/**
+ * Answers to current fields keyed by field ID
+ */
+export type EventFormResponseRowAnswers = { [key: string]: unknown };
+
+/**
+ * Answers to fields removed from the form, keyed by the old field ID
+ */
+export type EventFormResponseRowRemovedAnswers = { [key: string]: unknown };
+
+export interface EventFormResponseRow {
+  status: EventFormStatus;
+  /** Answers to current fields keyed by field ID */
+  answers: EventFormResponseRowAnswers;
+  /** Answers to fields removed from the form, keyed by the old field ID */
+  removedAnswers: EventFormResponseRowRemovedAnswers;
+  applicationId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  /** Organisation or custom organisation name */
+  organization: string;
+  /** @nullable */
+  spotName: string | null;
+  /** @nullable */
+  updatedAt: string | null;
+}
+
+export interface EventFormResponsesTable {
+  form: EventFormDetail;
+  rows: EventFormResponseRow[];
+}
+
+export type EventFormExportFormat = (typeof EventFormExportFormat)[keyof typeof EventFormExportFormat];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const EventFormExportFormat = {
+  xlsx: "xlsx",
+  csv: "csv",
+} as const;
+
+/**
+ * Answers to current fields keyed by field ID
+ */
+export type EventFormAnswerSetAnswers = { [key: string]: unknown };
+
+export interface EventFormAnswerSet {
+  /** Answers to current fields keyed by field ID */
+  answers: EventFormAnswerSetAnswers;
+  updatedAt: string;
 }
 
 /**
- * Additional registration form
-Each event can have different "requirements"
  * @nullable
  */
-export type EventDetailRegistrationForm = { [key: string]: unknown } | null;
+export type ApplicantEventFormResponse = EventFormAnswerSet | null;
 
-/**
- * @nullable
- */
-export type EventDetailPhoto = Photo | null;
-
-export interface EventApplicationsManagement {
-  spots: EventSpotSimple[];
-  applications: EventApplicationDetailedWithApplications[];
+export interface ApplicantEventForm {
+  fields: FormFieldDefinition[];
+  /** @nullable */
+  response: ApplicantEventFormResponse;
+  status: EventFormStatus;
+  /** Deadline has passed, answers can't be changed */
+  isClosed: boolean;
+  id: number;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  required: boolean;
+  deadline: string;
+  position: number;
+  updatedAt: string;
 }
 
-export interface EventApplicationsOverview {
-  event: EventDetail;
-  /** Applications visible to the signed-in user */
-  applications: EventApplicationDetailedWithApplications[];
-  /** Organization memberships of the signed-in user */
-  userOrganisationMemberships: OrganizationMemberWithoutUser[];
+/**
+ * Answers keyed by field ID
+ */
+export type SubmitEventFormResponseAnswers = { [key: string]: unknown };
+
+export interface SubmitEventFormResponse {
+  /** Answers keyed by field ID */
+  answers: SubmitEventFormResponseAnswers;
 }
 
 export interface EventDetailView {
@@ -717,49 +960,10 @@ export interface EventDetailView {
   isManager: boolean;
 }
 
-export interface EventDetail {
-  /** Short description in JSON format for RichText */
-  shortDescription: string;
-  /** Long description in JSON format for RichText */
-  longDescription: string;
-  links: EventDetailLink[];
-  applications: number;
-  id: number;
-  /** Event capacity */
-  capacity: number;
-  codeOfConductLink: string;
-  photoPolicyLink: string;
-  /** Links */
-  termsAndConditionsLink: string;
-  createdAt: string;
-  registrationDeadline: string;
-  /** @nullable */
-  priorityListDeadline: string | null;
-  /**
-   * Additional registration form
-Each event can have different "requirements"
-   * @nullable
-   */
-  registrationForm: EventDetailRegistrationForm;
-  since: string;
-  until: string;
-  title: string;
-  visible: boolean;
-  createdByUser: User;
-  /** @nullable */
-  photo: EventDetailPhoto;
-}
-
 export interface CreateEventLinkPartial {
   name: string;
   link: string;
 }
-
-/**
- * Additional registration properties
-! Must be valid JSON schema
- */
-export type CreateEventRegistrationForm = { [key: string]: unknown };
 
 export interface CreateEvent {
   /** Short description in JSON format for RichText */
@@ -775,9 +979,6 @@ export interface CreateEvent {
   priorityListDeadline?: string;
   links?: CreateEventLinkPartial[];
   visible?: boolean;
-  /** Additional registration properties
-! Must be valid JSON schema */
-  registrationForm?: CreateEventRegistrationForm;
   /** Generate invoices after {@link registrationDeadline} */
   generateInvoices: boolean;
   /**
@@ -806,6 +1007,8 @@ export interface EventSimple {
   title: string;
   createdByUser: User;
   registrationDeadline: string;
+  /** @nullable */
+  priorityListDeadline: string | null;
   visible: boolean;
   /** Links */
   termsAndConditionsLink: string;
@@ -815,19 +1018,11 @@ export interface EventSimple {
   capacity: number;
 }
 
-export interface UpdateEventLinkPartial {
-  name: string;
-  link: string;
-  /** @nullable */
-  id: number | null;
-}
-
 export interface UpdateEvent {
   /** Short description in JSON format for RichText */
   longDescription?: string;
   /** Short description in JSON format for RichText */
   shortDescription?: string;
-  links: UpdateEventLinkPartial[];
   /** @minLength 6 */
   title?: string;
   since?: string;
@@ -835,6 +1030,7 @@ export interface UpdateEvent {
   registrationDeadline?: string;
   /** Deadline for managers to assign the priority list. Defaults to event start date if not provided. */
   priorityListDeadline?: string;
+  links?: CreateEventLinkPartial[];
   visible?: boolean;
   /** Generate invoices after {@link registrationDeadline} */
   generateInvoices?: boolean;
@@ -846,21 +1042,6 @@ export interface UpdateEvent {
   termsAndConditionsLink?: string;
   photoPolicyLink?: string;
   codeOfConductLink?: string;
-}
-
-export type EventSpotSimpleCurrency = (typeof EventSpotSimpleCurrency)[keyof typeof EventSpotSimpleCurrency];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export const EventSpotSimpleCurrency = {
-  CZK: "CZK",
-  EUR: "EUR",
-} as const;
-
-export interface EventSpotSimple {
-  id: number;
-  name: string;
-  price: number;
-  currency: EventSpotSimpleCurrency;
 }
 
 export type CreateEventSpotCurrency = (typeof CreateEventSpotCurrency)[keyof typeof CreateEventSpotCurrency];
@@ -985,7 +1166,7 @@ export interface MailAttachment {
   path: string;
 }
 
-export type SendEmailDTOPlaceholderReplacement = { [key: string]: unknown };
+export type SendEmailDTOPlaceholderReplacement = { [key: string]: string };
 
 export interface SendEmailDTO {
   recipients: MailAddress[];
@@ -1034,6 +1215,13 @@ export type GetAllUsers200 = {
 
 export type GenerateSheetUsers200 = { [key: string]: unknown };
 
+export type GetPhotoParams = {
+  /**
+   * Requested width in pixels, rounded up to the nearest supported width (64, 128, 256, 512, 960, 1280, 1920). Without it, the original image is returned.
+   */
+  w?: number;
+};
+
 export type CreateOrganization201 = { [key: string]: unknown };
 
 export type UpdateOrganization201 = { [key: string]: unknown };
@@ -1079,7 +1267,16 @@ export type GetUserApplications200 = {
   pagination?: PaginationDto;
 };
 
+export type GenerateSheetEventApplicationParams = {
+  includeForms?: boolean;
+  onlyWithSpot?: boolean;
+};
+
 export type GenerateSheetEventApplication200 = { [key: string]: unknown };
+
+export type ExportEventFormResponsesParams = {
+  format?: EventFormExportFormat;
+};
 
 export type GetOngoingEventsParams = {
   /**

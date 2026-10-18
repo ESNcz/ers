@@ -7,6 +7,7 @@ import routes from "@/utils/routes";
 import { dateWithTime, dayMonthYear } from "@/utils/time";
 import ApiImage from "@components/ApiImage/ApiImage";
 import RichTextRenderer from "@components/Richtext/RichTextRenderer";
+import EventFormsSection from "@components/eventForms/EventFormsSection";
 import EventEditModal from "@components/events/modals/EventEditModal";
 import EventApplicationModal from "@components/modals/EventApplicationModal/EventApplicationModal";
 import UpdateEventApplicationModal from "@components/modals/UpdateEventApplicationModal/UpdateEventApplicationModal";
@@ -35,6 +36,7 @@ import {
   IconChevronDown,
   IconEdit,
   IconFileText,
+  IconForms,
   IconInfoCircle,
   IconInvoice,
   IconPhoto,
@@ -241,7 +243,8 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
                 )}
               </Flex>
             </SimpleGrid>
-            {hasSomePermissions(currentUser.role, ["event.update", "event.manageApplications"]) && (
+            {isUserRegistered && <EventFormsSection eventId={id} />}
+            {hasSomePermissions(currentUser.role, ["event.create", "event.update", "event.manageApplications"]) && (
               <Button
                 mb={8}
                 variant="outline"
@@ -277,6 +280,11 @@ const EventDetail = ({ eventDetail, userApplicationId, isManager }: EventDetailP
                     leftSection={<IconUsersGroup />}
                   >
                     Manage applications
+                  </Button>
+                )}
+                {hasSomePermissions(currentUser.role, ["event.create", "event.update"]) && (
+                  <Button component={Link} href={routes.EVENT_FORMS_MANAGE({ id })} leftSection={<IconForms />}>
+                    Manage forms
                   </Button>
                 )}
               </SimpleGrid>

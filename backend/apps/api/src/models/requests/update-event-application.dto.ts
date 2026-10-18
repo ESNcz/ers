@@ -48,7 +48,6 @@ export class UpdateEventApplication extends PartialType(
     "additionalInformation",
     "invoiceAddress",
     "spotTypeId",
-    "additionalFormData",
   ]),
 ) {
   @ApiProperty({

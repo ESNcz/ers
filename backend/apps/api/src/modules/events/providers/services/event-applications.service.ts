@@ -105,7 +105,6 @@ export class EventApplicationsService {
       },
       select: {
         id: true,
-        additionalData: true as never,
         createdAt: true,
         idNumber: true,
       },
@@ -162,7 +161,6 @@ export class EventApplicationsService {
         : { event: { id } },
       select: {
         id: true,
-        additionalData: true,
         createdAt: true,
         idNumber: true,
         invoiceMethod: true,
