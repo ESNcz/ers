@@ -5,6 +5,18 @@
  * The backend API description
  * OpenAPI spec version: 0.0.1
  */
+export interface CreateAddress {
+  city: string;
+  country: string;
+  street: string;
+  /**
+   * House number with entrance support
+   * @pattern ^(\d+)(\/\d+)?$
+   */
+  houseNumber: string;
+  zip: string;
+}
+
 /**
  * User gender
  */
@@ -18,7 +30,10 @@ export const CreateUserGender = {
   "prefer-not-to-say": "prefer-not-to-say",
 } as const;
 
-export type CreateUserPersonalAddress = { [key: string]: unknown };
+/**
+ * @nullable
+ */
+export type CreateUserPersonalAddress = CreateAddress | null;
 
 export interface CreateUser {
   /** User email */
@@ -48,30 +63,17 @@ export interface CreateUser {
   phoneNumber: string;
   /** User gender */
   gender: CreateUserGender;
+  /** @nullable */
   personalAddress?: CreateUserPersonalAddress;
 }
-
-export interface CreateAddress {
-  city: string;
-  country: string;
-  street: string;
-  /**
-   * House number with entrance support
-   * @pattern ^(\d+)(\/\d+)?$
-   */
-  houseNumber: string;
-  zip: string;
-}
-
-export type CreateOrganizationCin = { [key: string]: unknown };
-
-export type CreateOrganizationVatin = { [key: string]: unknown };
 
 export interface CreateOrganization {
   name: string;
   legalName: string;
-  cin?: CreateOrganizationCin;
-  vatin?: CreateOrganizationVatin;
+  /** @nullable */
+  cin?: string | null;
+  /** @nullable */
+  vatin?: string | null;
   address: CreateAddress;
 }
 
@@ -292,15 +294,13 @@ export interface PaginationResponseDto {
   pagination: PaginationDto;
 }
 
-export type UpdateOrganizationCin = { [key: string]: unknown };
-
-export type UpdateOrganizationVatin = { [key: string]: unknown };
-
 export interface UpdateOrganization {
   name?: string;
   legalName?: string;
-  cin?: UpdateOrganizationCin;
-  vatin?: UpdateOrganizationVatin;
+  /** @nullable */
+  cin?: string | null;
+  /** @nullable */
+  vatin?: string | null;
   address?: CreateAddress;
 }
 
@@ -355,8 +355,6 @@ export type EventApplicationCustomOrganization = EventCustomOrganization | null;
  */
 export type EventApplicationSpotType = EventSpot | null;
 
-export type EventApplicationAdditionalData = { [key: string]: unknown };
-
 export type EventApplicationInvoiceMethod =
   (typeof EventApplicationInvoiceMethod)[keyof typeof EventApplicationInvoiceMethod];
 
@@ -380,7 +378,6 @@ export interface EventApplication {
    * @nullable
    */
   spotType: EventApplicationSpotType;
-  additionalData: EventApplicationAdditionalData;
   personalAddress: Address;
   invoiceMethod: EventApplicationInvoiceMethod;
   /** @nullable */
@@ -409,13 +406,6 @@ export interface EventLink {
  */
 export type EventPhoto = Photo | null;
 
-/**
- * Additional registration form
-Each event can have different "requirements"
- * @nullable
- */
-export type EventRegistrationForm = { [key: string]: unknown } | null;
-
 export interface Event {
   /** Short description in JSON format for RichText */
   shortDescription: string;
@@ -438,12 +428,6 @@ export interface Event {
   priorityListDeadline: string | null;
   /** If true, generate invoices after {@link registrationDeadline} */
   generateInvoices: boolean;
-  /**
-   * Additional registration form
-Each event can have different "requirements"
-   * @nullable
-   */
-  registrationForm: EventRegistrationForm;
   /** Event capacity */
   capacity: number;
   /** Links */
@@ -495,8 +479,6 @@ export interface EventSimpleWithApplications {
   applications: number;
 }
 
-export type EventApplicationDetailedWithApplicationsAdditionalData = { [key: string]: unknown };
-
 /**
  * @nullable
  */
@@ -524,7 +506,6 @@ export const EventApplicationDetailedWithApplicationsInvoiceMethod = {
 } as const;
 
 export interface EventApplicationDetailedWithApplications {
-  additionalData: EventApplicationDetailedWithApplicationsAdditionalData;
   id: number;
   createdAt: string;
   idNumber: string;
@@ -559,13 +540,6 @@ export interface EventDetailLink {
 }
 
 /**
- * Additional registration form
-Each event can have different "requirements"
- * @nullable
- */
-export type EventDetailRegistrationForm = { [key: string]: unknown } | null;
-
-/**
  * @nullable
  */
 export type EventDetailPhoto = Photo | null;
@@ -586,12 +560,6 @@ export interface EventDetail {
   registrationDeadline: string;
   /** @nullable */
   priorityListDeadline: string | null;
-  /**
-   * Additional registration form
-Each event can have different "requirements"
-   * @nullable
-   */
-  registrationForm: EventDetailRegistrationForm;
   since: string;
   until: string;
   title: string;
@@ -663,8 +631,6 @@ export type CreateEventApplicationOrganization =
   | CreateEventApplicationExistingOrganization
   | CreateEventApplicationCustomOrganization;
 
-export type CreateEventApplicationAdditionalFormData = { [key: string]: unknown };
-
 export type CreateEventApplicationInvoiceMethod =
   (typeof CreateEventApplicationInvoiceMethod)[keyof typeof CreateEventApplicationInvoiceMethod];
 
@@ -679,7 +645,6 @@ export interface CreateEventApplication {
   organization: CreateEventApplicationOrganization;
   /** @nullable */
   spotTypeId?: number | null;
-  additionalFormData: CreateEventApplicationAdditionalFormData;
   invoiceMethod: CreateEventApplicationInvoiceMethod;
   /** @nullable */
   invoicedTo: string | null;
@@ -747,8 +712,6 @@ export const UpdateEventApplicationInvoiceMethod = {
   different: "different",
 } as const;
 
-export type UpdateEventApplicationAdditionalFormData = { [key: string]: unknown };
-
 export type UpdateEventApplicationOrganization =
   | UpdateEventApplicationExistingOrganization
   | UpdateEventApplicationCustomOrganization;
@@ -767,7 +730,6 @@ export interface UpdateEventApplication {
   invoiceAddress?: CreateAddress;
   /** @nullable */
   spotTypeId?: number | null;
-  additionalFormData?: UpdateEventApplicationAdditionalFormData;
   organization: UpdateEventApplicationOrganization;
 }
 
@@ -1003,12 +965,6 @@ export interface CreateEventLinkPartial {
   link: string;
 }
 
-/**
- * Additional registration properties
-! Must be valid JSON schema
- */
-export type CreateEventRegistrationForm = { [key: string]: unknown };
-
 export interface CreateEvent {
   /** Short description in JSON format for RichText */
   longDescription: string;
@@ -1023,9 +979,6 @@ export interface CreateEvent {
   priorityListDeadline?: string;
   links?: CreateEventLinkPartial[];
   visible?: boolean;
-  /** Additional registration properties
-! Must be valid JSON schema */
-  registrationForm?: CreateEventRegistrationForm;
   /** Generate invoices after {@link registrationDeadline} */
   generateInvoices: boolean;
   /**

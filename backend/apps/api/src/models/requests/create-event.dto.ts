@@ -3,7 +3,7 @@ import { Transform } from "class-transformer";
 import { Allow, IsBoolean, IsInt, IsNumber, IsOptional, IsString, IsUrl, Min, MinLength } from "class-validator";
 
 import { EventLink } from "@api/modules/events/entities";
-import { DateTransform, IsValidDate, IsValidJsonSchema } from "utilities/nest/class-validator";
+import { DateTransform, IsValidDate } from "utilities/nest/class-validator";
 
 export class CreateEventLinkPartial extends OmitType(EventLink, ["id", "event"]) {}
 
@@ -79,14 +79,6 @@ export class CreateEvent {
 
   @IsBoolean()
   visible?: boolean = true;
-
-  /**
-   * Additional registration properties
-   * ! Must be valid JSON schema
-   */
-  @IsOptional()
-  @IsValidJsonSchema()
-  registrationForm?: object;
 
   /**
    * Generate invoices after {@link registrationDeadline}

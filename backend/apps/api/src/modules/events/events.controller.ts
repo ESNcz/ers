@@ -207,7 +207,6 @@ export class EventsController {
     event.createdByUser = currentUser;
     event.visible = body.visible ?? true;
     event.registrationDeadline = new Date(body.registrationDeadline);
-    event.registrationForm = body.registrationForm ?? null;
     event.capacity = body.capacity;
     event.codeOfConductLink = body.codeOfConductLink;
     event.photoPolicyLink = body.photoPolicyLink;
@@ -256,7 +255,6 @@ export class EventsController {
       termsAndConditionsLink: event.termsAndConditionsLink,
       createdByUser: currentUser,
       visible: false,
-      registrationForm: event.registrationForm,
       registrationDeadline: event.registrationDeadline,
       priorityListDeadline: event.priorityListDeadline,
       generateInvoices: event.generateInvoices,

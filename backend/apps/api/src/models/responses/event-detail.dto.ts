@@ -18,7 +18,6 @@ export class EventDetail extends PickType(Event, [
   "shortDescription",
   "registrationDeadline",
   "priorityListDeadline",
-  "registrationForm",
   "since",
   "until",
   "title",

@@ -75,5 +75,5 @@ export class CreateUser {
   @IsObject()
   @IsOptional()
   @Type(() => CreateAddress)
-  personalAddress?: CreateAddress | undefined | null;
+  personalAddress?: CreateAddress | null;
 }

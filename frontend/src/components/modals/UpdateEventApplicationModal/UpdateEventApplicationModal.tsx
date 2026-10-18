@@ -112,18 +112,17 @@ const UpdateEventApplicationModal = ({
       idNumber: currentApplication.idNumber,
       validUntil: currentApplication.validUntil,
       invoiceMethod: currentApplication.invoiceMethod,
-      organization:
-        currentApplication.customOrganization === null
-          ? {
-              type: "organization",
-              id: currentApplication.organization.id,
-            }
-          : {
-              type: "custom",
-              id: currentApplication.customOrganization.id,
-              name: currentApplication.customOrganization.name,
-              country: currentApplication.customOrganization.country,
-            },
+      organization: currentApplication.organization
+        ? {
+            type: "organization",
+            id: currentApplication.organization.id,
+          }
+        : {
+            type: "custom",
+            id: currentApplication.customOrganization?.id,
+            name: currentApplication.customOrganization?.name ?? "",
+            country: currentApplication.customOrganization?.country ?? "",
+          },
       allergies: getOtherAllergens(),
       foodRestriction: getOtherFoodRestrictions(),
       healthLimitations: getOtherHealthLimitations(),

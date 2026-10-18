@@ -89,13 +89,6 @@ export class Event extends BaseEntity {
   generateInvoices: boolean;
 
   /**
-   * Additional registration form
-   * Each event can have different "requirements"
-   */
-  @Column("json", { nullable: true, select: false })
-  registrationForm: object | null;
-
-  /**
    * Event capacity
    */
   @Column({ unsigned: true })

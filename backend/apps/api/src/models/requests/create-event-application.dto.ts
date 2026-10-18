@@ -43,10 +43,6 @@ export class CreateEventApplication {
   @IsOptional()
   spotTypeId?: number | null;
 
-  @IsOptional()
-  @IsObject()
-  additionalFormData: object = {};
-
   @IsEnum(InvoiceMethods)
   invoiceMethod: InvoiceMethods = InvoiceMethods.personal;
 

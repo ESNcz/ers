@@ -12,10 +12,10 @@ export class CreateOrganization {
   legalName: string;
 
   @IsString()
-  cin?: string | null | undefined;
+  cin?: string | null;
 
   @IsString()
-  vatin?: string | null | undefined;
+  vatin?: string | null;
 
   @IsNotEmptyObject()
   @IsObject()
