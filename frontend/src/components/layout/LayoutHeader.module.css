@@ -24,7 +24,7 @@
   text-decoration: none;
 
   @mixin dark {
-    color: var(--mantine-color-cyan-5);
+    color: var(--mantine-color-cyan-7);
   }
 
   @mixin hover {

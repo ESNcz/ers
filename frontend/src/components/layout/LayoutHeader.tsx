@@ -21,16 +21,41 @@ import {
   Drawer,
   Flex,
   Group,
+  MantineColorScheme,
   Menu,
+  SegmentedControl,
   Skeleton,
   Stack,
   Text,
   UnstyledButton,
+  useMantineColorScheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconChevronDown, IconDeviceMobileDown, IconLogout, IconUser } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconDeviceDesktop,
+  IconDeviceMobileDown,
+  IconLogout,
+  IconMoon,
+  IconSun,
+  IconUser,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+const colorSchemeOptions = [
+  { value: "light", label: "Light", icon: IconSun },
+  { value: "dark", label: "Dark", icon: IconMoon },
+  { value: "auto", label: "Auto", icon: IconDeviceDesktop },
+].map(({ value, label, icon: Icon }) => ({
+  value,
+  label: (
+    <Group gap={4} wrap="nowrap" justify="center">
+      <Icon size={14} stroke={1.5} />
+      <span>{label}</span>
+    </Group>
+  ),
+}));
 
 export type MainLink = {
   link: string;
@@ -77,6 +102,8 @@ const LayoutHeader = () => {
   const userFullName = currentUser
     ? `${currentUser.firstName} ${currentUser.lastName}`.trim() || currentUser.email
     : "";
+
+  const { colorScheme, setColorScheme } = useMantineColorScheme();
 
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const [instructionsOpened, { open: openInstructions, close: closeInstructions }] = useDisclosure(false);
@@ -146,6 +173,16 @@ const LayoutHeader = () => {
                   >
                     Account
                   </Menu.Item>
+                  <Box px="xs" py={4}>
+                    <SegmentedControl
+                      fullWidth
+                      size="xs"
+                      value={colorScheme}
+                      onChange={(value) => setColorScheme(value as MantineColorScheme)}
+                      data={colorSchemeOptions}
+                      aria-label="Color scheme"
+                    />
+                  </Box>
                   {isInstallAvailable && (
                     <Menu.Item leftSection={<IconDeviceMobileDown size={16} stroke={1.5} />} onClick={installApp}>
                       Install app
@@ -223,6 +260,16 @@ const LayoutHeader = () => {
         )}
 
         <Divider my="sm" />
+
+        <Box px="md" pb="sm">
+          <SegmentedControl
+            fullWidth
+            value={colorScheme}
+            onChange={(value) => setColorScheme(value as MantineColorScheme)}
+            data={colorSchemeOptions}
+            aria-label="Color scheme"
+          />
+        </Box>
 
         {isInstallAvailable && (
           <Group grow px="md" pb="sm">
