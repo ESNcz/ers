@@ -1,6 +1,7 @@
 "use client";
 
 import { onSuccessNotification, showErrorNotification, showLoadingNotification } from "@/utils/notifications";
+import ThemeColorSync from "@components/layout/ThemeColorSync";
 import { Notifications } from "@mantine/notifications";
 import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
@@ -35,6 +36,7 @@ const Providers = ({ children }: ProvidersProps) => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <ThemeColorSync />
       <Notifications layout={"stacked"} />
       {children}
     </QueryClientProvider>

@@ -1,4 +1,4 @@
-import { theme } from "@/utils/theme";
+import { browserThemeColor, theme } from "@/utils/theme";
 import Providers from "@components/layout/Providers";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
@@ -25,6 +25,11 @@ export const metadata: Metadata = {
     ],
     apple: { url: "/icons/apple-icon.png", sizes: "180x180" },
   },
+  appleWebApp: {
+    capable: true,
+    title: "ERS",
+    statusBarStyle: "default",
+  },
   authors: [
     {
       name: "Šimon Slabý",
@@ -40,6 +45,11 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: "contain",
   interactiveWidget: "resizes-content",
+  // Follows the OS scheme on first paint, ThemeColorSync then applies the in-app choice
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: browserThemeColor.light },
+    { media: "(prefers-color-scheme: dark)", color: browserThemeColor.dark },
+  ],
 };
 
 interface RootLayoutProps {

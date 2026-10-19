@@ -38,6 +38,12 @@ const brandColors = {
   orange: "#f47b20",
 } as const;
 
+// Browser UI colour (address bar, PWA title bar), dark matches Mantine dark body background
+export const browserThemeColor = {
+  light: brandColors.cyan,
+  dark: "#242424",
+} as const;
+
 const mixHex = (from: string, to: string, amount: number) => {
   const parse = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
   const [a, b] = [parse(from), parse(to)];
