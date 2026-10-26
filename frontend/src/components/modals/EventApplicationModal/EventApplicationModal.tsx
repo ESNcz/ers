@@ -65,7 +65,7 @@ const EventApplicationModal = ({
   const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentUser.id);
 
   const form = useForm<Partial<CreateEventApplication>>({
-    mode: "uncontrolled",
+    mode: "controlled",
     initialValues: {
       validUntil: undefined,
       idNumber: undefined,

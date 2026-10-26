@@ -1,39 +1,11 @@
 import { useUpdateEventApplication, useUserOrganizationMemberships } from "@/utils/api";
-import {
-  CreateEventApplicationInvoiceMethod,
-  EventApplicationDetailedWithApplications,
-  Organization,
-  UpdateEventApplication,
-} from "@/utils/api.schemas";
+import { CreateEventApplicationInvoiceMethod, EventApplicationDetailedWithApplications, Organization, UpdateEventApplication } from "@/utils/api.schemas";
 import AddressCodeBlock from "@components/AddressCodeBlock/AddressCodeBlock";
 import Modal from "@components/Modal/Modal";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
-import { useCurrentUser } from "@components/providers/CurrentUserProvider";
-import {
-  allergenOptions,
-  foodRestrictionOptions,
-  healthLimitationsOptions,
-  joinRestrictions,
-  renderAllergenOptions,
-  renderFoodRestrictionsOptions,
-  renderHealthLimitationOptions,
-} from "@components/shared/renderRestrictionOptions";
-import {
-  Anchor,
-  Blockquote,
-  Box,
-  Button,
-  Flex,
-  Grid,
-  Group,
-  MultiSelect,
-  SimpleGrid,
-  Stack,
-  Text,
-  TextInput,
-  Textarea,
-} from "@mantine/core";
+import { allergenOptions, foodRestrictionOptions, healthLimitationsOptions, joinRestrictions, renderAllergenOptions, renderFoodRestrictionsOptions, renderHealthLimitationOptions } from "@components/shared/renderRestrictionOptions";
+import { Anchor, Blockquote, Box, Button, Flex, Grid, Group, MultiSelect, SimpleGrid, Stack, Text, TextInput, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
@@ -86,12 +58,11 @@ const UpdateEventApplicationModal = ({
     currentApplication.organization,
   );
 
-  const { currentUser } = useCurrentUser();
 
   const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentApplication.user.id);
 
   const form = useForm<UpdateEventApplication>({
-    mode: "uncontrolled",
+    mode: "controlled",
     validate: {},
     transformValues: (values) => {
       const { allergies, foodRestriction, healthLimitations, ...restValues } = values;
@@ -255,7 +226,7 @@ const UpdateEventApplicationModal = ({
               label="Invoice Method"
               value={form.values.invoiceMethod}
               data={[
-                { label: "Personal Address", value: "personal", disabled: !currentUser.personalAddress },
+                { label: "Personal Address", value: "personal", disabled: !currentApplication.invoiceAddress },
                 {
                   label: "Organisation Address",
                   value: "organisation",
@@ -268,14 +239,17 @@ const UpdateEventApplicationModal = ({
                 form.setFieldValue("invoiceMethod", value as CreateEventApplicationInvoiceMethod);
                 switch (value) {
                   case "personal": {
-                    if (!currentUser.personalAddress) return;
-                    form.setFieldValue("invoicedTo", `${currentUser.firstName} ${currentUser.lastName}`);
+                    if (!currentApplication.invoiceAddress) return;
+                    form.setFieldValue(
+                      "invoicedTo",
+                      `${currentApplication.user.firstName} ${currentApplication.user.lastName}`,
+                    );
                     form.setFieldValue("invoiceAddress", {
-                      city: currentUser.personalAddress.city,
-                      country: currentUser.personalAddress.country,
-                      houseNumber: currentUser.personalAddress.houseNumber,
-                      street: currentUser.personalAddress.street,
-                      zip: currentUser.personalAddress.zip,
+                      city: currentApplication.invoiceAddress.city,
+                      country: currentApplication.invoiceAddress.country,
+                      houseNumber: currentApplication.invoiceAddress.houseNumber,
+                      street: currentApplication.invoiceAddress.street,
+                      zip: currentApplication.invoiceAddress.zip,
                     });
                     break;
                   }
@@ -308,10 +282,7 @@ const UpdateEventApplicationModal = ({
                   {
                     personal: (
                       <Box>
-                        <AddressCodeBlock
-                          beforeAddress={form.values.invoicedTo}
-                          address={currentUser.personalAddress}
-                        />
+                        <AddressCodeBlock beforeAddress={form.values.invoicedTo} address={currentApplication.invoiceAddress} />
                       </Box>
                     ),
                     organisation: (
