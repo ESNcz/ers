@@ -196,7 +196,7 @@ const EventApplicationModal = ({
                 value={
                   form.values.organization
                     ? form.values.organization?.type === "custom"
-                      ? "null"
+                      ? "custom"
                       : form.values.organization.id
                     : null
                 }
@@ -211,15 +211,15 @@ const EventApplicationModal = ({
                         }),
                         {
                           label: "Different Organisation",
-                          value: "null",
+                          value: "custom",
                         },
                       ]
-                    : [{ label: "Different Organisation", value: "null" }]
+                    : [{ label: "Different Organisation", value: "custom" }]
                 }
                 onChange={(value) => {
                   if (!value) return;
                   const membership = userOrganisationMemberships.find((f) => f.organization.id === value);
-                  if (!membership || value === "null") {
+                  if (!membership || value === "custom") {
                     form.setFieldValue("organization", {
                       type: "custom",
                       name: "",
