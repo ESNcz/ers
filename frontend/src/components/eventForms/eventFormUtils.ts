@@ -10,7 +10,7 @@ export type FieldCheck = "ok" | "empty" | "invalid";
 const MAX_TEXT_ANSWER_LENGTH = 5000;
 
 export const isSelectType = (type: FormFieldType) =>
-  type === FormFieldType.singleSelect || type === FormFieldType.multiSelect;
+  type === FormFieldType.singleSelect || type === FormFieldType.multiSelect || type === FormFieldType.priorityList;
 
 const isEmptyValue = (value: unknown) =>
   value === undefined ||
@@ -39,6 +39,14 @@ export const checkFieldAnswer = (field: FormFieldDefinition, value: unknown): Fi
       return typeof value === "string" && options.includes(value) ? "ok" : "invalid";
     case FormFieldType.multiSelect:
       return Array.isArray(value) &&
+        value.every((item) => typeof item === "string" && options.includes(item)) &&
+        new Set(value).size === value.length
+        ? "ok"
+        : "invalid";
+    case FormFieldType.priorityList:
+      // Every option exactly once - the order is the applicant's ranking
+      return Array.isArray(value) &&
+        value.length === options.length &&
         value.every((item) => typeof item === "string" && options.includes(item)) &&
         new Set(value).size === value.length
         ? "ok"
@@ -72,6 +80,15 @@ const emptyInputValue = (field: FormFieldDefinition): FormInputValue => {
   }
 };
 
+/**
+ * First fill starts in the order set by the manager.
+ * After options change the saved order is kept: removed options drop out, new ones go last.
+ */
+const initialPriorityOrder = (options: string[], saved: unknown): string[] => {
+  const kept = Array.isArray(saved) ? [...new Set(saved)].filter((item) => options.includes(item)) : [];
+  return [...kept, ...options.filter((option) => !kept.includes(option))];
+};
+
 /** Answers that no longer match the field (type or options changed) start empty */
 export const toInitialValues = (
   fields: FormFieldDefinition[],
@@ -80,6 +97,9 @@ export const toInitialValues = (
   Object.fromEntries(
     fields.map((field) => {
       const value = answers?.[field.id];
+      if (field.type === FormFieldType.priorityList) {
+        return [field.id, initialPriorityOrder(field.options ?? [], value)];
+      }
       return [field.id, checkFieldAnswer(field, value) === "ok" ? (value as FormInputValue) : emptyInputValue(field)];
     }),
   );

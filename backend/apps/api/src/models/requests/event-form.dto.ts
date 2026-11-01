@@ -47,7 +47,7 @@ export class FormFieldDefinition {
   required: boolean;
 
   /**
-   * Choices for `singleSelect` and `multiSelect`, ignored for other types
+   * Choices for `singleSelect`, `multiSelect` and `priorityList`, ignored for other types
    */
   @IsOptional()
   @IsArray()

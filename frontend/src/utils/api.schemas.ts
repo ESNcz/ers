@@ -764,6 +764,7 @@ export const FormFieldType = {
   number: "number",
   singleSelect: "singleSelect",
   multiSelect: "multiSelect",
+  priorityList: "priorityList",
   checkbox: "checkbox",
 } as const;
 
@@ -779,7 +780,7 @@ export interface FormFieldDefinition {
   /** @maxLength 1000 */
   description?: string;
   required: boolean;
-  /** Choices for `singleSelect` and `multiSelect`, ignored for other types */
+  /** Choices for `singleSelect`, `multiSelect` and `priorityList`, ignored for other types */
   options?: string[];
 }
 

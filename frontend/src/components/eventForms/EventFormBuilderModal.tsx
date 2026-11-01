@@ -32,6 +32,7 @@ const FIELD_TYPE_OPTIONS = [
   { value: FormFieldType.number, label: "Number" },
   { value: FormFieldType.singleSelect, label: "Single select" },
   { value: FormFieldType.multiSelect, label: "Multi select" },
+  { value: FormFieldType.priorityList, label: "Priority list" },
   { value: FormFieldType.checkbox, label: "Checkbox" },
 ];
 
@@ -130,8 +131,19 @@ const EventFormBuilderModal = ({
     else createForm.mutate({ eventId, data });
   });
 
+  // Covers the close button, Escape, click outside and Cancel. Saving closes through `onMutationSuccess` instead.
+  const handleClose = () => {
+    if (form.isDirty() && !confirm("You have unsaved changes in this form. Close it and lose them?")) return;
+    closeModal();
+  };
+
   return (
-    <Modal size="xl" opened={isOpened} onClose={closeModal} title={eventForm ? `Edit "${eventForm.name}"` : "New form"}>
+    <Modal
+      size="xl"
+      opened={isOpened}
+      onClose={handleClose}
+      title={eventForm ? `Edit "${eventForm.name}"` : "New form"}
+    >
       <form onSubmit={handleSubmit}>
         <Stack gap="md">
           {hasResponses && (
@@ -244,7 +256,7 @@ const EventFormBuilderModal = ({
           </Button>
 
           <Group justify="flex-end">
-            <Button variant="default" onClick={closeModal}>
+            <Button variant="default" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit" loading={createForm.isPending || updateForm.isPending}>

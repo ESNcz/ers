@@ -9,6 +9,7 @@ export enum FormFieldType {
   number = "number",
   singleSelect = "singleSelect",
   multiSelect = "multiSelect",
+  priorityList = "priorityList",
   checkbox = "checkbox",
 }
 
@@ -25,7 +26,7 @@ export interface FormField {
   label: string;
   description?: string;
   required: boolean;
-  /** Only for `singleSelect` and `multiSelect` */
+  /** Only for `singleSelect`, `multiSelect` and `priorityList` */
   options?: string[];
 }
 
@@ -44,7 +45,7 @@ export const FORM_LIMITS = {
 } as const;
 
 export const isSelectType = (type: FormFieldType) =>
-  type === FormFieldType.singleSelect || type === FormFieldType.multiSelect;
+  type === FormFieldType.singleSelect || type === FormFieldType.multiSelect || type === FormFieldType.priorityList;
 
 const isEmptyValue = (value: unknown) =>
   value === undefined ||
@@ -73,6 +74,14 @@ export const checkFieldAnswer = (field: FormField, value: unknown): FieldCheck =
       return typeof value === "string" && options.includes(value) ? "ok" : "invalid";
     case FormFieldType.multiSelect:
       return Array.isArray(value) &&
+        value.every((item) => typeof item === "string" && options.includes(item)) &&
+        new Set(value).size === value.length
+        ? "ok"
+        : "invalid";
+    case FormFieldType.priorityList:
+      // Every option exactly once - the order is the applicant's ranking
+      return Array.isArray(value) &&
+        value.length === options.length &&
         value.every((item) => typeof item === "string" && options.includes(item)) &&
         new Set(value).size === value.length
         ? "ok"

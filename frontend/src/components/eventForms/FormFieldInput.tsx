@@ -2,6 +2,7 @@ import { FormFieldDefinition, FormFieldType } from "@/utils/api.schemas";
 import { Checkbox, MultiSelect, NumberInput, Select, TextInput, Textarea } from "@mantine/core";
 import type { UseFormReturnType } from "@mantine/form";
 
+import PriorityListInput from "./PriorityListInput";
 import type { FormInputValue } from "./eventFormUtils";
 
 interface FormFieldInputProps {
@@ -24,6 +25,8 @@ const FormFieldInput = ({ field, form }: FormFieldInputProps) => {
       return <Select {...common} data={field.options ?? []} clearable {...form.getInputProps(field.id)} />;
     case FormFieldType.multiSelect:
       return <MultiSelect {...common} data={field.options ?? []} clearable {...form.getInputProps(field.id)} />;
+    case FormFieldType.priorityList:
+      return <PriorityListInput {...common} {...form.getInputProps(field.id)} />;
     case FormFieldType.checkbox:
       return (
         <Checkbox
