@@ -17,4 +17,8 @@ jobs:
           script: |
             cd /root/ers
             git pull origin main
+            # Builds run with --no-cache, so old build cache is never reused - drop it to free disk space
+            docker builder prune -af
             GIT_COMMIT_SHA=${{ github.sha }} docker compose -f compose.yml build --no-cache && docker compose -f compose.yml up -d --force-recreate
+            # Remove images no longer used by any container (previous deploys)
+            docker image prune -af
