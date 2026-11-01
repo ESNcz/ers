@@ -6,6 +6,7 @@ export * from "./organization-member-without-organization.dto";
 export * from "./organization-member-without-user.dto";
 export * from "./event-simple-with-applications.dto";
 export * from "./event-application-simple-with-applications.dto";
+export * from "./open-sugar-cube-event.dto";
 export * from "./sugar-cube-recipient-option.dto";
 export * from "./event-detail-view.dto";
 export * from "./event-applications-overview.dto";

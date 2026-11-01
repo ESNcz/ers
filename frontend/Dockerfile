@@ -1,7 +1,7 @@
 # ============================
 # Base Stage
 # ============================
-FROM node:22-alpine AS base
+FROM node:26-alpine AS base
 RUN apk add --no-cache tzdata
 ENV TZ=$TZ
 RUN apk add --no-cache tzdata \
@@ -15,7 +15,7 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
-RUN corepack enable pnpm && pnpm i --frozen-lockfile --ignore-scripts && pnpm rebuild esbuild sharp unrs-resolver;
+RUN npm install -g pnpm && pnpm i --frozen-lockfile --ignore-scripts && pnpm rebuild esbuild sharp unrs-resolver;
 
 FROM base AS builder
 # ============================
@@ -36,7 +36,7 @@ ARG GIT_COMMIT_SHA=unknown
 ENV GIT_COMMIT_SHA=$GIT_COMMIT_SHA
 ENV NEXT_PUBLIC_BUILD_ID=$GIT_COMMIT_SHA
 
-RUN corepack enable pnpm && pnpm run build;
+RUN npm install -g pnpm && pnpm run build;
 
 FROM base AS runner
 # ============================

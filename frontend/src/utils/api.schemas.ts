@@ -1128,6 +1128,13 @@ export interface SettingsDTO {
   footerDescription: string | null;
 }
 
+export interface OpenSugarCubeEventDto {
+  id: number;
+  title: string;
+  /** Last moment sugar cubes can be sent */
+  closesAt: string;
+}
+
 export interface CreateSugarCubeDto {
   /** Recipient user ID */
   toUserId: string;

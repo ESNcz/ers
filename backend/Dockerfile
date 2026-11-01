@@ -1,7 +1,7 @@
 # ============================
 # Builder Stage
 # ============================
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 ENV TZ=$TZ
 RUN apk add --no-cache tzdata \
 && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
@@ -27,7 +27,7 @@ RUN pnpm run build ${PROJECT_NAME}
 # ============================
 # Production Stage
 # ============================
-FROM node:22-alpine AS production
+FROM node:26-alpine AS production
 
 ARG PROJECT_NAME
 ARG PORT_API

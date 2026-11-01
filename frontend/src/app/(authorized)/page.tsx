@@ -1,12 +1,14 @@
-import { getEvents, getOngoingEvents } from "@/utils/api";
+import { getEvents, getOngoingEvents, getOpenSugarCubeEvents } from "@/utils/api";
 import { EventCardSkeleton } from "@components/events/EventCard";
 import EventSection from "@components/events/EventSection";
 import NoUpcomingEvents from "@components/events/NoUpcomingEvents";
+import SugarCubesOpenSection from "@components/events/SugarCubesOpenSection";
 import { Container, Stack, Title } from "@mantine/core";
 import { Suspense } from "react";
 
 const HomeEvents = async () => {
-  const [ongoingEvents, upcomingEvents] = await Promise.all([
+  const [openSugarCubeEvents, ongoingEvents, upcomingEvents] = await Promise.all([
+    getOpenSugarCubeEvents(),
     getOngoingEvents(),
     getEvents({ sinceSince: Date.now() }),
   ]);
@@ -15,6 +17,8 @@ const HomeEvents = async () => {
 
   return (
     <Stack gap={48}>
+      {openSugarCubeEvents.length > 0 && <SugarCubesOpenSection events={openSugarCubeEvents} />}
+
       {ongoing.length > 0 && (
         <EventSection title="Happening now" events={ongoing} total={ongoingEvents.pagination?.totalCount} />
       )}

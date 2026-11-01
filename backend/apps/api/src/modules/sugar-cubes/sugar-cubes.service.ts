@@ -1,12 +1,20 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { LessThanOrEqual, MoreThanOrEqual, Repository } from "typeorm";
 
 import { CreateSugarCubeDto } from "@api/models/requests";
 import { Event, EventApplication } from "@api/modules/events/entities";
 import { User } from "@api/modules/users/entities";
 
 import { SugarCube } from "./entities/sugar-cube.entity";
+
+const OPEN_DAYS_AFTER_EVENT = 3;
+
+const shiftDays = (date: Date, days: number) => {
+  const shifted = new Date(date);
+  shifted.setDate(shifted.getDate() + days);
+  return shifted;
+};
 
 @Injectable()
 export class SugarCubesService {
@@ -56,10 +64,8 @@ export class SugarCubesService {
 
     // Check time constraints: start of the event until 3 days after event until
     const now = new Date();
-    const threeDaysAfter = new Date(event.until);
-    threeDaysAfter.setDate(threeDaysAfter.getDate() + 3);
 
-    if (now < event.since || now > threeDaysAfter) {
+    if (now < event.since || now > shiftDays(event.until, OPEN_DAYS_AFTER_EVENT)) {
       throw new ForbiddenException("Sugar cubes can only be sent since start of the event until 3 days after");
     }
 
@@ -72,6 +78,29 @@ export class SugarCubesService {
     });
 
     return await this.sugarCubesRepository.save(sugarCube);
+  }
+
+  /**
+   * Visible events the user is registered to where sugar cubes can be sent right now
+   */
+  async getOpenEvents(user: User) {
+    const now = new Date();
+    const events = await this.eventsRepository.find({
+      where: {
+        visible: true,
+        since: LessThanOrEqual(now),
+        until: MoreThanOrEqual(shiftDays(now, -OPEN_DAYS_AFTER_EVENT)),
+        applications: { user: { id: user.id } },
+      },
+      select: { id: true, title: true, until: true },
+      order: { until: "ASC" },
+    });
+
+    return events.map(({ id, title, until }) => ({
+      id,
+      title,
+      closesAt: shiftDays(until, OPEN_DAYS_AFTER_EVENT),
+    }));
   }
 
   async getReceivedSugarCubes(eventId: number, user: User) {

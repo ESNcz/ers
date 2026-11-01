@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nest
 
 import { CurrentUser } from "@api/decorators";
 import { CreateSugarCubeDto } from "@api/models/requests";
+import { OpenSugarCubeEventDto } from "@api/models/responses/open-sugar-cube-event.dto";
 import { SugarCubeRecipientOptionDto } from "@api/models/responses/sugar-cube-recipient-option.dto";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
 import { Permission } from "@api/modules/roles";
@@ -17,6 +18,12 @@ import { SugarCube } from "./entities/sugar-cube.entity";
 @ApiBearerAuth()
 export class SugarCubesController {
   constructor(private readonly sugarCubesService: SugarCubesService) {}
+
+  @ApiOkResponse({ type: OpenSugarCubeEventDto, isArray: true })
+  @Get("open-events")
+  async getOpenSugarCubeEvents(@CurrentUser() user: User) {
+    return await this.sugarCubesService.getOpenEvents(user);
+  }
 
   @ApiCreatedResponse({ type: SugarCube, description: "Sugar cube created" })
   @Post("event/:eventId")
