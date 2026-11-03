@@ -3,6 +3,7 @@
 import { RolePermissionsItem } from "@/utils/api.schemas";
 import { apiImageURL } from "@/utils/apiImageURL";
 import { manageEventLink, manageOrganisationLink, managePeopleLink, settingsLink } from "@/utils/headerLinks";
+import { disablePushNotifications } from "@/utils/pushNotifications";
 import routes from "@/utils/routes";
 import { useInstallPrompt } from "@/utils/useInstallPrompt";
 import LogoERS from "@components/icons/LogoERS";
@@ -94,8 +95,12 @@ const mainLinks: MainLinksProps = [
 const LayoutHeader = () => {
   const pathname = usePathname();
 
-  // Full navigation (not router.push) so the React Query cache of this user is dropped
-  const logout = () => window.location.assign(routes.LOGOUT);
+  // Full navigation (not router.push) so the React Query cache of this user is dropped.
+  // Push is turned off first - a logged-out device must not receive notifications of this user.
+  const logout = async () => {
+    await disablePushNotifications().catch(() => {});
+    window.location.assign(routes.LOGOUT);
+  };
 
   const { currentUser } = useOptionalCurrentUser();
 

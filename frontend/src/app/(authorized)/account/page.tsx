@@ -12,6 +12,7 @@ import UploadProgress from "@components/UploadProgress/UploadProgress";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
 import { useCurrentUser } from "@components/providers/CurrentUserProvider";
+import PushNotificationsSettings from "@components/pwa/PushNotificationsSettings";
 import {
   Accordion,
   Avatar,
@@ -413,6 +414,7 @@ const AccountPage = () => {
           </Button>
         </Group>
       </form>
+      <PushNotificationsSettings />
     </Container>
   );
 };

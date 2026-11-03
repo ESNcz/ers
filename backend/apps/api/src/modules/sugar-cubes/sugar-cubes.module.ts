@@ -6,6 +6,7 @@ import { AuthModule } from "@api/modules/auth";
 import { Event, EventsModule } from "@api/modules/events";
 import { EventApplication } from "@api/modules/events/entities";
 import { MailModule } from "@api/modules/mail/mail.module";
+import { PushModule } from "@api/modules/push";
 import { SugarCubesController } from "@api/modules/sugar-cubes/sugar-cubes.controller";
 import { SugarCubesService } from "@api/modules/sugar-cubes/sugar-cubes.service";
 import { UsersModule } from "@api/modules/users";
@@ -21,6 +22,7 @@ import { SugarCube } from "./entities/sugar-cube.entity";
     MailModule,
     AuthModule,
     ConfigModule,
+    PushModule,
   ],
   controllers: [SugarCubesController],
   providers: [SugarCubesService],

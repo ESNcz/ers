@@ -73,6 +73,7 @@ export const proxy = async (request: NextRequest) => {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|public|favicon.*|manifest|icons/*|screenshots/|imagePlaceholder.svg).*)",
+    // `sw.js` must never redirect - browsers reject a redirected service worker script
+    "/((?!api|_next/static|_next/image|public|favicon.*|manifest|icons/*|screenshots/|imagePlaceholder.svg|sw.js).*)",
   ],
 };

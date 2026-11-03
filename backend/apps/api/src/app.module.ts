@@ -22,6 +22,8 @@ import { OrganizationMembersController } from "@api/modules/organization/organiz
 import { OrganizationsController } from "@api/modules/organization/organizations.controller";
 import { PhotoModule } from "@api/modules/photo";
 import { PhotoController } from "@api/modules/photo/photo.controller";
+import { PushModule } from "@api/modules/push";
+import { PushController } from "@api/modules/push/push.controller";
 import { RolesModule } from "@api/modules/roles";
 import { RolesController } from "@api/modules/roles/roles.controller";
 import { SettingsController } from "@api/modules/settings/settings.controller";
@@ -59,6 +61,7 @@ import { EventApplicationSimpleWithApplicationsMapper, EventSimpleWithApplicatio
     MailModule,
     SettingsModule,
     SugarCubesModule,
+    PushModule,
   ],
   controllers: [
     InitialiseController,
@@ -76,6 +79,7 @@ import { EventApplicationSimpleWithApplicationsMapper, EventSimpleWithApplicatio
     HealthController,
     SettingsController,
     SugarCubesController,
+    PushController,
   ],
   providers: [EventSimpleWithApplicationsMapper, EventApplicationSimpleWithApplicationsMapper],
 })

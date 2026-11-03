@@ -1,0 +1,10 @@
+/* Top left, under the sticky header (48px) */
+.banner {
+  position: fixed;
+  z-index: 200;
+  top: calc(rem(48px) + var(--mantine-spacing-md) + env(safe-area-inset-top));
+  right: var(--mantine-spacing-md);
+  left: var(--mantine-spacing-md);
+  max-width: 420px;
+  margin-right: auto;
+}

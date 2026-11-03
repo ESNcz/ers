@@ -30,9 +30,11 @@ import type {
   CreateEventSpot,
   CreateOrganization,
   CreateOrganization201,
+  CreatePushSubscriptionDto,
   CreateRole,
   CreateSugarCubeDto,
   CreateUser,
+  DeletePushSubscriptionDto,
   Error,
   EventApplicationDetailedWithApplications,
   EventApplicationSimpleWithApplications,
@@ -73,6 +75,7 @@ import type {
   OrganizationMemberWithoutUser,
   OrganizationMembers200,
   OrganizationMembersParams,
+  PushPublicKeyDto,
   ReorderEventForms,
   ResendVerificationParams,
   ResetPasswordDto,
@@ -7052,6 +7055,278 @@ export function useGetSugarCubesRecipientOptions<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getPushPublicKey = (options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
+  return customInstance<PushPublicKeyDto>({ url: `/push/public-key`, method: "GET", signal }, options);
+};
+
+export const getGetPushPublicKeyQueryKey = () => {
+  return [`/push/public-key`] as const;
+};
+
+export const getGetPushPublicKeyQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPushPublicKey>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushPublicKey>>, TError, TData>>;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPushPublicKeyQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPushPublicKey>>> = ({ signal }) =>
+    getPushPublicKey(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPushPublicKey>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPushPublicKeyQueryResult = NonNullable<Awaited<ReturnType<typeof getPushPublicKey>>>;
+export type GetPushPublicKeyQueryError = ErrorType<unknown>;
+
+export function useGetPushPublicKey<TData = Awaited<ReturnType<typeof getPushPublicKey>>, TError = ErrorType<unknown>>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushPublicKey>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPushPublicKey>>,
+          TError,
+          Awaited<ReturnType<typeof getPushPublicKey>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPushPublicKey<TData = Awaited<ReturnType<typeof getPushPublicKey>>, TError = ErrorType<unknown>>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushPublicKey>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPushPublicKey>>,
+          TError,
+          Awaited<ReturnType<typeof getPushPublicKey>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPushPublicKey<TData = Awaited<ReturnType<typeof getPushPublicKey>>, TError = ErrorType<unknown>>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushPublicKey>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetPushPublicKey<TData = Awaited<ReturnType<typeof getPushPublicKey>>, TError = ErrorType<unknown>>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushPublicKey>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPushPublicKeyQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Save the browser push subscription of the current user
+ */
+export const subscribePush = (
+  createPushSubscriptionDto: CreatePushSubscriptionDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<void>(
+    {
+      url: `/push/subscribe`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: createPushSubscriptionDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getSubscribePushMutationKey = () => ["subscribePush"] as const;
+
+export const getSubscribePushMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof subscribePush>>,
+    TError,
+    SubscribePushMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof subscribePush>>, TError, SubscribePushMutationVariables, TContext> => {
+  const mutationKey = getSubscribePushMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof subscribePush>>, SubscribePushMutationVariables> = (
+    props,
+  ) => {
+    const { data } = props ?? {};
+
+    return subscribePush(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubscribePushMutationResult = NonNullable<Awaited<ReturnType<typeof subscribePush>>>;
+export type SubscribePushMutationBody = CreatePushSubscriptionDto;
+export type SubscribePushMutationError = ErrorType<unknown>;
+export type SubscribePushMutationVariables = { data: CreatePushSubscriptionDto };
+
+export const useSubscribePush = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof subscribePush>>,
+      TError,
+      SubscribePushMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof subscribePush>>, TError, SubscribePushMutationVariables, TContext> => {
+  return useMutation(getSubscribePushMutationOptions(options), queryClient);
+};
+
+export const unsubscribePush = (
+  deletePushSubscriptionDto: DeletePushSubscriptionDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<void>(
+    {
+      url: `/push/unsubscribe`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: deletePushSubscriptionDto,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getUnsubscribePushMutationKey = () => ["unsubscribePush"] as const;
+
+export const getUnsubscribePushMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unsubscribePush>>,
+    TError,
+    UnsubscribePushMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unsubscribePush>>,
+  TError,
+  UnsubscribePushMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUnsubscribePushMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof unsubscribePush>>, UnsubscribePushMutationVariables> = (
+    props,
+  ) => {
+    const { data } = props ?? {};
+
+    return unsubscribePush(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UnsubscribePushMutationResult = NonNullable<Awaited<ReturnType<typeof unsubscribePush>>>;
+export type UnsubscribePushMutationBody = DeletePushSubscriptionDto;
+export type UnsubscribePushMutationError = ErrorType<unknown>;
+export type UnsubscribePushMutationVariables = { data: DeletePushSubscriptionDto };
+
+export const useUnsubscribePush = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unsubscribePush>>,
+      TError,
+      UnsubscribePushMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof unsubscribePush>>,
+  TError,
+  UnsubscribePushMutationVariables,
+  TContext
+> => {
+  return useMutation(getUnsubscribePushMutationOptions(options), queryClient);
+};
+
+/**
+ * Send a test notification to all devices of the current user
+ */
+export const sendTestPush = (options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
+  return customInstance<void>({ url: `/push/test`, method: "POST", signal }, options);
+};
+
+export const getSendTestPushMutationKey = () => ["sendTestPush"] as const;
+
+export const getSendTestPushMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof sendTestPush>>, TError, void, TContext>;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof sendTestPush>>, TError, void, TContext> => {
+  const mutationKey = getSendTestPushMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendTestPush>>, void> = () => {
+    return sendTestPush(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendTestPushMutationResult = NonNullable<Awaited<ReturnType<typeof sendTestPush>>>;
+
+export type SendTestPushMutationError = ErrorType<unknown>;
+
+export const useSendTestPush = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof sendTestPush>>, TError, void, TContext>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof sendTestPush>>, TError, void, TContext> => {
+  return useMutation(getSendTestPushMutationOptions(options), queryClient);
+};
 
 /**
  * Send e-mail

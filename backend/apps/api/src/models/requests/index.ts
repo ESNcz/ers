@@ -18,3 +18,4 @@ export * from "./create-role.dto";
 export * from "./init.dto";
 export * from "./create-sugar-cube.dto";
 export * from "./event-form.dto";
+export * from "./push-subscription.dto";

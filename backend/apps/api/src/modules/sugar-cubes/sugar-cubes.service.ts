@@ -4,6 +4,7 @@ import { LessThanOrEqual, MoreThanOrEqual, Repository } from "typeorm";
 
 import { CreateSugarCubeDto } from "@api/models/requests";
 import { Event, EventApplication } from "@api/modules/events/entities";
+import { PushService } from "@api/modules/push";
 import { User } from "@api/modules/users/entities";
 
 import { SugarCube } from "./entities/sugar-cube.entity";
@@ -27,6 +28,7 @@ export class SugarCubesService {
     private readonly eventsRepository: Repository<Event>,
     @InjectRepository(EventApplication)
     private readonly eventApplicationsRepository: Repository<EventApplication>,
+    private readonly pushService: PushService,
   ) {}
 
   async findSugarCubeById(id: number) {
@@ -77,7 +79,19 @@ export class SugarCubesService {
       event,
     });
 
-    return await this.sugarCubesRepository.save(sugarCube);
+    const saved = await this.sugarCubesRepository.save(sugarCube);
+
+    // Not awaited - the sender should not wait for push services
+    void this.pushService.sendToUser(dto.toUserId, {
+      title: "You received a sugar cube",
+      body: dto.isAnonymous
+        ? `Someone sent you a sugar cube at ${event.title}`
+        : `${fromUser.firstName} sent you a sugar cube at ${event.title}`,
+      url: `/event/${event.id}/sugar-cubes`,
+      tag: `sugar-cube-${event.id}`,
+    });
+
+    return saved;
   }
 
   /**

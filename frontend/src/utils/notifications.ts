@@ -1,5 +1,6 @@
 import { ErrorType } from "@/utils/customInstance";
 import { notifications } from "@mantine/notifications";
+import { isAxiosError } from "axios";
 
 export const updateErrorNotification = () => {
   notifications.hide("loading");
@@ -53,5 +54,18 @@ export const onSuccessNotification = () => {
     loading: false,
     autoClose: true,
     color: "green",
+  });
+};
+
+/** API errors as usual, browser push errors (subscribe failed, unsupported) with their own message */
+export const showPushErrorNotification = (error: unknown) => {
+  if (isAxiosError(error)) {
+    showErrorNotification(error);
+    return;
+  }
+  notifications.show({
+    title: "Notifications could not be turned on",
+    message: error instanceof Error ? error.message : "Try again later.",
+    color: "red",
   });
 };

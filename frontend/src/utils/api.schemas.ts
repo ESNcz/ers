@@ -1046,6 +1046,30 @@ export interface SugarCubeRecipientOptionDto {
   grouped: SugarCubeRecipientOptionDtoGrouped;
 }
 
+export interface PushPublicKeyDto {
+  /**
+   * VAPID public key for `pushManager.subscribe`, `null` when push is not configured on the server
+   * @nullable
+   */
+  publicKey: string | null;
+}
+
+export interface PushSubscriptionKeysDto {
+  p256dh: string;
+  auth: string;
+}
+
+export interface CreatePushSubscriptionDto {
+  /** Push service endpoint */
+  endpoint: string;
+  keys: PushSubscriptionKeysDto;
+}
+
+export interface DeletePushSubscriptionDto {
+  /** Push service endpoint */
+  endpoint: string;
+}
+
 export interface MailAddress {
   name: string;
   address: string;

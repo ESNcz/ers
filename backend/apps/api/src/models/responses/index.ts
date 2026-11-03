@@ -12,3 +12,4 @@ export * from "./event-detail-view.dto";
 export * from "./event-applications-overview.dto";
 export * from "./event-applications-management.dto";
 export * from "./event-form.dto";
+export * from "./push-public-key.dto";

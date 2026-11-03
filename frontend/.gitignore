@@ -48,3 +48,6 @@ certificates
 .DS_Store
 dist
 *.tsbuildinfo
+
+# Service worker, compiled from sw/sw.ts by `pnpm build:sw`
+public/sw.js

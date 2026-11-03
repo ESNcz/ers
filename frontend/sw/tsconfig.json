@@ -1,0 +1,15 @@
+{
+  // Service worker build - runs in a worker, not the DOM. Excluded from the app tsconfig.
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["esnext", "webworker"],
+    "types": [],
+    "strict": true,
+    "skipLibCheck": true,
+    "rootDir": ".",
+    "outDir": "../public",
+    "removeComments": true,
+    "newLine": "lf"
+  },
+  "files": ["sw.ts"]
+}

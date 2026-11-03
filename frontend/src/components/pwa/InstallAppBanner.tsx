@@ -4,6 +4,7 @@ import { useInstallPrompt } from "@/utils/useInstallPrompt";
 import LogoERS from "@components/icons/LogoERS";
 import styles from "@components/pwa/InstallAppBanner.module.css";
 import InstallInstructionsModal from "@components/pwa/InstallInstructionsModal";
+import { usePushPromptPending } from "@components/pwa/PushPromptBanner";
 import { Button, CloseButton, Group, Paper, Text, Transition } from "@mantine/core";
 import { useDisclosure, useLocalStorage, useTimeout } from "@mantine/hooks";
 import { useEffect, useState } from "react";
@@ -31,7 +32,9 @@ const InstallAppBanner = () => {
   useEffect(start, [start]);
 
   const isSnoozed = dismissedAt !== null && Date.now() - dismissedAt < SNOOZE_MS;
-  const isVisible = isAvailable && isDelayOver && !isSnoozed;
+  // Notifications prompt goes first after login, one prompt at a time
+  const isPushPromptPending = usePushPromptPending();
+  const isVisible = isAvailable && isDelayOver && !isSnoozed && !isPushPromptPending;
 
   const dismiss = () => setDismissedAt(Date.now());
 

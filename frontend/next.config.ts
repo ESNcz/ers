@@ -12,6 +12,19 @@ const nextConfig: NextConfig = {
     PORT_FE: process.env.PORT_FE,
   },
   // Serve the API under the web origin so the auth cookie is first-party (sameSite lax, no CORS)
+  async headers() {
+    return [
+      {
+        // Browsers must always fetch the latest service worker, otherwise an old version keeps running
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${apiUrl}/:path*` }];
   },
