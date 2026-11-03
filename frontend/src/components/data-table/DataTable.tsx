@@ -1,11 +1,11 @@
 "use client";
 
+import classes from "./DataTable.module.css";
 import { ActionBar, Box, Skeleton, Stack, Table, Text } from "@mantine/core";
 import { flexRender } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useEffect, useRef } from "react";
 
-import classes from "./DataTable.module.css";
 import { DataTableColumnResizer } from "./DataTableColumnResizer";
 import { DataTableHeaderCell } from "./DataTableHeaderCell";
 import { DataTablePagination } from "./DataTablePagination";

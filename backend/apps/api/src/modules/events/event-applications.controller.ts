@@ -76,8 +76,6 @@ export class EventApplicationsController {
 
   /**
    * Get all signed-in user applications
-   *
-   * For filtering look at {@link EventsController}
    */
   @ApiBearerAuth()
   @ApiQuery({ name: "sinceSince", required: false, type: Number })
@@ -231,10 +229,12 @@ export class EventApplicationsController {
     });
     if (!application) throw new NotFoundException("Event application not found");
 
-    if (!(
-      application.user.id === currentUser.id ||
-      currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])
-    )) {
+    if (
+      !(
+        application.user.id === currentUser.id ||
+        currentUser.role?.hasOneOfPermissions([Permission.EventManageApplications])
+      )
+    ) {
       throw new ForbiddenException("You don't have permission to perform this action");
     }
 

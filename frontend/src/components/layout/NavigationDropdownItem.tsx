@@ -1,5 +1,4 @@
-import { UserRole } from "@/utils/api.schemas";
-import { hasSomePermissions } from "@/utils/checkPermissions";
+import { UserRole, hasSomePermissions } from "@/utils/checkPermissions";
 import { GroupedLinks } from "@components/layout/LayoutHeader";
 import styles from "@components/layout/LayoutHeader.module.css";
 import { Anchor, Box, BoxProps, Button, Menu, NavLink } from "@mantine/core";

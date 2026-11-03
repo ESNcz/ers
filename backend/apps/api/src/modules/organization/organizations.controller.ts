@@ -104,9 +104,9 @@ export class OrganizationsController {
   ) {
     const organization = await this.organizationService.findById(organisationId);
 
-    if (!(
-      organization?.manager?.id === currentUser?.id || currentUser.role?.hasPermission(Permission.OrganisationUpdate)
-    )) {
+    if (
+      !(organization?.manager?.id === currentUser?.id || currentUser.role?.hasPermission(Permission.OrganisationUpdate))
+    ) {
       throw new UnauthorizedException("You don't have permission to perform this action");
     }
 

@@ -1,7 +1,0 @@
-node_modules
-dist
-documentation
-storage
-pnpm-lock.yaml
-.husky
-*.md

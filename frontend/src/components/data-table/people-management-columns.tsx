@@ -1,5 +1,5 @@
-import { RolePermissionsItem, User, UserRole } from "@/utils/api.schemas";
-import { hasSomePermissions } from "@/utils/checkPermissions";
+import { RolePermissionsItem, User } from "@/utils/api.schemas";
+import { UserRole, hasSomePermissions } from "@/utils/checkPermissions";
 import { Flex, Text } from "@mantine/core";
 import { IconCheck, IconEdit, IconSwitchHorizontal, IconTrash, IconX } from "@tabler/icons-react";
 import type { ColumnDef } from "@tanstack/react-table";

@@ -8,7 +8,6 @@ import "@mantine/notifications/styles.css";
 import "@mantine/tiptap/styles.css";
 import { Metadata, Viewport } from "next";
 import React, { ReactNode, Suspense } from "react";
-
 import "./globals.css";
 
 export const metadata: Metadata = {

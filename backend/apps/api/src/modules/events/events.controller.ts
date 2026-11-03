@@ -295,7 +295,8 @@ export class EventsController {
     });
     if (!event) throw new NotFoundException("Event not found");
 
-    if (body.priorityListDeadline && dayjs(body.priorityListDeadline).isAfter(dayjs(event.until))) {
+    // The same request can move the event, so compare against the new end date
+    if (body.priorityListDeadline && dayjs(body.priorityListDeadline).isAfter(dayjs(body.until ?? event.until))) {
       throw new BadRequestException("Priority list deadline cannot be set after the event has ended");
     }
 

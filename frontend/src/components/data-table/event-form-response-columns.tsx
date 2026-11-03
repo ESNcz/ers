@@ -60,32 +60,30 @@ export const eventFormResponseColumns = (
       meta: { filterVariant: "date" },
       cell: ({ row }) => (row.original.updatedAt ? dateWithTime(row.original.updatedAt) : "—"),
     },
-    ...form.fields.map(
-      (field): ColumnDef<EventFormResponseRow> => ({
-        id: `field:${field.id}`,
-        // Numbers stay numeric for sorting and range filter, a stale answer of another type is shown as text
-        accessorFn: (row) => {
-          const value = row.answers[field.id];
-          return field.type === FormFieldType.number && typeof value === "number" ? value : formatAnswer(value);
-        },
-        header: field.label,
-        minSize: 160,
-        meta: {
-          label: field.label,
-          filterVariant:
-            field.type === FormFieldType.number
-              ? "number"
-              : field.type === FormFieldType.singleSelect || field.type === FormFieldType.checkbox
-                ? "select"
-                : "text",
-        },
-        cell: ({ getValue }) => (
-          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
-            {String(getValue() ?? "") || "—"}
-          </Text>
-        ),
-      }),
-    ),
+    ...form.fields.map((field): ColumnDef<EventFormResponseRow> => ({
+      id: `field:${field.id}`,
+      // Numbers stay numeric for sorting and range filter, a stale answer of another type is shown as text
+      accessorFn: (row) => {
+        const value = row.answers[field.id];
+        return field.type === FormFieldType.number && typeof value === "number" ? value : formatAnswer(value);
+      },
+      header: field.label,
+      minSize: 160,
+      meta: {
+        label: field.label,
+        filterVariant:
+          field.type === FormFieldType.number
+            ? "number"
+            : field.type === FormFieldType.singleSelect || field.type === FormFieldType.checkbox
+              ? "select"
+              : "text",
+      },
+      cell: ({ getValue }) => (
+        <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+          {String(getValue() ?? "") || "—"}
+        </Text>
+      ),
+    })),
   ];
 
   if (showRemovedAnswers) {

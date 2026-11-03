@@ -1,5 +1,6 @@
 "use client";
 
+import classes from "./DataTable.module.css";
 import { ActionIcon, Button, Divider, Group, Popover, Stack, Text, UnstyledButton } from "@mantine/core";
 import {
   IconArrowDown,
@@ -12,7 +13,6 @@ import {
 } from "@tabler/icons-react";
 import { type Column, type Header, flexRender } from "@tanstack/react-table";
 
-import classes from "./DataTable.module.css";
 import { DataTableColumnFilter } from "./DataTableColumnFilter";
 
 export const getColumnLabel = <TData, TValue>(column: Column<TData, TValue>) => {

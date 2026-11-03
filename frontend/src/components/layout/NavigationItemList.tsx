@@ -1,5 +1,4 @@
-import { UserRole } from "@/utils/api.schemas";
-import { hasSomePermissions } from "@/utils/checkPermissions";
+import { UserRole, hasSomePermissions } from "@/utils/checkPermissions";
 import { MainLinksProps } from "@components/layout/LayoutHeader";
 import NavigationDropdownItem from "@components/layout/NavigationDropdownItem";
 import NavigationItem from "@components/layout/NavigationItem";

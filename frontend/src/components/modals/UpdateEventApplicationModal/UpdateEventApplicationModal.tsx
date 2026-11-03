@@ -1,11 +1,38 @@
 import { useUpdateEventApplication, useUserOrganizationMemberships } from "@/utils/api";
-import { CreateEventApplicationInvoiceMethod, EventApplicationDetailedWithApplications, Organization, UpdateEventApplication } from "@/utils/api.schemas";
+import {
+  CreateEventApplicationInvoiceMethod,
+  EventApplicationDetailedWithApplications,
+  Organization,
+  UpdateEventApplication,
+} from "@/utils/api.schemas";
 import AddressCodeBlock from "@components/AddressCodeBlock/AddressCodeBlock";
 import Modal from "@components/Modal/Modal";
 import DateInput from "@components/primitives/DateInput";
 import Select from "@components/primitives/Select";
-import { allergenOptions, foodRestrictionOptions, healthLimitationsOptions, joinRestrictions, renderAllergenOptions, renderFoodRestrictionsOptions, renderHealthLimitationOptions } from "@components/shared/renderRestrictionOptions";
-import { Anchor, Blockquote, Box, Button, Flex, Grid, Group, MultiSelect, SimpleGrid, Stack, Text, TextInput, Textarea } from "@mantine/core";
+import {
+  allergenOptions,
+  foodRestrictionOptions,
+  healthLimitationsOptions,
+  joinRestrictions,
+  renderAllergenOptions,
+  renderFoodRestrictionsOptions,
+  renderHealthLimitationOptions,
+} from "@components/shared/renderRestrictionOptions";
+import {
+  Anchor,
+  Blockquote,
+  Box,
+  Button,
+  Flex,
+  Grid,
+  Group,
+  MultiSelect,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  Textarea,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
@@ -57,7 +84,6 @@ const UpdateEventApplicationModal = ({
   const [selectedOrganisation, setSelectedOrganisation] = useState<Organization | null>(
     currentApplication.organization,
   );
-
 
   const { data: userOrganisationMemberships } = useUserOrganizationMemberships(currentApplication.user.id);
 
@@ -282,7 +308,10 @@ const UpdateEventApplicationModal = ({
                   {
                     personal: (
                       <Box>
-                        <AddressCodeBlock beforeAddress={form.values.invoicedTo} address={currentApplication.invoiceAddress} />
+                        <AddressCodeBlock
+                          beforeAddress={form.values.invoicedTo}
+                          address={currentApplication.invoiceAddress}
+                        />
                       </Box>
                     ),
                     organisation: (

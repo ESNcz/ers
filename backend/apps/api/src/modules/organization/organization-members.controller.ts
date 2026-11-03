@@ -97,10 +97,12 @@ export class OrganizationMembersController {
     const organization = await this.organizationService.findById(organizationId);
     if (!organization) throw new NotFoundException("Organization not found");
 
-    if (!(
-      organization.manager?.id === currentUser.id ||
-      currentUser.role?.hasOneOfPermissions([Permission.OrganisationAddUser])
-    )) {
+    if (
+      !(
+        organization.manager?.id === currentUser.id ||
+        currentUser.role?.hasOneOfPermissions([Permission.OrganisationAddUser])
+      )
+    ) {
       throw new ForbiddenException("User does not have required permissions");
     }
 
@@ -154,10 +156,12 @@ export class OrganizationMembersController {
     const organization = await this.organizationService.findById(organisationId);
     if (!organization) throw new NotFoundException("Organization not found");
 
-    if (!(
-      organization.manager?.id === currentUser.id ||
-      currentUser.role?.hasOneOfPermissions([Permission.OrganisationDeleteUser])
-    )) {
+    if (
+      !(
+        organization.manager?.id === currentUser.id ||
+        currentUser.role?.hasOneOfPermissions([Permission.OrganisationDeleteUser])
+      )
+    ) {
       throw new ForbiddenException("User does not have required permissions");
     }
     const organisationMember = organization.members.find((member) => member.id.toString() === organisationMemberId);

@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 120,
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "all",
+  "useTabs": false,
+  "sortPackageJson": false,
+  "ignorePatterns": ["node_modules", "dist", "documentation", "storage", "pnpm-lock.yaml", ".husky", "*.md"],
+  "sortImports": {
+    "groups": [
+      ["builtin", "external", "style", "type-builtin", "type-external"],
+      ["internal", "subpath", "type-internal", "type-subpath"],
+      ["parent", "sibling", "index", "type-parent", "type-sibling", "type-index"],
+      "unknown"
+    ],
+    "internalPattern": ["@api/", "utilities/", "base/"],
+    "ignoreCase": false,
+    "newlinesBetween": true
+  }
+}

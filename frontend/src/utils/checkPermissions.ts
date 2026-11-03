@@ -1,4 +1,6 @@
-import { OrganizationMemberWithoutUser, RolePermissionsItem, User, UserRole } from "@/utils/api.schemas";
+import { OrganizationMemberWithoutUser, Role, RolePermissionsItem, User } from "@/utils/api.schemas";
+
+export type UserRole = Role | null;
 
 export const hasEveryPermissions = (role: UserRole, requiredPermissions: RolePermissionsItem[] | null): boolean => {
   if (requiredPermissions === null) return true;

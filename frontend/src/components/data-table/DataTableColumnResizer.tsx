@@ -1,9 +1,8 @@
 "use client";
 
+import classes from "./DataTable.module.css";
 import type { Header } from "@tanstack/react-table";
 import type { PointerEvent } from "react";
-
-import classes from "./DataTable.module.css";
 
 interface DataTableColumnResizerProps<TData, TValue> {
   header: Header<TData, TValue>;

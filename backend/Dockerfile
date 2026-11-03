@@ -48,6 +48,7 @@ COPY --from=builder /app/${PROJECT_DIST} .
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml ./
+COPY --from=builder /app/pnpm-workspace.yaml ./
 # Copy e-mail templates
 COPY --from=builder /app/templates/ ./templates/
 # Copy maintenance scripts

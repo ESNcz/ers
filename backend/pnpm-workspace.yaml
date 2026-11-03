@@ -2,3 +2,14 @@ allowBuilds:
   "@nestjs/core": true
   "@scarf/scarf": true
   unrs-resolver: true
+
+overrides:
+  # exceljs has no release with fixed dependencies
+  "exceljs>tmp": ^0.2.6
+  "exceljs>uuid": ^11.1.1
+  # Pulled in through @nestjs-modules/mailer, which has no release with fixed dependencies
+  "preview-email>nodemailer": ^10.3.1
+  "mailparser>nodemailer": ^10.3.1
+  postcss: ^8.5.32
+  # Unused optional peer of @nestjs/core, but pnpm still installs it
+  "@nestjs/microservices": ^11.2.8
