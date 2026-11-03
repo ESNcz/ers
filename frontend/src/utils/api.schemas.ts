@@ -1070,6 +1070,38 @@ export interface DeletePushSubscriptionDto {
   endpoint: string;
 }
 
+export interface PushRecipientDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  /** Number of subscribed devices */
+  devices: number;
+}
+
+export interface SendPushDto {
+  /** Recipients, all available recipients when empty or missing */
+  userIds?: string[];
+  /** @maxLength 100 */
+  title: string;
+  /** @maxLength 300 */
+  body?: string;
+  /**
+   * App path opened on click, e.g. `/account`
+   * @pattern ^\/(?![/\\])
+   */
+  url?: string;
+}
+
+export interface PushSendResultDto {
+  /** Users the notification was sent to */
+  recipients: number;
+  /** Devices accepted by the push service */
+  delivered: number;
+  /** Devices that failed, expired subscriptions are removed */
+  failed: number;
+}
+
 export interface MailAddress {
   name: string;
   address: string;

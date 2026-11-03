@@ -76,11 +76,14 @@ import type {
   OrganizationMembers200,
   OrganizationMembersParams,
   PushPublicKeyDto,
+  PushRecipientDto,
+  PushSendResultDto,
   ReorderEventForms,
   ResendVerificationParams,
   ResetPasswordDto,
   Role,
   SendEmailDTO,
+  SendPushDto,
   Settings,
   SettingsDTO,
   SubmitEventFormResponse,
@@ -7326,6 +7329,158 @@ export const useSendTestPush = <TError = ErrorType<unknown>, TContext = unknown>
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof sendTestPush>>, TError, void, TContext> => {
   return useMutation(getSendTestPushMutationOptions(options), queryClient);
+};
+
+/**
+ * Users who can receive a notification from `POST /push/send`, admin only
+ */
+export const getPushRecipients = (options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
+  return customInstance<PushRecipientDto[]>({ url: `/push/recipients`, method: "GET", signal }, options);
+};
+
+export const getGetPushRecipientsQueryKey = () => {
+  return [`/push/recipients`] as const;
+};
+
+export const getGetPushRecipientsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPushRecipients>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushRecipients>>, TError, TData>>;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPushRecipientsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPushRecipients>>> = ({ signal }) =>
+    getPushRecipients(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPushRecipients>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPushRecipientsQueryResult = NonNullable<Awaited<ReturnType<typeof getPushRecipients>>>;
+export type GetPushRecipientsQueryError = ErrorType<unknown>;
+
+export function useGetPushRecipients<
+  TData = Awaited<ReturnType<typeof getPushRecipients>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushRecipients>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPushRecipients>>,
+          TError,
+          Awaited<ReturnType<typeof getPushRecipients>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPushRecipients<
+  TData = Awaited<ReturnType<typeof getPushRecipients>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushRecipients>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPushRecipients>>,
+          TError,
+          Awaited<ReturnType<typeof getPushRecipients>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPushRecipients<
+  TData = Awaited<ReturnType<typeof getPushRecipients>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushRecipients>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetPushRecipients<
+  TData = Awaited<ReturnType<typeof getPushRecipients>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPushRecipients>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPushRecipientsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Send a custom notification to the chosen recipients or all of them, admin only
+ */
+export const sendPush = (
+  sendPushDto: SendPushDto,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<PushSendResultDto>(
+    { url: `/push/send`, method: "POST", headers: { "Content-Type": "application/json" }, data: sendPushDto, signal },
+    options,
+  );
+};
+
+export const getSendPushMutationKey = () => ["sendPush"] as const;
+
+export const getSendPushMutationOptions = <TError = ErrorType<unknown>, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof sendPush>>, TError, SendPushMutationVariables, TContext>;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<Awaited<ReturnType<typeof sendPush>>, TError, SendPushMutationVariables, TContext> => {
+  const mutationKey = getSendPushMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendPush>>, SendPushMutationVariables> = (props) => {
+    const { data } = props ?? {};
+
+    return sendPush(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendPushMutationResult = NonNullable<Awaited<ReturnType<typeof sendPush>>>;
+export type SendPushMutationBody = SendPushDto;
+export type SendPushMutationError = ErrorType<unknown>;
+export type SendPushMutationVariables = { data: SendPushDto };
+
+export const useSendPush = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof sendPush>>, TError, SendPushMutationVariables, TContext>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof sendPush>>, TError, SendPushMutationVariables, TContext> => {
+  return useMutation(getSendPushMutationOptions(options), queryClient);
 };
 
 /**

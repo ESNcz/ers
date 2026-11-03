@@ -25,6 +25,8 @@
 - Notifications (Web Push, self-hosted - `apps/api/src/modules/push`)
   - [x] Push infrastructure - subscriptions, VAPID, `PushService.sendToUser(s)`, `public/sw.js`
   - [x] Account page switch + test notification, soft prompt banner after login (turns on all types)
+  - [x] Settings page - admin sends a custom notification to everyone or selected people (`POST /push/send`)
+    - [ ] Recipients are only admins for testing - widen `PushService.getRecipients` to open it to everyone
   - [ ] Notification types - choose individual notifications
     - [ ] `NotificationType` enum: `sugarCube`, `spotAssigned`, `eventPublished`, `formDeadline`, `registrationReminder`
     - [ ] User preferences - `notification_preference` table (user, type, enabled), missing row = enabled,

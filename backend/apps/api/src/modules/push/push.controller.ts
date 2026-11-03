@@ -1,9 +1,19 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 
 import { CurrentUser } from "@api/decorators";
-import { CreatePushSubscriptionDto, DeletePushSubscriptionDto } from "@api/models/requests";
-import { PushPublicKeyDto } from "@api/models/responses";
+import { CreatePushSubscriptionDto, DeletePushSubscriptionDto, SendPushDto } from "@api/models/requests";
+import { PushPublicKeyDto, PushRecipientDto, PushSendResultDto } from "@api/models/responses";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
 import { User } from "@api/modules/users/entities";
 
@@ -56,5 +66,30 @@ export class PushController {
       url: "/account",
       tag: "push-test",
     });
+  }
+
+  /**
+   * Users who can receive a notification from `POST /push/send`, admin only
+   */
+  @ApiOkResponse({ type: PushRecipientDto, isArray: true })
+  @Get("recipients")
+  async getPushRecipients(@CurrentUser() user: User) {
+    if (!user.role?.isAdmin()) {
+      throw new ForbiddenException("You don't have permission to send notifications");
+    }
+    return await this.pushService.getRecipients();
+  }
+
+  /**
+   * Send a custom notification to the chosen recipients or all of them, admin only
+   */
+  @ApiOkResponse({ type: PushSendResultDto })
+  @HttpCode(HttpStatus.OK)
+  @Post("send")
+  async sendPush(@CurrentUser() user: User, @Body() dto: SendPushDto) {
+    if (!user.role?.isAdmin()) {
+      throw new ForbiddenException("You don't have permission to send notifications");
+    }
+    return await this.pushService.sendCustom(user, dto);
   }
 }

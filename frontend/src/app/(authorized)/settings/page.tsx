@@ -3,6 +3,7 @@
 import { useGetSettings, useUpdateSettings } from "@/utils/api";
 import { Settings, SettingsDTO } from "@/utils/api.schemas";
 import RichTextEditor from "@components/Richtext/RichTextEditor";
+import SendPushNotification from "@components/pwa/SendPushNotification";
 import { Button, Container, Grid, Group, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import React, { useEffect } from "react";
@@ -79,6 +80,7 @@ const SettingsPage = () => {
           </Button>
         </Group>
       </form>
+      <SendPushNotification />
     </Container>
   );
 };
