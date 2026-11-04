@@ -6,33 +6,33 @@
     - Count
     - Price
   - [x] Update photo (admin)
-  - [ ] Register users
-    - [ ] Spot updated by creator or admin
-    - [ ] Status
+  - [x] Register users
+    - [x] Spot updated by creator or admin
+    - [x] Status
       - Completed
       - Cancelled
   - [x] Register form
   - [ ] Payment PDF
   - [ ] Payment confirmation PDF/JPG/PNG
   - [ ] Update
-  - [ ] Filter (registered users)
+  - [x] Filter (registered users)
     - Organization
     - Applicant name
     - Paid
 
-- [ ] My sent applications
+- [x] My sent applications
 
 - Notifications (Web Push, self-hosted - `apps/api/src/modules/push`)
   - [x] Push infrastructure - subscriptions, VAPID, `PushService.sendToUser(s)`, `public/sw.js`
   - [x] Account page switch + test notification, soft prompt banner after login (turns on all types)
   - [x] Settings page - admin sends a custom notification to everyone or selected people (`POST /push/send`)
-    - [ ] Recipients are only admins for testing - widen `PushService.getRecipients` to open it to everyone
-  - [ ] Notification types - choose individual notifications
-    - [ ] `NotificationType` enum: `sugarCube`, `spotAssigned`, `eventPublished`, `formDeadline`, `registrationReminder`
-    - [ ] User preferences - `notification_preference` table (user, type, enabled), missing row = enabled,
+    - [x] Recipients are only admins for testing - widen `PushService.getRecipients` to open it to everyone
+  - [x] Notification types - choose individual notifications
+    - [x] `NotificationType` enum: `sugarCube`, `spotAssigned`, `eventPublished`, `formDeadline`, `registrationReminder`
+    - [x] User preferences - `notification_preference` table (user, type, enabled), missing row = enabled,
           so the banner "Turn on" keeps meaning all types
-    - [ ] `sendToUsers(userIds, type, payload)` skips users who turned the type off
-    - [ ] Endpoints `GET/PATCH /push/preferences`, checkboxes per type on the Account page
+    - [x] `sendToUsers(userIds, type, payload)` skips users who turned the type off
+    - [x] Endpoints `GET/PATCH /push/preferences`, checkboxes per type on the Account page
   - [ ] Triggers
     - [x] Sugar cube received - `SugarCubesService.createSugarCube`
     - [ ] Assigned spot - `EventApplicationsController.updateUserApplicationSpot` and bulk `updateApplicationsSpot`,

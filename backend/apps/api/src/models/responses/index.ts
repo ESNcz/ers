@@ -12,5 +12,6 @@ export * from "./event-detail-view.dto";
 export * from "./event-applications-overview.dto";
 export * from "./event-applications-management.dto";
 export * from "./event-form.dto";
+export * from "./notification-preference.dto";
 export * from "./push-public-key.dto";
 export * from "./push-recipient.dto";

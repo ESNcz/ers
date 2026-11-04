@@ -10,7 +10,8 @@ import {
 } from "@/utils/pushNotifications";
 import { useInstallPrompt } from "@/utils/useInstallPrompt";
 import InstallInstructionsModal from "@components/pwa/InstallInstructionsModal";
-import { Alert, Button, Group, Paper, Stack, Switch, Text } from "@mantine/core";
+import NotificationPreferences from "@components/pwa/NotificationPreferences";
+import { Alert, Button, Divider, Group, Paper, Stack, Switch, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconBell, IconBellOff } from "@tabler/icons-react";
@@ -132,6 +133,9 @@ const PushNotificationsSettings = () => {
         Push notifications
       </Text>
       {renderContent()}
+      {/* Saved per user, so other devices can be set from here too */}
+      <Divider my="md" />
+      <NotificationPreferences />
       <InstallInstructionsModal platform="ios" opened={instructionsOpened} onClose={closeInstructions} />
     </Paper>
   );

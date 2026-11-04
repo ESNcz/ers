@@ -1093,6 +1093,30 @@ export interface SendPushDto {
   url?: string;
 }
 
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+
+export const NotificationType = {
+  sugarCube: "sugarCube",
+  spotAssigned: "spotAssigned",
+  eventPublished: "eventPublished",
+  formDeadline: "formDeadline",
+  registrationReminder: "registrationReminder",
+} as const;
+
+export interface NotificationPreferenceDto {
+  type: NotificationType;
+  enabled: boolean;
+}
+
+export interface NotificationPreferenceItemDto {
+  type: NotificationType;
+  enabled: boolean;
+}
+
+export interface UpdateNotificationPreferencesDto {
+  preferences: NotificationPreferenceItemDto[];
+}
+
 export interface PushSendResultDto {
   /** Users the notification was sent to */
   recipients: number;

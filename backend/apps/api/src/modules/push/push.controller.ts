@@ -6,14 +6,25 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 
 import { CurrentUser } from "@api/decorators";
-import { CreatePushSubscriptionDto, DeletePushSubscriptionDto, SendPushDto } from "@api/models/requests";
-import { PushPublicKeyDto, PushRecipientDto, PushSendResultDto } from "@api/models/responses";
+import {
+  CreatePushSubscriptionDto,
+  DeletePushSubscriptionDto,
+  SendPushDto,
+  UpdateNotificationPreferencesDto,
+} from "@api/models/requests";
+import {
+  NotificationPreferenceDto,
+  PushPublicKeyDto,
+  PushRecipientDto,
+  PushSendResultDto,
+} from "@api/models/responses";
 import { CookieGuard } from "@api/modules/auth/providers/guards";
 import { User } from "@api/modules/users/entities";
 
@@ -54,13 +65,31 @@ export class PushController {
   }
 
   /**
+   * Notification types of the current user and whether each is on
+   */
+  @ApiOkResponse({ type: NotificationPreferenceDto, isArray: true })
+  @Get("preferences")
+  async getNotificationPreferences(@CurrentUser() user: User) {
+    return await this.pushService.getPreferences(user);
+  }
+
+  /**
+   * Turn notification types on/off for the current user, applies to all of their devices
+   */
+  @ApiOkResponse({ type: NotificationPreferenceDto, isArray: true })
+  @Patch("preferences")
+  async updateNotificationPreferences(@CurrentUser() user: User, @Body() dto: UpdateNotificationPreferencesDto) {
+    return await this.pushService.updatePreferences(user, dto);
+  }
+
+  /**
    * Send a test notification to all devices of the current user
    */
   @ApiNoContentResponse({ description: "Test notification sent" })
   @HttpCode(HttpStatus.NO_CONTENT)
   @Post("test")
   async sendTestPush(@CurrentUser() user: User) {
-    await this.pushService.sendToUser(user.id, {
+    await this.pushService.sendToUser(user.id, null, {
       title: "Notifications are on",
       body: "This is how notifications from ERS will look.",
       url: "/account",

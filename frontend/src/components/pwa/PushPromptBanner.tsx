@@ -42,7 +42,7 @@ export const usePushPromptPending = () =>
 /**
  * Soft prompt for push notifications - the browser permission prompt opens only after the user accepts here,
  * so it always comes from a click (required by Safari/iOS and Firefox) and is not rejected out of surprise.
- * Turns on all notification types, choosing individual types is TODO (see backend/TODO.md).
+ * Turns on all notification types, individual types are chosen on the Account page.
  */
 const PushPromptBanner = () => {
   const pathname = usePathname();

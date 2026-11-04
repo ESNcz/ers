@@ -67,6 +67,7 @@ import type {
   GetUserApplicationsParams,
   InitialiseType,
   LoginUser,
+  NotificationPreferenceDto,
   OpenSugarCubeEventDto,
   Organization,
   OrganizationMember,
@@ -97,6 +98,7 @@ import type {
   UpdateEventApplicationPrioritiesDto,
   UpdateEventForm,
   UpdateEventSpot,
+  UpdateNotificationPreferencesDto,
   UpdateOrganization,
   UpdateOrganization201,
   UpdatePhoto,
@@ -7288,6 +7290,190 @@ export const useUnsubscribePush = <TError = ErrorType<unknown>, TContext = unkno
   TContext
 > => {
   return useMutation(getUnsubscribePushMutationOptions(options), queryClient);
+};
+
+/**
+ * Notification types of the current user and whether each is on
+ */
+export const getNotificationPreferences = (options?: SecondParameter<typeof customInstance>, signal?: AbortSignal) => {
+  return customInstance<NotificationPreferenceDto[]>({ url: `/push/preferences`, method: "GET", signal }, options);
+};
+
+export const getGetNotificationPreferencesQueryKey = () => {
+  return [`/push/preferences`] as const;
+};
+
+export const getGetNotificationPreferencesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNotificationPreferences>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationPreferences>>, TError, TData>>;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetNotificationPreferencesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotificationPreferences>>> = ({ signal }) =>
+    getNotificationPreferences(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getNotificationPreferences>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetNotificationPreferencesQueryResult = NonNullable<Awaited<ReturnType<typeof getNotificationPreferences>>>;
+export type GetNotificationPreferencesQueryError = ErrorType<unknown>;
+
+export function useGetNotificationPreferences<
+  TData = Awaited<ReturnType<typeof getNotificationPreferences>>,
+  TError = ErrorType<unknown>,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationPreferences>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationPreferences>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationPreferences>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNotificationPreferences<
+  TData = Awaited<ReturnType<typeof getNotificationPreferences>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationPreferences>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNotificationPreferences>>,
+          TError,
+          Awaited<ReturnType<typeof getNotificationPreferences>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNotificationPreferences<
+  TData = Awaited<ReturnType<typeof getNotificationPreferences>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationPreferences>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetNotificationPreferences<
+  TData = Awaited<ReturnType<typeof getNotificationPreferences>>,
+  TError = ErrorType<unknown>,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotificationPreferences>>, TError, TData>>;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetNotificationPreferencesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+/**
+ * Turn notification types on/off for the current user, applies to all of their devices
+ */
+export const updateNotificationPreferences = (
+  updateNotificationPreferencesDto: UpdateNotificationPreferencesDto,
+  options?: SecondParameter<typeof customInstance>,
+) => {
+  return customInstance<NotificationPreferenceDto[]>(
+    {
+      url: `/push/preferences`,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      data: updateNotificationPreferencesDto,
+    },
+    options,
+  );
+};
+
+export const getUpdateNotificationPreferencesMutationKey = () => ["updateNotificationPreferences"] as const;
+
+export const getUpdateNotificationPreferencesMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateNotificationPreferences>>,
+    TError,
+    UpdateNotificationPreferencesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateNotificationPreferences>>,
+  TError,
+  UpdateNotificationPreferencesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateNotificationPreferencesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateNotificationPreferences>>,
+    UpdateNotificationPreferencesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateNotificationPreferences(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateNotificationPreferencesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateNotificationPreferences>>
+>;
+export type UpdateNotificationPreferencesMutationBody = UpdateNotificationPreferencesDto;
+export type UpdateNotificationPreferencesMutationError = ErrorType<unknown>;
+export type UpdateNotificationPreferencesMutationVariables = { data: UpdateNotificationPreferencesDto };
+
+export const useUpdateNotificationPreferences = <TError = ErrorType<unknown>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateNotificationPreferences>>,
+      TError,
+      UpdateNotificationPreferencesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateNotificationPreferences>>,
+  TError,
+  UpdateNotificationPreferencesMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateNotificationPreferencesMutationOptions(options), queryClient);
 };
 
 /**

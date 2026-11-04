@@ -16,7 +16,7 @@ interface SendPushForm {
 }
 
 /**
- * Send a custom push notification, admin only. Recipients are only admins for now (see `PushService.getRecipients`).
+ * Send a custom push notification, admin only. Recipients are all users with a subscribed device (see `PushService.getRecipients`).
  */
 const SendPushNotification = () => {
   const { data: publicKeyData } = useGetPushPublicKey();
@@ -73,7 +73,7 @@ const SendPushNotification = () => {
     <Paper withBorder radius="md" p="md" mt="xl">
       <Text fw={600}>Send push notification</Text>
       <Text size="sm" c="dimmed" mb="sm">
-        For testing, only admins with notifications turned on can receive it.
+        Only users with notifications turned on can receive it.
       </Text>
       <form onSubmit={form.onSubmit(handleSend)}>
         <Stack gap="sm">

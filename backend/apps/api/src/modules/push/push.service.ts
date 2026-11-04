@@ -4,11 +4,13 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import webPush, { WebPushError } from "web-push";
 
-import { CreatePushSubscriptionDto, SendPushDto } from "@api/models/requests";
-import { PushRecipientDto, PushSendResultDto } from "@api/models/responses";
+import { CreatePushSubscriptionDto, SendPushDto, UpdateNotificationPreferencesDto } from "@api/models/requests";
+import { NotificationPreferenceDto, PushRecipientDto, PushSendResultDto } from "@api/models/responses";
 import { User } from "@api/modules/users/entities";
 
+import { NotificationPreference } from "./entities/notification-preference.entity";
 import { PushSubscription } from "./entities/push-subscription.entity";
+import { NotificationType } from "./enums";
 
 /**
  * Data read by `public/sw.js` on the frontend
@@ -33,6 +35,8 @@ export class PushService {
   constructor(
     @InjectRepository(PushSubscription)
     private readonly pushSubscriptionsRepository: Repository<PushSubscription>,
+    @InjectRepository(NotificationPreference)
+    private readonly notificationPreferencesRepository: Repository<NotificationPreference>,
     configService: ConfigService,
   ) {
     const publicKey = configService.get<string>("VAPID_PUBLIC_KEY");
@@ -76,24 +80,61 @@ export class PushService {
     await this.pushSubscriptionsRepository.delete({ endpoint, user: { id: user.id } });
   }
 
-  async sendToUser(userId: string, payload: PushPayload) {
-    return await this.sendToUsers([userId], payload);
+  /**
+   * All notification types of the user, types without a saved preference are on
+   */
+  async getPreferences(user: User): Promise<NotificationPreferenceDto[]> {
+    const saved = await this.notificationPreferencesRepository.find({ where: { user: { id: user.id } } });
+    const enabledByType = new Map(saved.map((preference) => [preference.type, preference.enabled]));
+
+    return Object.values(NotificationType).map((type) => ({ type, enabled: enabledByType.get(type) ?? true }));
+  }
+
+  async updatePreferences(user: User, dto: UpdateNotificationPreferencesDto) {
+    // Last value wins when a type is sent twice
+    const enabledByType = new Map(dto.preferences.map((preference) => [preference.type, preference.enabled]));
+
+    await this.notificationPreferencesRepository.upsert(
+      [...enabledByType].map(([type, enabled]) => ({ user: { id: user.id }, type, enabled })),
+      ["user", "type"],
+    );
+    return await this.getPreferences(user);
   }
 
   /**
-   * Send to every subscription of the users. Never throws - a failed push must not fail the action that triggered it
-   * TODO: add `type: NotificationType` and skip users who turned the type off (see backend/TODO.md - Notifications)
+   * @param type `null` for notifications sent regardless of preferences, e.g. test or admin notifications
+   */
+  async sendToUser(userId: string, type: NotificationType | null, payload: PushPayload) {
+    return await this.sendToUsers([userId], type, payload);
+  }
+
+  /**
+   * Send to every subscription of the users, skips users who turned the type off.
+   * Never throws - a failed push must not fail the action that triggered it
+   * @param type `null` for notifications sent regardless of preferences, e.g. test or admin notifications
    * @returns Number of devices delivered and failed
    */
-  async sendToUsers(userIds: string[], payload: PushPayload) {
+  async sendToUsers(userIds: string[], type: NotificationType | null, payload: PushPayload) {
     const result = { delivered: 0, failed: 0 };
     if (!this.isEnabled || userIds.length === 0) return result;
 
     try {
-      const subscriptions = await this.pushSubscriptionsRepository
+      const query = this.pushSubscriptionsRepository
         .createQueryBuilder("subscription")
-        .where("subscription.user_id IN (:...userIds)", { userIds })
-        .getMany();
+        .where("subscription.user_id IN (:...userIds)", { userIds });
+
+      if (type) {
+        // Missing preference row = type is on
+        query.andWhere(
+          `NOT EXISTS (
+            SELECT 1 FROM notification_preference preference
+            WHERE preference.user_id = subscription.user_id AND preference.type = :type AND preference.enabled = false
+          )`,
+          { type },
+        );
+      }
+
+      const subscriptions = await query.getMany();
 
       const body = JSON.stringify(payload);
       const sent = await Promise.all(subscriptions.map((subscription) => this.send(subscription, body)));
@@ -106,15 +147,13 @@ export class PushService {
   }
 
   /**
-   * Users who can receive a notification sent from the Settings page.
-   * Only admins for now - widen the filter to open it to everyone with a subscribed device.
+   * Users who can receive a notification sent from the Settings page - everyone with a subscribed device
    */
   async getRecipients(): Promise<PushRecipientDto[]> {
     const subscriptions = await this.pushSubscriptionsRepository.find({ relations: { user: true } });
 
     const recipients = new Map<string, PushRecipientDto>();
     for (const { user } of subscriptions) {
-      if (!user.role?.isAdmin()) continue;
       const recipient = recipients.get(user.id);
       if (recipient) {
         recipient.devices++;
@@ -142,7 +181,7 @@ export class PushService {
     const allowedIds = (await this.getRecipients()).map((recipient) => recipient.id);
     const userIds = dto.userIds?.length ? allowedIds.filter((id) => dto.userIds?.includes(id)) : allowedIds;
 
-    const result = await this.sendToUsers(userIds, { title: dto.title, body: dto.body, url: dto.url || "/" });
+    const result = await this.sendToUsers(userIds, null, { title: dto.title, body: dto.body, url: dto.url || "/" });
 
     this.logger.log(
       `User ${sender.id} sent "${dto.title}" to ${userIds.length} users: ${result.delivered} delivered, ${result.failed} failed`,
