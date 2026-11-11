@@ -1097,6 +1097,7 @@ export type NotificationType = (typeof NotificationType)[keyof typeof Notificati
 
 export const NotificationType = {
   sugarCube: "sugarCube",
+  sugarCubeDeadline: "sugarCubeDeadline",
   spotAssigned: "spotAssigned",
   eventPublished: "eventPublished",
   formDeadline: "formDeadline",

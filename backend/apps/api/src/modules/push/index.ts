@@ -1,3 +1,4 @@
+export { NotificationLog } from "./entities/notification-log.entity";
 export { NotificationPreference } from "./entities/notification-preference.entity";
 export { NotificationType } from "./enums";
 export { PushSubscription } from "./entities/push-subscription.entity";

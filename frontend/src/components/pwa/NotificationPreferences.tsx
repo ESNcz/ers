@@ -12,6 +12,10 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const typeLabels: Record<NotificationType, { label: string; description: string }> = {
   sugarCube: { label: "Sugar cubes", description: "Someone sends you a sugar cube" },
+  sugarCubeDeadline: {
+    label: "Sugar cube deadline",
+    description: "Sending sugar cubes closes in one day",
+  },
   spotAssigned: { label: "Assigned spot", description: "You get a spot in an event you applied to" },
   eventPublished: { label: "New events", description: "A new event is published" },
   formDeadline: { label: "Form deadlines", description: "A required form of your event is about to close" },

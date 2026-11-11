@@ -8,6 +8,7 @@ import { CreatePushSubscriptionDto, SendPushDto, UpdateNotificationPreferencesDt
 import { NotificationPreferenceDto, PushRecipientDto, PushSendResultDto } from "@api/models/responses";
 import { User } from "@api/modules/users/entities";
 
+import { NotificationLog } from "./entities/notification-log.entity";
 import { NotificationPreference } from "./entities/notification-preference.entity";
 import { PushSubscription } from "./entities/push-subscription.entity";
 import { NotificationType } from "./enums";
@@ -37,6 +38,8 @@ export class PushService {
     private readonly pushSubscriptionsRepository: Repository<PushSubscription>,
     @InjectRepository(NotificationPreference)
     private readonly notificationPreferencesRepository: Repository<NotificationPreference>,
+    @InjectRepository(NotificationLog)
+    private readonly notificationLogsRepository: Repository<NotificationLog>,
     configService: ConfigService,
   ) {
     const publicKey = configService.get<string>("VAPID_PUBLIC_KEY");
@@ -144,6 +147,29 @@ export class PushService {
       this.logger.error("Sending push notifications failed", error);
     }
     return result;
+  }
+
+  /**
+   * Send a notification about an entity at most once per user, e.g. scheduled reminders.
+   * Users are logged before sending, so concurrent runs or restarts never send twice
+   * @param entityId Id of the entity the notification is about, e.g. event id
+   * @returns Number of newly notified users and devices delivered and failed
+   */
+  async sendToUsersOnce(userIds: string[], type: NotificationType, entityId: string | number, payload: PushPayload) {
+    if (!this.isEnabled || userIds.length === 0) return { users: 0, delivered: 0, failed: 0 };
+
+    // Only rows actually inserted are returned - users notified before are skipped
+    const inserted = await this.notificationLogsRepository
+      .createQueryBuilder()
+      .insert()
+      .values(userIds.map((id) => ({ user: { id }, type, entityId: String(entityId) })))
+      .orIgnore()
+      .returning(["user_id"])
+      .execute();
+
+    const newUserIds = (inserted.raw as { user_id: string }[]).map((row) => row.user_id);
+    const result = await this.sendToUsers(newUserIds, type, payload);
+    return { users: newUserIds.length, ...result };
   }
 
   /**

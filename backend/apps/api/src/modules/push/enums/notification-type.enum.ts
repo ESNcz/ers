@@ -4,6 +4,8 @@
 export enum NotificationType {
   /** Received a sugar cube */
   SugarCube = "sugarCube",
+  /** Sending sugar cubes for an event is about to close */
+  SugarCubeDeadline = "sugarCubeDeadline",
   /** Got a spot assigned in an event application */
   SpotAssigned = "spotAssigned",
   /** New event was published */

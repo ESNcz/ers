@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { ScheduleModule } from "@nestjs/schedule";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { getDataSourceOptions } from "config/typeorm.config";
 import { NestjsFormDataModule } from "nestjs-form-data";
@@ -62,6 +63,7 @@ import { EventApplicationSimpleWithApplicationsMapper, EventSimpleWithApplicatio
     SettingsModule,
     SugarCubesModule,
     PushModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [
     InitialiseController,
